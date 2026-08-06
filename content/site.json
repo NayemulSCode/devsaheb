@@ -4,5 +4,6 @@
   "titleTemplate": "%s | DevSaheb",
   "description": "DevSaheb is a software development company building custom software, cloud platforms, mobile apps, and AI systems to a published engineering standard.",
   "image": "/og-default.png",
-  "locale": "en_US"
+  "locale": "en_US",
+  "sameAs": []
 }

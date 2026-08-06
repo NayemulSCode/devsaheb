@@ -103,11 +103,35 @@ Uploads live under `content/media` and are served from `/media`. SVG is
 excluded from the allowlist deliberately: it is an XML document that can carry
 script, and these files are served from our own origin.
 
+## Social cards
+
+Every indexable page gets its own 1200×630 card, generated at build time into
+`dist/client/og/` and rebuilt for a single page when its content is saved.
+
+These must be real image files. LinkedIn, WhatsApp and Slack read raw HTML and
+never execute JavaScript — the same constraint that shaped the render
+architecture. A card rendered in the browser would never be seen.
+
+Built with **satori + resvg**, not headless Chrome: no browser to install, the
+same output on a CI runner as on Windows, and deterministic for a given title.
+satori needs TTF (not WOFF2), so `assets/fonts/` carries two Geist weights for
+build use only — they are never served to a browser. Geist is SIL OFL; the
+licence sits alongside them.
+
+The card headline comes from the page's own `h1` (taxonomy pages) or its Hero
+block (editable pages), falling back to `meta.title`. That is deliberate:
+`meta.title` is written for a search result, but the card is seen by a human
+deciding whether to click.
+
+`npm run check:links` verifies every `og:image` resolves to a file on disk. A
+missing card breaks nothing on the site — it just silently fails to appear when
+someone shares the link, which is the worst kind of bug to ship.
+
 ## Adding a page
 
 Add an entry to `routes` in [src/routes.tsx](src/routes.tsx). That is all — it
 gets built, prerendered, given a `<head>`, and listed in `sitemap.xml`. Give it
-a `contentSlug` to make it editable in the admin.
+a `contentPath` to make it editable in the admin.
 
 ## Deploying to cPanel
 
@@ -137,7 +161,10 @@ a `contentSlug` to make it editable in the admin.
 | Script | Does |
 |---|---|
 | `dev` | Vite dev server (SPA mode, HMR). |
-| `build` | Client build → SSR build → prerender. |
+| `build` | Client build → SSR build → prerender → OG cards → link check. |
+| `og` | Regenerate social cards from an existing build. |
+| `check:links` | Fail on any broken internal link or missing og:image. |
+| `verify` | `typecheck` then `build`. |
 | `prerender` | Regenerate HTML from an existing build. |
 | `start` | Express. API, regeneration, and static files for local preview. |
 | `preview` | `build` then `start`. |
@@ -145,6 +172,6 @@ a `contentSlug` to make it editable in the admin.
 
 ## Status
 
-Phases 0-4 are complete: brand, render spine, design system, marketing pages,
-and the content layer with the Puck admin. Next: Phase 3b - the service and
-technology detail pages, behind a keyword map and shipped in tiers.
+Phases 0-5 are complete: brand, render spine, design system, marketing pages,
+the content layer with the Puck admin, taxonomy detail pages, and the SEO
+layer. Next: Phase 6 - Lighthouse CI and the accessibility audit.

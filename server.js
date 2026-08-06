@@ -77,6 +77,17 @@ async function regeneratePage(path) {
   const bundle = await loadServerBundle();
   const assets = await readAssets();
   const file = await renderPage(path, bundle, assets);
+
+  // The social card carries the headline, so it has to be rebuilt with the
+  // page. A card failure must not fail the save - the content is already
+  // written and correct at this point.
+  try {
+    const { generateOgImageForPath } = await import('./scripts/og.mjs');
+    await generateOgImageForPath(path);
+  } catch (err) {
+    console.error('[regenerate] og card failed for', path, err);
+  }
+
   return file.replace(ROOT, '');
 }
 

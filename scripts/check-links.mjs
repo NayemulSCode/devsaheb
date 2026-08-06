@@ -36,8 +36,15 @@ if (!existsSync(CLIENT_DIR)) {
 const pages = htmlFiles(CLIENT_DIR);
 const broken = new Map();
 
+const record = (target, page) => {
+  const from = page.replace(CLIENT_DIR, '').replace(/\\/g, '/');
+  if (!broken.has(target)) broken.set(target, new Set());
+  broken.get(target).add(from);
+};
+
 for (const page of pages) {
   const html = readFileSync(page, 'utf8');
+
   for (const [, href] of html.matchAll(/href="(\/[^"#?]*)"/g)) {
     if (ASSET.test(href)) continue;
     // /media is written at runtime by uploads, so it is not in the build.
@@ -46,11 +53,16 @@ for (const page of pages) {
     const target =
       href === '/' ? join(CLIENT_DIR, 'index.html') : join(CLIENT_DIR, href, 'index.html');
 
-    if (!existsSync(target)) {
-      const from = page.replace(CLIENT_DIR, '').replace(/\\/g, '/');
-      if (!broken.has(href)) broken.set(href, new Set());
-      broken.get(href).add(from);
-    }
+    if (!existsSync(target)) record(href, page);
+  }
+
+  // Social cards fail silently: nothing on the site is broken, the image just
+  // does not appear when someone shares the link. Checked here because that is
+  // the only place it would ever be noticed before a customer notices it.
+  for (const [, url] of html.matchAll(/property="og:image" content="([^"]+)"/g)) {
+    const path = url.replace(/^https?:\/\/[^/]+/, '');
+    if (!path.startsWith('/')) continue;
+    if (!existsSync(join(CLIENT_DIR, path))) record(`${path} (og:image)`, page);
   }
 }
 

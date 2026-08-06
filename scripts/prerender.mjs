@@ -9,10 +9,11 @@
  * without a full rebuild.
  */
 
-import { mkdir, writeFile, rename } from 'node:fs/promises';
+import { mkdir, writeFile, rename, stat } from 'node:fs/promises';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import { readAssets } from './assets.mjs';
+import { ogFileName } from './og.mjs';
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const CLIENT_DIR = join(ROOT, 'dist', 'client');
@@ -75,14 +76,36 @@ function taxonomyJsonLd(site, routePath, faq) {
   return { '@context': 'https://schema.org', '@graph': graph };
 }
 
-function organizationJsonLd(site) {
+function homeJsonLd(site) {
+  const base = site.url.replace(/\/+$/, '');
+
+  const org = {
+    '@type': 'Organization',
+    '@id': `${base}/#organization`,
+    name: site.name,
+    url: base,
+    logo: `${base}/ds-lockup-h-dark.svg`,
+    description: site.description,
+  };
+
+  // Emitted only once real profiles exist. sameAs pointing at a network's
+  // homepage rather than our own profile is worse than omitting the field.
+  if (Array.isArray(site.sameAs) && site.sameAs.length > 0) {
+    org.sameAs = site.sameAs;
+  }
+
   return {
     '@context': 'https://schema.org',
-    '@type': 'Organization',
-    name: site.name,
-    url: site.url,
-    logo: `${site.url.replace(/\/+$/, '')}/ds-lockup-h-dark.svg`,
-    description: site.description,
+    '@graph': [
+      org,
+      {
+        '@type': 'WebSite',
+        '@id': `${base}/#website`,
+        url: base,
+        name: site.name,
+        publisher: { '@id': `${base}/#organization` },
+      },
+    ],
   };
 }
 
@@ -97,7 +120,9 @@ function pageDataScript(data) {
   return `    <script type="application/json" id="__DS_PAGE_DATA__">${json}</script>\n`;
 }
 
-function buildDocument({ appHtml, meta, assets, site, jsonLd, data }) {
+function buildDocument({ appHtml, meta, assets, site, jsonLd, data, ogImage }) {
+  // Per-page card, falling back to the site default.
+  const image = ogImage ?? meta.image;
   const styles = assets.css
     .map((href) => `    <link rel="stylesheet" href="${href}">`)
     .join('\n');
@@ -138,12 +163,16 @@ function buildDocument({ appHtml, meta, assets, site, jsonLd, data }) {
     <meta property="og:title" content="${escape(meta.title)}">
     <meta property="og:description" content="${escape(meta.description)}">
     <meta property="og:url" content="${escape(meta.canonical)}">
-    <meta property="og:image" content="${escape(meta.image)}">
+    <meta property="og:image" content="${escape(image)}">
+    <meta property="og:image:width" content="1200">
+    <meta property="og:image:height" content="630">
+    <meta property="og:image:alt" content="${escape(meta.title)}">
 
     <meta name="twitter:card" content="summary_large_image">
     <meta name="twitter:title" content="${escape(meta.title)}">
     <meta name="twitter:description" content="${escape(meta.description)}">
-    <meta name="twitter:image" content="${escape(meta.image)}">
+    <meta name="twitter:image" content="${escape(image)}">
+    <meta name="twitter:image:alt" content="${escape(meta.title)}">
 
     <link rel="icon" href="/favicon.svg" type="image/svg+xml">
     <link rel="icon" href="/favicon.ico" sizes="48x48">
@@ -186,7 +215,7 @@ export async function renderPage(routePath, bundle, assets) {
 
   let jsonLd = null;
   if (routePath === '/') {
-    jsonLd = organizationJsonLd(siteConfig);
+    jsonLd = homeJsonLd(siteConfig);
   } else if (faq) {
     jsonLd = taxonomyJsonLd(siteConfig, routePath, {
       title: breadcrumb ?? meta.title,
@@ -201,6 +230,9 @@ export async function renderPage(routePath, bundle, assets) {
     site: siteConfig,
     jsonLd,
     data,
+    ogImage: meta.robots.startsWith('noindex')
+      ? null
+      : `${siteConfig.url.replace(/\/+$/, '')}/og/${ogFileName(routePath)}`,
   });
   const file = outputPath(routePath);
   await writeAtomic(file, doc);
@@ -209,10 +241,28 @@ export async function renderPage(routePath, bundle, assets) {
 
 async function writeSitemap(routes, site) {
   const base = site.url.replace(/\/+$/, '');
-  const urls = routes
-    .filter((r) => !r.meta.noindex && !r.skipPrerender)
-    .map((r) => `  <url><loc>${base}${r.path === '/' ? '/' : r.path}</loc></url>`)
-    .join('\n');
+
+  // lastmod comes from the backing content file's mtime, and is omitted where
+  // there is no content file. A build timestamp on every URL would tell
+  // crawlers the whole site changed on every deploy, which trains them to
+  // ignore the field.
+  const urls = await Promise.all(
+    routes
+      .filter((r) => !r.meta.noindex && !r.skipPrerender)
+      .map(async (r) => {
+        const loc = `${base}${r.path === '/' ? '/' : r.path}`;
+        let lastmod = '';
+        if (r.contentPath) {
+          try {
+            const { mtime } = await stat(join(ROOT, 'content', `${r.contentPath}.json`));
+            lastmod = `<lastmod>${mtime.toISOString().slice(0, 10)}</lastmod>`;
+          } catch {
+            /* no content file; omit rather than invent a date */
+          }
+        }
+        return `  <url><loc>${loc}</loc>${lastmod}</url>`;
+      }),
+  ).then((lines) => lines.join('\n'));
 
   await writeAtomic(
     join(CLIENT_DIR, 'sitemap.xml'),
