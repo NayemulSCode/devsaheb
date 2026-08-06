@@ -36,7 +36,18 @@ function organizationJsonLd(site) {
   };
 }
 
-function buildDocument({ appHtml, meta, assets, site, jsonLd }) {
+/**
+ * Embeds the content the page was rendered from so the client hydrates against
+ * identical bytes. `<` is escaped: an unescaped `</script>` inside the JSON
+ * would close the tag early and let stored content inject markup.
+ */
+function pageDataScript(data) {
+  if (!data) return '';
+  const json = JSON.stringify(data).replace(/</g, '\\u003c');
+  return `    <script type="application/json" id="__DS_PAGE_DATA__">${json}</script>\n`;
+}
+
+function buildDocument({ appHtml, meta, assets, site, jsonLd, data }) {
   const styles = assets.css
     .map((href) => `    <link rel="stylesheet" href="${href}">`)
     .join('\n');
@@ -96,7 +107,7 @@ ${ld}    <script type="module" src="${assets.js}"></script>
   </head>
   <body>
     <div id="root">${appHtml}</div>
-  </body>
+${pageDataScript(data)}  </body>
 </html>
 `;
 }
@@ -121,13 +132,14 @@ export async function loadServerBundle() {
 /** Renders one route and writes its HTML file. Returns the path written. */
 export async function renderPage(routePath, bundle, assets) {
   const { render, siteConfig } = bundle;
-  const { html, meta } = render(routePath);
+  const { html, meta, data } = render(routePath);
   const doc = buildDocument({
     appHtml: html,
     meta,
     assets,
     site: siteConfig,
     jsonLd: routePath === '/' ? organizationJsonLd(siteConfig) : null,
+    data,
   });
   const file = outputPath(routePath);
   await writeAtomic(file, doc);
@@ -183,6 +195,7 @@ export async function prerenderAll() {
       assets,
       site: siteConfig,
       jsonLd: null,
+      data: null,
     }),
   );
   written.push(join(CLIENT_DIR, '404.html'));

@@ -12,11 +12,14 @@ import Partnership from './routes/company/Partnership';
 import Careers from './routes/Careers';
 import Contact from './routes/Contact';
 import { Privacy, Terms } from './routes/Legal';
+import Admin from './routes/Admin';
 
 export type AppRoute = {
   path: string;
   Component: ComponentType;
   meta: RouteMeta;
+  /** content/pages/<slug>.json backing this route, if it is editable. */
+  contentSlug?: string;
   /** Excluded from the prerender walk and from sitemap.xml. */
   skipPrerender?: boolean;
 };
@@ -34,6 +37,7 @@ export const routes: AppRoute[] = [
   {
     path: '/',
     Component: Home,
+    contentSlug: 'home',
     meta: {
       title: 'Software development company',
       description:
@@ -136,6 +140,15 @@ export const routes: AppRoute[] = [
       title: 'Terms of service',
       description:
         'The terms under which DevSaheb provides services and you use this site.',
+    },
+  },
+  {
+    path: '/admin',
+    Component: Admin,
+    meta: {
+      title: 'Admin',
+      description: 'Content editor.',
+      noindex: true,
     },
   },
 ];

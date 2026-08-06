@@ -54,21 +54,60 @@ So routes declare metadata as plain objects. The prerender writes it into a real
 imperatively during client-side navigation. It renders `null` on first paint, so
 it cannot cause a hydration mismatch. One source of truth, real tags for crawlers.
 
-### Regeneration
-
-Content will be edited at runtime through Puck (Phase 4). `POST /api/regenerate`
-re-renders a single page to disk using the same SSR bundle the build uses, so a
-regenerated page is identical to a freshly built one. No full rebuild, no
-per-request rendering.
+## Editing content
 
 ```bash
-curl -X POST localhost:3000/api/regenerate -H 'content-type: application/json' -d '{"path":"/"}'
+node scripts/hash-password.mjs "a long password"   # prints two .env lines
+npm run build && npm start                          # then visit /admin
 ```
+
+Content lives in `content/pages/*.json`. The editor at `/admin` is Puck, behind
+a password. Saving does three things in order: validate against the zod schema,
+snapshot the previous version, then write atomically and regenerate that page's
+HTML through the same SSR bundle the build uses. No rebuild, no restart.
+
+**Puck never reaches the public bundle.** Public pages render through our own
+registry in [src/components/blocks](src/components/blocks) rather than Puck's
+`<Render>`, and the editor sits behind `React.lazy` in its own chunk. Imported
+eagerly it would add ~84 kB gzipped to every marketing page.
+
+### Why the content layer looks like this
+
+There is no database, so three properties have to be enforced by hand:
+
+| Property | Why |
+|---|---|
+| Atomic write (temp + rename) | A crash mid-write truncates the file and 500s the page it backs. |
+| Snapshot before overwrite | Without a database this is the only undo that exists. Last 20 kept. |
+| Per-file write lock | Two concurrent saves interleave and corrupt the file. |
+
+Saves are validated against the schema exported from the **built SSR bundle**,
+so the validator is always the one the renderer was compiled against. Block
+components derive their props from that same schema
+([blocks/types.ts](src/components/blocks/types.ts)) rather than restating them —
+a schema change becomes a compile error rather than a field the renderer
+silently ignores.
+
+### Admin API
+
+| Route | Auth | Does |
+|---|---|---|
+| `GET /api/admin/session` | — | Whether admin is configured and signed in |
+| `POST /api/admin/login` | — | Password → session cookie. Rate limited, 5 per 15 min per IP |
+| `POST /api/admin/logout` | — | Clears the cookie |
+| `GET /api/admin/pages/:slug` | yes | Current content plus version list |
+| `PUT /api/admin/pages/:slug` | yes | Validate, snapshot, write, regenerate |
+| `POST /api/admin/media` | yes | Upload. 5 MB cap, image types only |
+
+Uploads live under `content/media` and are served from `/media`. SVG is
+excluded from the allowlist deliberately: it is an XML document that can carry
+script, and these files are served from our own origin.
 
 ## Adding a page
 
 Add an entry to `routes` in [src/routes.tsx](src/routes.tsx). That is all — it
-gets built, prerendered, given a `<head>`, and listed in `sitemap.xml`.
+gets built, prerendered, given a `<head>`, and listed in `sitemap.xml`. Give it
+a `contentSlug` to make it editable in the admin.
 
 ## Deploying to cPanel
 
@@ -106,5 +145,6 @@ gets built, prerendered, given a `<head>`, and listed in `sitemap.xml`.
 
 ## Status
 
-Phase 0 (brand) and Phase 1 (render spine) are complete. Next: Phase 2 —
-self-host Geist and JetBrains Mono, then build out the design system.
+Phases 0-4 are complete: brand, render spine, design system, marketing pages,
+and the content layer with the Puck admin. Next: Phase 3b - the service and
+technology detail pages, behind a keyword map and shipped in tiers.

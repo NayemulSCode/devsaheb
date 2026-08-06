@@ -1,0 +1,109 @@
+{
+  "root": {
+    "props": {
+      "title": "Home"
+    }
+  },
+  "content": [
+    {
+      "type": "Hero",
+      "props": {
+        "id": "hero",
+        "eyebrow": "software engineering",
+        "title": "Built to a standard, not to a",
+        "highlight": "deadline.",
+        "lede": "We build custom software, cloud platforms, and mobile apps. Every project ships typed end to end, reviewed line by line, and measured against numbers we commit to before the work starts.",
+        "primaryLabel": "See our work",
+        "primaryHref": "/work",
+        "secondaryLabel": "Our standards",
+        "secondaryHref": "/company/about"
+      }
+    },
+    {
+      "type": "SpecTable",
+      "props": {
+        "id": "standards",
+        "caption": "Definition of done",
+        "rows": [
+          {
+            "label": "Largest Contentful Paint",
+            "value": "< 2.0 s",
+            "tag": "Enforced"
+          },
+          {
+            "label": "Interaction to Next Paint",
+            "value": "< 200 ms",
+            "tag": "Enforced"
+          },
+          {
+            "label": "Cumulative Layout Shift",
+            "value": "< 0.05",
+            "tag": "Enforced"
+          },
+          {
+            "label": "Accessibility",
+            "value": "WCAG 2.2 AA",
+            "tag": "Audited"
+          },
+          {
+            "label": "Test coverage floor",
+            "value": "80%",
+            "tag": "CI gate"
+          }
+        ]
+      }
+    },
+    {
+      "type": "CardGrid",
+      "props": {
+        "id": "disciplines",
+        "tone": "bone",
+        "eyebrow": "what we do",
+        "heading": "Four disciplines, twenty specialisms, one standard across all of them.",
+        "lede": "We group our work the way clients actually buy it, not alphabetically.",
+        "cards": [
+          {
+            "index": "01",
+            "title": "Build",
+            "items": [
+              "Custom Software",
+              "Web Development",
+              "Mobile App",
+              "iOS & Android"
+            ]
+          },
+          {
+            "index": "02",
+            "title": "Platforms",
+            "items": [
+              "SaaS",
+              "Ecommerce",
+              "CMS",
+              "CRM",
+              "ERP"
+            ]
+          },
+          {
+            "index": "03",
+            "title": "Data & AI",
+            "items": [
+              "AI Development",
+              "Machine Learning",
+              "Database"
+            ]
+          },
+          {
+            "index": "04",
+            "title": "Cloud & Operations",
+            "items": [
+              "Cloud Application",
+              "DevOps",
+              "QA",
+              "Legacy Modernization"
+            ]
+          }
+        ]
+      }
+    }
+  ]
+}

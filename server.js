@@ -14,17 +14,33 @@
 
 import express from 'express';
 import compression from 'compression';
+import cookieParser from 'cookie-parser';
 import { dirname, extname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { existsSync } from 'node:fs';
+import { createAuth } from './server/auth.js';
+import { createAdminRouter } from './server/admin.js';
+import { ensureDirs, MEDIA_DIR } from './server/content.js';
 
 const ROOT = dirname(fileURLToPath(import.meta.url));
 const CLIENT_DIR = join(ROOT, 'dist', 'client');
 const PORT = Number(process.env.PORT) || 3000;
 
+await ensureDirs();
+
+const auth = createAuth({
+  passwordHash: process.env.ADMIN_PASSWORD_HASH,
+  sessionSecret: process.env.SESSION_SECRET,
+  secureCookies: process.env.SECURE_COOKIES === '1',
+});
+
 const app = express();
 app.disable('x-powered-by');
+// Passenger sits behind Apache, so the client IP arrives in X-Forwarded-For.
+// Without this the login rate limiter would key every attempt to the proxy.
+app.set('trust proxy', 1);
 app.use(compression());
+app.use(cookieParser());
 app.use(express.json({ limit: '2mb' }));
 
 // --- Canonical host and path -------------------------------------------------
@@ -51,27 +67,43 @@ app.get('/api/health', (_req, res) => {
 /**
  * Regenerates one page from the current content on disk.
  *
- * Phase 4 calls this from the Puck save handler. It loads the same SSR bundle
- * the build uses, so a regenerated page is identical to a freshly built one.
+ * The SSR bundle is imported fresh each time rather than cached, because a
+ * cached module would keep serving the content it read when first loaded -
+ * which is exactly what a save needs to invalidate.
  */
-app.post('/api/regenerate', async (req, res) => {
-  const path = typeof req.body?.path === 'string' ? req.body.path : null;
-  if (!path || !path.startsWith('/')) {
-    return res.status(400).json({ ok: false, error: 'Expected a leading-slash path.' });
-  }
+async function regeneratePage(path) {
+  const { loadServerBundle, renderPage } = await import('./scripts/prerender.mjs');
+  const { readAssets } = await import('./scripts/assets.mjs');
+  const bundle = await loadServerBundle();
+  const assets = await readAssets();
+  const file = await renderPage(path, bundle, assets);
+  return file.replace(ROOT, '');
+}
 
-  try {
-    const { loadServerBundle, renderPage } = await import('./scripts/prerender.mjs');
-    const { readAssets } = await import('./scripts/assets.mjs');
-    const bundle = await loadServerBundle();
-    const assets = await readAssets();
-    const file = await renderPage(path, bundle, assets);
-    res.json({ ok: true, path, file: file.replace(ROOT, '') });
-  } catch (err) {
-    console.error('[regenerate]', err);
-    res.status(500).json({ ok: false, error: 'Regeneration failed.' });
-  }
-});
+/** Schema comes from the built SSR bundle so it cannot drift from the renderer. */
+async function getSchema() {
+  const { loadServerBundle } = await import('./scripts/prerender.mjs');
+  const { pageSchema, slugSchema } = await loadServerBundle();
+  return { pageSchema, slugSchema };
+}
+
+app.use('/api/admin', createAdminRouter({ auth, getSchema, regenerate: regeneratePage }));
+
+// Uploaded media. Served from the content directory, which persists across
+// deploys - this is why cPanel's real filesystem matters for this design.
+app.use(
+  '/media',
+  express.static(MEDIA_DIR, {
+    index: false,
+    redirect: false,
+    setHeaders(res) {
+      res.setHeader('Cache-Control', 'public, max-age=604800');
+      // Uploads are user-supplied bytes on our own origin; never let a browser
+      // sniff one into something executable.
+      res.setHeader('X-Content-Type-Options', 'nosniff');
+    },
+  }),
+);
 
 // --- Static (local preview only) ---------------------------------------------
 //

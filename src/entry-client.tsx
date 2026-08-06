@@ -2,15 +2,19 @@ import { StrictMode } from 'react';
 import { hydrateRoot, createRoot } from 'react-dom/client';
 import { BrowserRouter } from 'react-router-dom';
 import App from './App';
+import { readEmbeddedPageData } from './lib/page-data';
 import './styles.css';
 
 const root = document.getElementById('root');
 if (!root) throw new Error('#root not found');
 
+// Same bytes the server rendered from, so hydration matches.
+const initialData = readEmbeddedPageData();
+
 const tree = (
   <StrictMode>
     <BrowserRouter>
-      <App />
+      <App initialData={initialData} />
     </BrowserRouter>
   </StrictMode>
 );

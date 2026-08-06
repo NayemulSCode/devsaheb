@@ -3,7 +3,9 @@ import { cn } from '../../lib/cn';
 export type SpecRow = {
   label: string;
   value: string;
-  tag?: string;
+  /** Explicit `| undefined`: exactOptionalPropertyTypes is on, and the zod
+      schema these rows come from infers optionals that way. */
+  tag?: string | undefined;
 };
 
 /**
@@ -20,9 +22,9 @@ export default function SpecTable({
   id,
 }: {
   caption: string;
-  rows: SpecRow[];
-  className?: string;
-  id?: string;
+  rows: readonly SpecRow[];
+  className?: string | undefined;
+  id?: string | undefined;
 }) {
   return (
     <div

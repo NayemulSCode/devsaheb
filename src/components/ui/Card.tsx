@@ -13,12 +13,12 @@ export default function Card({
   className,
   style,
 }: {
-  index?: string;
+  index?: string | undefined;
   title: string;
   children?: ReactNode;
   footer?: ReactNode;
-  className?: string;
-  style?: CSSProperties;
+  className?: string | undefined;
+  style?: CSSProperties | undefined;
 }) {
   return (
     <article
