@@ -1,0 +1,21 @@
+node_modules/
+dist/
+.vite/
+
+# Runtime content written by the admin. Snapshots are local safety copies,
+# not source. The seed files under content/ ARE tracked.
+content/.versions/
+content/media/
+
+*.local
+.env
+.env.*
+!.env.example
+
+.DS_Store
+Thumbs.db
+npm-debug.log*
+
+# Brand build harnesses, not shipped
+brand/_proof.html
+brand/_icon.html

@@ -1,0 +1,62 @@
+@import "tailwindcss";
+
+/*
+  Brand tokens sampled from images/color_plate_of_wesite.png.
+  See brand/README.md for the contrast measurements behind the gold rules.
+*/
+@theme {
+  --color-ink: #0b1020;
+  --color-ink-2: #10162a;
+  --color-ink-3: #141a2e;
+
+  /* Gold measures 9.22:1 on ink and 1.81:1 on bone. It is an accent for dark
+     grounds only. Never set gold type on a light ground - use gold-deep. */
+  --color-gold: #ccaa50;
+  --color-gold-lift: #e0c47a;
+  --color-gold-deep: #7a5f1e;
+
+  --color-silver: #929ca8;
+  --color-silver-dim: #5c6675;
+
+  --color-bone: #f7f0e6;
+  --color-bone-2: #faf7f2;
+
+  /* Phase 2 self-hosts Geist and JetBrains Mono. System stacks until then. */
+  --font-display: "Segoe UI Variable Display", "SF Pro Display", -apple-system,
+    BlinkMacSystemFont, system-ui, sans-serif;
+  --font-sans: "Segoe UI Variable Text", "SF Pro Text", -apple-system,
+    BlinkMacSystemFont, system-ui, sans-serif;
+  --font-mono: ui-monospace, "Cascadia Code", "SF Mono", "JetBrains Mono", Menlo,
+    Consolas, monospace;
+
+  --ease-brand: cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+:root {
+  color-scheme: dark;
+}
+
+html {
+  background: var(--color-ink);
+}
+
+body {
+  margin: 0;
+  color: var(--color-bone);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+}
+
+:focus-visible {
+  outline: 2px solid var(--color-gold);
+  outline-offset: 3px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}
