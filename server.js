@@ -14,7 +14,7 @@
 
 import express from 'express';
 import compression from 'compression';
-import { dirname, join, resolve } from 'node:path';
+import { dirname, extname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { existsSync } from 'node:fs';
 
@@ -74,14 +74,34 @@ app.post('/api/regenerate', async (req, res) => {
 });
 
 // --- Static (local preview only) ---------------------------------------------
+//
+// Serve /services from /services/index.html directly, mirroring the
+// mod_rewrite rule in deploy/.htaccess.
+//
+// serve-static would instead 301 a directory request to add a trailing slash,
+// which the canonicaliser above strips straight back off - an infinite loop
+// between /services and /services/. Sending the file ourselves is explicit and
+// does not depend on serve-static's directory handling at all.
+app.use((req, res, next) => {
+  if (req.method !== 'GET' && req.method !== 'HEAD') return next();
+  const pathname = req.path;
+  if (pathname.startsWith('/api') || extname(pathname)) return next();
+
+  const candidate = join(CLIENT_DIR, pathname, 'index.html');
+  if (!existsSync(candidate)) return next();
+
+  res.setHeader('Cache-Control', 'no-cache');
+  return res.sendFile(candidate);
+});
+
 app.use(
   express.static(CLIENT_DIR, {
-    index: 'index.html',
-    extensions: ['html'],
+    redirect: false,
+    index: false,
     setHeaders(res, filePath) {
       // Hashed assets are immutable; HTML must always revalidate or edits
       // made through the admin would stay invisible behind a cache.
-      if (filePath.includes(`${resolve('/')}assets${resolve('/')}`) || /\/assets\//.test(filePath)) {
+      if (/[\\/]assets[\\/]/.test(filePath)) {
         res.setHeader('Cache-Control', 'public, max-age=31536000, immutable');
       } else if (filePath.endsWith('.html')) {
         res.setHeader('Cache-Control', 'no-cache');
