@@ -4,8 +4,9 @@ import { StaticRouter } from 'react-router-dom';
 import App from './App';
 import { routes, notFoundRoute, findRoute } from './routes';
 import { resolveMeta, type SiteConfig } from './lib/seo';
-import { readPageContent } from './lib/content-server';
-import type { PageContent } from './content/schema';
+import { readContentFile } from './lib/content-server';
+import { SERVICES, TECHNOLOGIES } from './content/taxonomy';
+import type { TaxonomyPage } from './content/schema';
 import site from '../content/site.json';
 
 export { routes, notFoundRoute, findRoute };
@@ -18,8 +19,19 @@ export { pageSchema, slugSchema } from './content/schema';
 export type RenderResult = {
   html: string;
   meta: ReturnType<typeof resolveMeta>;
-  data: PageContent | null;
+  data: unknown;
+  /** FAQ entries, when the route has them. Drives FAQPage schema. */
+  faq: { q: string; a: string }[] | null;
+  /** Short taxonomy name. Breadcrumbs use this, never the h1 headline. */
+  breadcrumb: string | null;
 };
+
+/** Narrow enough to detect a taxonomy payload without importing zod here. */
+function asTaxonomy(data: unknown): TaxonomyPage | null {
+  return data && typeof data === 'object' && 'faq' in data && 'notFor' in data
+    ? (data as TaxonomyPage)
+    : null;
+}
 
 /**
  * Renders one route to markup, its resolved metadata, and the content it was
@@ -31,7 +43,8 @@ export type RenderResult = {
  */
 export function render(url: string): RenderResult {
   const route = findRoute(url);
-  const data = route.contentSlug ? readPageContent(route.contentSlug) : null;
+  const data = route.contentPath ? readContentFile<unknown>(route.contentPath) : null;
+  const taxonomy = asTaxonomy(data);
 
   const html = renderToString(
     <StaticRouter location={url}>
@@ -39,5 +52,19 @@ export function render(url: string): RenderResult {
     </StaticRouter>,
   );
 
-  return { html, meta: resolveMeta(siteConfig, route.meta, url), data };
+  // A taxonomy page's own title and description are the ones written against
+  // its keyword-map row, so they win over the route table's fallback.
+  const meta = resolveMeta(
+    siteConfig,
+    taxonomy
+      ? { ...route.meta, title: taxonomy.title, description: taxonomy.description }
+      : route.meta,
+    url,
+  );
+
+  const breadcrumb = taxonomy
+    ? ([...SERVICES, ...TECHNOLOGIES].find((i) => i.slug === taxonomy.slug)?.name ?? taxonomy.slug)
+    : null;
+
+  return { html, meta, data, faq: taxonomy?.faq ?? null, breadcrumb };
 }

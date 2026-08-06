@@ -25,12 +25,18 @@ export default function TechnologiesHub() {
                 <ul className="mt-5 flex flex-wrap gap-2">
                   {group.items.map((item) => (
                     <li key={item.slug}>
-                      <Link
-                        to={technologyPath(item.slug)}
-                        className="inline-block border border-silver/15 px-3.5 py-2 font-mono text-[12.5px] text-silver transition-colors hover:border-gold hover:text-gold"
-                      >
-                        {item.name}
-                      </Link>
+                      {item.published ? (
+                        <Link
+                          to={technologyPath(item.slug)}
+                          className="inline-block border border-silver/15 px-3.5 py-2 font-mono text-[12.5px] text-silver transition-colors hover:border-gold hover:text-gold"
+                        >
+                          {item.name}
+                        </Link>
+                      ) : (
+                        <span className="inline-block border border-silver/10 px-3.5 py-2 font-mono text-[12.5px] text-silver-dim">
+                          {item.name}
+                        </span>
+                      )}
                     </li>
                   ))}
                 </ul>

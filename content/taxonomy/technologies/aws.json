@@ -1,0 +1,56 @@
+{
+  "slug": "aws",
+  "primaryQuery": "aws development services",
+  "title": "AWS Development Services",
+  "description": "AWS architecture sized to what you actually run. Infrastructure as code, costs you can predict, and no managed service you did not need.",
+  "h1": "AWS, sized to what you actually run",
+  "intro": "AWS has around two hundred services and most projects need six of them. The expensive mistake is not choosing the wrong cloud — it is adopting an architecture built for a scale you do not have, then paying for it in both bill and complexity every month afterwards.",
+  "sections": [
+    {
+      "heading": "Start smaller than the reference architecture",
+      "body": "AWS reference diagrams are drawn for the largest plausible customer. Copied onto a product with a few thousand users, they produce a system that costs more to operate than to build.\n\nWe start from the load you actually have and the load you can evidence is coming. That usually means a container service, a managed database, object storage, a CDN, and a queue. Not a service mesh, not multi-region active-active, not a bespoke event bus.\n\nThose things are all correct at some scale. The point is to know which scale, and to build the seams that let you add them later without a rewrite."
+    },
+    {
+      "heading": "Cost is an architectural property",
+      "body": "The bill is decided by the design, not by the finance team. NAT gateway traffic, cross-availability-zone transfer, and per-request charges on chatty services are the three that surprise people most often, and all three are architecture choices.\n\nWe tag resources by environment and workload from the start, so the bill can be read by feature rather than as one number. And we put a budget alarm in place before launch, because the cost of finding out about a runaway process at month end is the entire month.\n\nWhere it fits, we will recommend the boring option — a right-sized instance rather than a serverless design that bills per invocation on a predictable, constant workload."
+    },
+    {
+      "heading": "Reproducible, or it does not count",
+      "body": "Everything is defined in code. If the environment cannot be recreated from an empty account, you do not have infrastructure — you have a configuration that happens to be running.\n\nThat matters most in the worst week you will have. Recovering from a bad change is a deploy when infrastructure is code, and an archaeology exercise when it is not.\n\nAccess follows the same rule: roles rather than long-lived keys, least privilege by default, and no credential that lives in a repository."
+    }
+  ],
+  "deliverables": [
+    "Infrastructure as code, reproducible from an empty account",
+    "Right-sized architecture with documented scaling seams",
+    "Cost tagging by environment and workload",
+    "Budget alarms before launch",
+    "IAM roles, least privilege, no long-lived keys",
+    "Runbook for recovery"
+  ],
+  "faq": [
+    {
+      "q": "AWS, Azure, or Google Cloud?",
+      "a": "Whichever your team can operate at three in the morning. The feature gaps between the three are narrower than the gap between a platform your engineers know and one they are learning during an incident. We work across all three and have no commission in the answer."
+    },
+    {
+      "q": "Should we go serverless?",
+      "a": "For spiky or unpredictable workloads, yes — you stop paying for idle. For steady, constant load it is frequently more expensive than a right-sized container, and it constrains how you debug. It is a workload-shape decision, not a modernity one."
+    },
+    {
+      "q": "Can you reduce our existing AWS bill?",
+      "a": "Usually. The recurring wins are unattached storage volumes, over-provisioned databases, data transfer crossing availability zones unnecessarily, and environments left running out of hours. We start with a tagged breakdown, because you cannot cut what you cannot attribute."
+    },
+    {
+      "q": "Do you set up multi-region?",
+      "a": "Only when there is a stated recovery objective that single-region cannot meet. Multi-region roughly doubles operational complexity, and complexity causes outages too. Most teams asking for it need better backups and a tested restore instead."
+    }
+  ],
+  "notFor": {
+    "heading": "When AWS is more than you need",
+    "body": "If you are running one application with predictable traffic and no compliance requirement, a managed platform will cost less in both money and attention. AWS earns its complexity when you need fine-grained control, specific compliance boundaries, or services that genuinely have no equivalent elsewhere. Choosing it because it is the default is how teams end up with a platform engineer they did not budget for."
+  },
+  "related": {
+    "services": ["cloud-application", "devops", "custom-software"],
+    "technologies": ["docker", "nodejs", "python", "typescript"]
+  }
+}

@@ -114,6 +114,43 @@ export type PageContent = z.infer<typeof pageSchema>;
 
 export const BLOCK_TYPES = ['Hero', 'SpecTable', 'CardGrid', 'Prose'] as const;
 
+/**
+ * Service and technology detail pages.
+ *
+ * More structured than a block list because these pages carry structured data:
+ * the FAQ drives FAQPage schema and the related lists drive the internal link
+ * graph. A free-form block list could not be read back into either.
+ *
+ * Every field maps to a line in the substance bar in docs/keyword-map.md. A
+ * page missing `faq`, `notFor`, or `related` fails that bar, which is exactly
+ * the distinction between a legitimate programmatic play and 45 thin pages.
+ */
+export const taxonomyPageSchema = z.object({
+  slug: slugSchemaBase(),
+  /** Owned query from the keyword map. Recorded so drift is visible in review. */
+  primaryQuery: trimmed(120),
+  title: trimmed(70),
+  description: trimmed(180),
+  h1: trimmed(120),
+  intro: trimmed(1200),
+  sections: z
+    .array(z.object({ heading: trimmed(120), body: trimmed(2500) }))
+    .max(8),
+  deliverables: z.array(trimmed(140)).max(12).optional(),
+  faq: z.array(z.object({ q: trimmed(200), a: trimmed(1200) })).min(3).max(6),
+  notFor: z.object({ heading: trimmed(120), body: trimmed(1200) }),
+  related: z.object({
+    services: z.array(trimmed(64)).max(6),
+    technologies: z.array(trimmed(64)).max(8),
+  }),
+});
+
+export type TaxonomyPage = z.infer<typeof taxonomyPageSchema>;
+
+function slugSchemaBase() {
+  return z.string().regex(/^[a-z0-9][a-z0-9-]{0,63}$/);
+}
+
 /** Slugs address files on disk, so keep them to a strict, traversal-proof set. */
 export const slugSchema = z
   .string()

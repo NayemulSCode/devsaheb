@@ -2,7 +2,8 @@ import Blocks from '../components/blocks';
 import HeroBlock from '../components/blocks/HeroBlock';
 import SpecTableBlock from '../components/blocks/SpecTableBlock';
 import CardGridBlock from '../components/blocks/CardGridBlock';
-import { usePageData } from '../lib/page-data';
+import { useRouteData } from '../lib/page-data';
+import type { PageContent } from '../content/schema';
 
 /**
  * Home renders from content/pages/home.json.
@@ -12,7 +13,7 @@ import { usePageData } from '../lib/page-data';
  * important should degrade, not disappear.
  */
 export default function Home() {
-  const data = usePageData();
+  const data = useRouteData<PageContent>();
 
   if (data?.content?.length) {
     return (

@@ -1,0 +1,56 @@
+{
+  "slug": "devops",
+  "primaryQuery": "devops services",
+  "title": "DevOps Services — CI/CD, Infrastructure as Code",
+  "description": "We make deployment boring. Pipelines, infrastructure as code, monitoring, and an on-call rotation your team can actually run without us.",
+  "h1": "DevOps that makes deploying boring",
+  "intro": "The measure of a deployment pipeline is how little anyone thinks about it. If shipping requires a specific person, a checklist, or a quiet Friday afternoon, the pipeline is the bottleneck — not the team. We build the automation that removes the ceremony, and we hand it over rather than operating it forever.",
+  "sections": [
+    {
+      "heading": "What we actually change",
+      "body": "Most engagements start in the same place: deploys are manual, environments have drifted apart, and nobody is certain what is running in production. The fix is rarely a new tool. It is making the current state reproducible.\n\nSo we begin by putting infrastructure into code, so that staging and production are the same thing with different variables. Drift between environments is the root cause behind most 'it worked on staging' incidents, and it cannot be fixed by being more careful.\n\nThen the pipeline: build, test, security scan, deploy, with the quality gates enforced rather than advisory. A gate that can be skipped under pressure is not a gate — it is a suggestion that gets ignored on exactly the day it mattered."
+    },
+    {
+      "heading": "Monitoring that someone reads",
+      "body": "A dashboard nobody looks at is not monitoring. We instrument the handful of signals that actually predict user pain — error rate, latency at the 95th percentile, queue depth, saturation — and alert on those. Everything else is available when you go looking, but does not wake anyone up.\n\nAlerts route to a rotation with a written runbook per alert. If an alert fires and the on-call engineer does not know what to do, that is a defect in the alert, not in the engineer."
+    },
+    {
+      "heading": "Rollback before rollout",
+      "body": "We do not ship a deployment pipeline until the rollback path has been tested under load. The question is never whether a bad release will reach production; it is how long it stays there.\n\nThat usually means versioned, reversible database migrations and a deployment strategy where the previous version is still running when the new one starts taking traffic. It costs a little more to build and it is the difference between a four-minute incident and a four-hour one."
+    }
+  ],
+  "deliverables": [
+    "Infrastructure as code, environments reproducible from scratch",
+    "CI/CD pipeline with enforced quality gates",
+    "Monitoring and alerting on signals that predict user impact",
+    "A tested rollback path",
+    "Runbook per alert",
+    "Handover so your team can run it without us"
+  ],
+  "faq": [
+    {
+      "q": "Do we need DevOps if we deploy once a month?",
+      "a": "Deploy frequency is a symptom, not the problem. Teams that deploy monthly usually do so because deploying is frightening, and it is frightening because it is manual. The work is the same either way; the benefit is that monthly becomes weekly because it stopped being an event."
+    },
+    {
+      "q": "Which cloud do you recommend?",
+      "a": "Whichever one your team already knows. The operational cost of a platform nobody on staff has used outweighs almost any feature difference. If there is no existing preference we will usually suggest AWS for breadth, but that is a default rather than a conviction."
+    },
+    {
+      "q": "Can you take over an existing pipeline?",
+      "a": "Yes. We start by documenting what is currently there before changing anything, because undocumented pipelines usually contain at least one step that is load-bearing for a reason nobody remembers."
+    },
+    {
+      "q": "Do you provide ongoing on-call?",
+      "a": "We can cover a transition period, but the goal is that your team runs it. Permanent outsourced on-call means the people who understand the system are not the people carrying the pager, which makes incidents longer."
+    }
+  ],
+  "notFor": {
+    "heading": "When this is the wrong thing to buy first",
+    "body": "If your application has no tests, a deployment pipeline will automate shipping bugs faster. Coverage comes first — there is no point automating a process whose output nobody trusts. Equally, if you are pre-launch with one environment and three users, this is premature. Ship something, find out what breaks, then automate the parts that hurt."
+  },
+  "related": {
+    "services": ["cloud-application", "custom-software", "qa"],
+    "technologies": ["aws", "docker", "typescript", "nodejs"]
+  }
+}

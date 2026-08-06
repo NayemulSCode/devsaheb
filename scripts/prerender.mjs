@@ -25,6 +25,56 @@ const escape = (s) =>
     .replace(/>/g, '&gt;')
     .replace(/"/g, '&quot;');
 
+/**
+ * Structured data for a taxonomy detail page.
+ *
+ * FAQPage is the one with a real chance of a rich result, which is why the
+ * substance bar requires a genuine 3-5 question FAQ rather than padding.
+ * BreadcrumbList mirrors the on-page trail - Google cross-checks the two, so
+ * they must agree.
+ */
+function taxonomyJsonLd(site, routePath, faq) {
+  const base = site.url.replace(/\/+$/, '');
+  const isService = routePath.startsWith('/services/');
+  const hub = isService ? '/services' : '/technologies';
+  const hubName = isService ? 'Services' : 'Technologies';
+
+  const graph = [
+    {
+      '@type': 'BreadcrumbList',
+      itemListElement: [
+        { '@type': 'ListItem', position: 1, name: 'Home', item: `${base}/` },
+        { '@type': 'ListItem', position: 2, name: hubName, item: base + hub },
+        { '@type': 'ListItem', position: 3, name: faq.title, item: base + routePath },
+      ],
+    },
+  ];
+
+  if (faq.entries.length) {
+    graph.push({
+      '@type': 'FAQPage',
+      mainEntity: faq.entries.map((item) => ({
+        '@type': 'Question',
+        name: item.q,
+        acceptedAnswer: { '@type': 'Answer', text: item.a },
+      })),
+    });
+  }
+
+  if (isService) {
+    graph.push({
+      '@type': 'Service',
+      name: faq.title,
+      serviceType: faq.title,
+      provider: { '@type': 'Organization', name: site.name, url: base },
+      areaServed: 'Worldwide',
+      url: base + routePath,
+    });
+  }
+
+  return { '@context': 'https://schema.org', '@graph': graph };
+}
+
 function organizationJsonLd(site) {
   return {
     '@context': 'https://schema.org',
@@ -132,13 +182,24 @@ export async function loadServerBundle() {
 /** Renders one route and writes its HTML file. Returns the path written. */
 export async function renderPage(routePath, bundle, assets) {
   const { render, siteConfig } = bundle;
-  const { html, meta, data } = render(routePath);
+  const { html, meta, data, faq, breadcrumb } = render(routePath);
+
+  let jsonLd = null;
+  if (routePath === '/') {
+    jsonLd = organizationJsonLd(siteConfig);
+  } else if (faq) {
+    jsonLd = taxonomyJsonLd(siteConfig, routePath, {
+      title: breadcrumb ?? meta.title,
+      entries: faq,
+    });
+  }
+
   const doc = buildDocument({
     appHtml: html,
     meta,
     assets,
     site: siteConfig,
-    jsonLd: routePath === '/' ? organizationJsonLd(siteConfig) : null,
+    jsonLd,
     data,
   });
   const file = outputPath(routePath);

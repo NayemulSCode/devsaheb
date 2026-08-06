@@ -16,6 +16,14 @@ export type TaxonomyItem = {
   name: string;
   slug: string;
   tier1?: boolean;
+  /**
+   * A detail page exists and has cleared the substance bar.
+   *
+   * Unpublished items still appear in the menus and hubs - the firm does the
+   * work - but render as plain text rather than links. That avoids both a 404
+   * and the worse option of shipping a thin page to fill the gap.
+   */
+  published?: boolean;
 };
 
 export type TaxonomyGroup = {
@@ -27,7 +35,7 @@ export const SERVICE_GROUPS: TaxonomyGroup[] = [
   {
     name: 'Build',
     items: [
-      { name: 'Custom Software', slug: 'custom-software', tier1: true },
+      { name: 'Custom Software', slug: 'custom-software', tier1: true, published: true },
       { name: 'Web Development', slug: 'web-development', tier1: true },
       { name: 'Mobile App', slug: 'mobile-app', tier1: true },
       { name: 'iOS', slug: 'ios' },
@@ -58,7 +66,7 @@ export const SERVICE_GROUPS: TaxonomyGroup[] = [
     name: 'Cloud & Operations',
     items: [
       { name: 'Cloud Application', slug: 'cloud-application', tier1: true },
-      { name: 'DevOps', slug: 'devops', tier1: true },
+      { name: 'DevOps', slug: 'devops', tier1: true, published: true },
       { name: 'QA', slug: 'qa' },
       { name: 'Legacy Modernization', slug: 'legacy-application-modernization' },
       { name: 'Digital Transformation', slug: 'digital-transformation' },
@@ -78,7 +86,7 @@ export const TECHNOLOGY_GROUPS: TaxonomyGroup[] = [
     items: [
       { name: 'JavaScript', slug: 'javascript' },
       { name: 'TypeScript', slug: 'typescript', tier1: true },
-      { name: 'React.js', slug: 'reactjs', tier1: true },
+      { name: 'React.js', slug: 'reactjs', tier1: true, published: true },
       { name: 'Next.js', slug: 'nextjs', tier1: true },
       { name: 'Vue.js', slug: 'vuejs' },
       { name: 'Angular', slug: 'angular' },
@@ -111,7 +119,7 @@ export const TECHNOLOGY_GROUPS: TaxonomyGroup[] = [
   {
     name: 'Cloud & AI',
     items: [
-      { name: 'AWS', slug: 'aws', tier1: true },
+      { name: 'AWS', slug: 'aws', tier1: true, published: true },
       { name: 'Azure', slug: 'azure' },
       { name: 'Google Cloud', slug: 'google-cloud' },
       { name: 'Docker', slug: 'docker' },
@@ -126,6 +134,8 @@ export const SERVICES = flatten(SERVICE_GROUPS);
 export const TECHNOLOGIES = flatten(TECHNOLOGY_GROUPS);
 
 export const TIER1_SERVICES = SERVICES.filter((s) => s.tier1);
+export const PUBLISHED_SERVICES = SERVICES.filter((s) => s.published);
+export const PUBLISHED_TECHNOLOGIES = TECHNOLOGIES.filter((t) => t.published);
 export const TIER1_TECHNOLOGIES = TECHNOLOGIES.filter((t) => t.tier1);
 
 export const servicePath = (slug: string) => `/services/${slug}`;

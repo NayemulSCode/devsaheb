@@ -1,0 +1,56 @@
+{
+  "slug": "reactjs",
+  "primaryQuery": "hire react developers",
+  "title": "Hire React Developers",
+  "description": "React engineers who know when not to reach for it. Typed components, tested behaviour, and rendering choices made for your users rather than for the résumé.",
+  "h1": "React developers who know when not to use React",
+  "intro": "React is the default choice for interactive interfaces, and defaults deserve scrutiny. We use it when an interface has genuine client state to manage — and we will tell you when a page would be faster and cheaper as server-rendered HTML with a little JavaScript on top.",
+  "sections": [
+    {
+      "heading": "How we build React that stays maintainable",
+      "body": "The failure mode of a React codebase is not performance. It is that after eighteen months nobody can change one component without breaking another, because state ended up everywhere.\n\nSo we are strict about where state lives. Server state — anything that came from an API — is cached and invalidated in one place, never copied into component state where it can go stale. Genuine UI state stays as local as it can be. Global state is a last resort, not a starting architecture.\n\nComponents are typed end to end. Props are not optional-by-default, and we avoid the pattern where a component takes fifteen booleans and renders six different things. If a component needs a mode flag, it is usually two components."
+    },
+    {
+      "heading": "Rendering: the decision that actually matters",
+      "body": "The choice between client rendering, server rendering, and prerendering has more effect on real user experience than any amount of component optimisation, and it is made once at the start.\n\nA client-rendered React app ships an empty HTML document. Search engines will eventually render it, but social crawlers — LinkedIn, WhatsApp, Slack — never execute JavaScript, so shared links preview as bare URLs. For anything marketing-facing that alone settles it.\n\nWe make that call explicitly, per project, and write down why. This site is prerendered to static HTML for exactly that reason."
+    },
+    {
+      "heading": "Testing behaviour, not implementation",
+      "body": "We test what a user can do, not what a component's internals look like. A test that asserts on state variables breaks every time you refactor and catches nothing; a test that fills the form and checks the result survives the refactor and catches the regression.\n\nThat keeps the suite useful past the first rewrite, which is the only test suite worth having."
+    }
+  ],
+  "deliverables": [
+    "Typed components, no implicit any",
+    "One clear owner for server state",
+    "An explicit, written rendering strategy",
+    "Behaviour-level tests above the coverage floor",
+    "Accessibility to WCAG 2.2 AA",
+    "Bundle budget enforced in CI"
+  ],
+  "faq": [
+    {
+      "q": "React or Next.js?",
+      "a": "Next.js is React plus a rendering and routing opinion. If you need server rendering, file-based routing, and image handling out of the box, take the opinion. If you are embedding an interface into an existing application, plain React with your own build is usually less to fight."
+    },
+    {
+      "q": "Can you work in our existing React codebase?",
+      "a": "Yes, and we do not start by proposing a rewrite. We read it first. Most codebases described as unmaintainable have three or four specific problems, and fixing those is far cheaper than starting again."
+    },
+    {
+      "q": "What about React Native for our mobile app?",
+      "a": "Sharing React knowledge across web and mobile is real, but sharing code between them is mostly not — the UI layer is where the work is and it does not transfer. Choose React Native because you want one mobile codebase for iOS and Android, not because you already use React on the web."
+    },
+    {
+      "q": "How do you keep bundles small?",
+      "a": "A gzipped budget enforced in CI, so a regression fails the build rather than being discovered in a Lighthouse report months later. Heavy dependencies — editors, chart libraries, admin tooling — are route-split so they never load for visitors who do not reach that route."
+    }
+  ],
+  "notFor": {
+    "heading": "When React is the wrong tool",
+    "body": "A content site with a contact form does not need React. It will be faster, cheaper, and easier to maintain as server-rendered HTML with a small amount of JavaScript. We would rather tell you that than bill for the framework. React earns its weight when there is real client-side state — an editor, a dashboard, a multi-step flow with live validation. If your interface is mostly reading, the framework is overhead you pay for on every page load."
+  },
+  "related": {
+    "services": ["web-development", "front-end", "custom-software"],
+    "technologies": ["typescript", "nextjs", "nodejs", "react-native"]
+  }
+}

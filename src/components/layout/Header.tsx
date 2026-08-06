@@ -302,12 +302,21 @@ function TaxonomyPanel({
             <ul className="grid gap-2.5">
               {group.items.map((item) => (
                 <li key={item.slug}>
-                  <Link
-                    to={toPath(item.slug)}
-                    className="block text-[13.5px] text-silver transition-[color,padding] duration-150 hover:pl-1 hover:text-gold"
-                  >
-                    {item.name}
-                  </Link>
+                  {item.published ? (
+                    <Link
+                      to={toPath(item.slug)}
+                      className="block text-[13.5px] text-silver transition-[color,padding] duration-150 hover:pl-1 hover:text-gold"
+                    >
+                      {item.name}
+                    </Link>
+                  ) : (
+                    // We do the work; the page is not written yet. A link here
+                    // would 404, and a filler page would be the thin content
+                    // the whole tiering strategy exists to avoid.
+                    <span className="block cursor-default text-[13.5px] text-silver-dim">
+                      {item.name}
+                    </span>
+                  )}
                 </li>
               ))}
             </ul>

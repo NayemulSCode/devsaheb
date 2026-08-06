@@ -26,18 +26,29 @@ export default function ServicesHub() {
                   <ul className="grid gap-px border-t border-[var(--accent-line)] sm:grid-cols-2">
                     {group.items.map((item) => (
                       <li key={item.slug} className="border-b border-[var(--accent-line)]">
-                        <Link
-                          to={servicePath(item.slug)}
-                          className="group flex items-center justify-between gap-4 py-4 pr-2 transition-[padding] duration-200 hover:pl-2"
-                        >
-                          <span className="font-display text-lg font-bold">{item.name}</span>
-                          <span
-                            aria-hidden="true"
-                            className="font-mono text-[var(--accent)] opacity-0 transition-opacity group-hover:opacity-100"
+                        {item.published ? (
+                          <Link
+                            to={servicePath(item.slug)}
+                            className="group flex items-center justify-between gap-4 py-4 pr-2 transition-[padding] duration-200 hover:pl-2"
                           >
-                            →
-                          </span>
-                        </Link>
+                            <span className="font-display text-lg font-bold">{item.name}</span>
+                            <span
+                              aria-hidden="true"
+                              className="font-mono text-[var(--accent)] opacity-0 transition-opacity group-hover:opacity-100"
+                            >
+                              →
+                            </span>
+                          </Link>
+                        ) : (
+                          <div className="flex items-center justify-between gap-4 py-4 pr-2">
+                            <span className="font-display text-lg font-bold text-muted">
+                              {item.name}
+                            </span>
+                            <span className="font-mono text-[9.5px] uppercase tracking-[0.1em] text-muted/70">
+                              Page in progress
+                            </span>
+                          </div>
+                        )}
                       </li>
                     ))}
                   </ul>

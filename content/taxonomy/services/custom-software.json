@@ -1,0 +1,60 @@
+{
+  "slug": "custom-software",
+  "primaryQuery": "custom software development company",
+  "title": "Custom Software Development Company",
+  "description": "We build bespoke software for organisations whose process does not fit an off-the-shelf product. Typed end to end, reviewed line by line, measured against numbers agreed before the work starts.",
+  "h1": "Custom software for processes that do not fit a product",
+  "intro": "Most organisations should buy software, not build it. We say that first because the decision to build is the expensive one, and it is usually made for the wrong reason. Custom software earns its cost when your process is the thing that makes you competitive — and bending it to fit someone else's product would give that advantage away.",
+  "sections": [
+    {
+      "heading": "When building actually beats buying",
+      "body": "There are three cases where custom pays for itself. The first is when the process is the differentiator: a pricing model, an underwriting rule, a routing algorithm that your competitors do not have. Configure that into a generic tool and you have handed it to every other customer of that tool.\n\nThe second is integration debt. If four systems have to agree and no product speaks to all four, the glue is where the cost lives. Buying a fifth product usually adds a fifth thing to integrate.\n\nThe third is licence arithmetic. Per-seat pricing that made sense at forty people can become the largest line in the budget at four hundred. That is a real trigger, but it is a finance decision, and it should be made with a spreadsheet rather than a preference.\n\nIf none of those describe you, the honest answer is that configuring an existing product will be faster and cheaper, and we will say so."
+    },
+    {
+      "heading": "How we scope it",
+      "body": "We start by mapping the constraint rather than the feature list. A feature list describes what someone imagines the software doing; the constraint describes what actually breaks today. These are rarely the same thing, and the gap between them is where most budget is lost.\n\nThat produces a written architecture before any code exists: the data model, the boundaries between services, and the failure modes we are designing against. You approve that document. It is deliberately readable by someone non-technical, because the person paying for the system should be able to understand what they are buying.\n\nWe then build in two-week increments against it. Every pull request is reviewed by a second engineer and CI has to be green before merge — not as ceremony, but because the alternative is discovering a design problem in month five."
+    },
+    {
+      "heading": "What you own at the end",
+      "body": "The source, the infrastructure definitions, the migrations, the test suite, and documentation written for the team who will maintain it rather than for us.\n\nWe are not interested in the kind of dependency where the client cannot change anything without calling us. A handover that a competent in-house developer can act on is part of the definition of done, not an extra."
+    }
+  ],
+  "deliverables": [
+    "Written architecture, approved before build",
+    "Typed codebase, end to end",
+    "Test suite above the 80% coverage floor",
+    "Infrastructure as code",
+    "CI pipeline with the quality gates enforced",
+    "Handover documentation and a walkthrough"
+  ],
+  "faq": [
+    {
+      "q": "How long does a custom build take?",
+      "a": "A first production release is usually three to six months, depending on how many systems it has to integrate with. We give a range after the discovery phase, not before it — a number produced before anyone has looked at your data model is a guess wearing a suit."
+    },
+    {
+      "q": "What happens if requirements change mid-build?",
+      "a": "They will. Building in two-week increments exists precisely so that a change costs one increment rather than a renegotiation. What we push back on is a change that contradicts the approved architecture, because that is the kind that quietly doubles the cost."
+    },
+    {
+      "q": "Can you work with our existing in-house team?",
+      "a": "Yes, and it usually produces a better result. We work in your repository, follow your review process, and leave your team able to maintain what we wrote. If your standards are stricter than ours, we adopt yours."
+    },
+    {
+      "q": "Do we own the code?",
+      "a": "Yes, outright, including the infrastructure definitions and CI configuration. There is no runtime licence and no component you have to keep paying us for."
+    },
+    {
+      "q": "What does it cost to maintain afterwards?",
+      "a": "Budget roughly 15 to 20 per cent of the build cost per year for dependency updates, security patches, and small changes. Anyone quoting materially less is either excluding security work or expecting you to absorb it."
+    }
+  ],
+  "notFor": {
+    "heading": "When we would tell you not to build",
+    "body": "If your requirement is standard accounting, payroll, CRM, or helpdesk, buy the product. Those markets are mature, the products are good, and a custom version will cost more and do less for at least three years. We would rather lose the project than build you a worse Salesforce. The same applies if the real problem is that nobody agrees on the process yet — software will harden the disagreement rather than resolve it."
+  },
+  "related": {
+    "services": ["web-development", "cloud-application", "devops"],
+    "technologies": ["typescript", "reactjs", "nodejs", "python", "aws"]
+  }
+}

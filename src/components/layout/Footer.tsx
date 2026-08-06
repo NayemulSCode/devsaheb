@@ -1,9 +1,8 @@
 import { Link } from 'react-router-dom';
 import Container from '../ui/Container';
-import {
-  TIER1_SERVICES,
-  servicePath,
-} from '../../content/taxonomy';
+// Only published pages are linked. A footer link to an unwritten page is a 404
+// on every page of the site at once.
+import { PUBLISHED_SERVICES, servicePath } from '../../content/taxonomy';
 
 const COMPANY = [
   { name: 'About Us', path: '/company/about' },
@@ -98,7 +97,7 @@ export default function Footer() {
               pattern. The hubs distribute from here. */}
           <FooterColumn
             title="Services"
-            links={TIER1_SERVICES.slice(0, 6).map((s) => ({
+            links={PUBLISHED_SERVICES.slice(0, 6).map((s) => ({
               name: s.name,
               path: servicePath(s.slug),
             }))}

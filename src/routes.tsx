@@ -13,13 +13,20 @@ import Careers from './routes/Careers';
 import Contact from './routes/Contact';
 import { Privacy, Terms } from './routes/Legal';
 import Admin from './routes/Admin';
+import TaxonomyDetail from './routes/TaxonomyDetail';
+import {
+  PUBLISHED_SERVICES,
+  PUBLISHED_TECHNOLOGIES,
+  servicePath,
+  technologyPath,
+} from './content/taxonomy';
 
 export type AppRoute = {
   path: string;
   Component: ComponentType;
   meta: RouteMeta;
-  /** content/pages/<slug>.json backing this route, if it is editable. */
-  contentSlug?: string;
+  /** Content file backing this route, relative to content/ and without .json. */
+  contentPath?: string;
   /** Excluded from the prerender walk and from sitemap.xml. */
   skipPrerender?: boolean;
 };
@@ -37,7 +44,7 @@ export const routes: AppRoute[] = [
   {
     path: '/',
     Component: Home,
-    contentSlug: 'home',
+    contentPath: 'pages/home',
     meta: {
       title: 'Software development company',
       description:
@@ -152,6 +159,41 @@ export const routes: AppRoute[] = [
     },
   },
 ];
+
+/**
+ * Detail routes for published taxonomy items only.
+ *
+ * Unpublished slugs get no route at all, so they cannot 404 from the nav - the
+ * menus render them as plain text. Publishing is therefore a single flag flip
+ * once a page clears the substance bar in docs/keyword-map.md.
+ */
+function taxonomyRoutes(): AppRoute[] {
+  const services: AppRoute[] = PUBLISHED_SERVICES.map((item) => ({
+    path: servicePath(item.slug),
+    Component: TaxonomyDetail,
+    contentPath: `taxonomy/services/${item.slug}`,
+    meta: {
+      // Overridden per page by the content file's own title and description,
+      // which the prerender prefers. These are the fallback.
+      title: item.name,
+      description: `${item.name} services from DevSaheb.`,
+    },
+  }));
+
+  const technologies: AppRoute[] = PUBLISHED_TECHNOLOGIES.map((item) => ({
+    path: technologyPath(item.slug),
+    Component: TaxonomyDetail,
+    contentPath: `taxonomy/technologies/${item.slug}`,
+    meta: {
+      title: item.name,
+      description: `${item.name} development from DevSaheb.`,
+    },
+  }));
+
+  return [...services, ...technologies];
+}
+
+routes.push(...taxonomyRoutes());
 
 /** Rendered for anything the table does not match. */
 export const notFoundRoute: AppRoute = {

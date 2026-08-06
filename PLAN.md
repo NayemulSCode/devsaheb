@@ -431,3 +431,25 @@ Mitigation: `/admin` behind `React.lazy()` at the route boundary, editor package
 - Social accounts to link (LinkedIn and GitHub matter most for B2B; drop any you won't maintain — a dead feed is worse than no link)
 - Whether an **Industries** taxonomy is in scope
 - Whether **Staff Augmentation** should join the services list
+
+---
+
+## Appendix — Phase 3b status
+
+The keyword map is at [docs/keyword-map.md](docs/keyword-map.md). No taxonomy
+page is written before it has a row there.
+
+**Published (4).** `custom-software`, `devops`, `reactjs`, `aws`. Written as
+exemplars: each sets the pattern for the rest and clears four of the six
+substance-bar items.
+
+**Unpublished (41).** No route exists for these, so the menus and hubs render
+them as plain text rather than links — the firm does the work, the page is not
+written. Publishing is one `published: true` flag in
+[src/content/taxonomy.ts](src/content/taxonomy.ts) once a page clears the bar.
+
+**Blocked on DevSaheb, not on code.** Substance-bar items 2 and 4 — a real case
+study per page, and named engineers who actually own that specialism — cannot be
+written without facts only you have. Every published page currently carries the
+approach, FAQ, and honest counter-case; none carries a client name or a metric,
+because inventing those would undermine the one argument the site makes.

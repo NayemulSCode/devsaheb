@@ -3,13 +3,12 @@ import { routes, notFoundRoute } from './routes';
 import HeadSync from './components/HeadSync';
 import Layout from './components/layout/Layout';
 import { PageDataProvider } from './lib/page-data';
-import type { PageContent } from './content/schema';
 import type { SiteConfig } from './lib/seo';
 import site from '../content/site.json';
 
 const NotFound = notFoundRoute.Component;
 
-export default function App({ initialData = null }: { initialData?: PageContent | null }) {
+export default function App({ initialData = null }: { initialData?: unknown }) {
   return (
     <PageDataProvider value={initialData}>
       <Layout>
