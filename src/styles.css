@@ -1,3 +1,8 @@
+/* Variable fonts, self-hosted via npm so Vite hashes them and immutable
+   caching applies. Subsets carry unicode-range, so a browser only downloads
+   the ranges it actually needs. Must precede the Tailwind import. */
+@import "@fontsource-variable/geist/wght.css";
+@import "@fontsource-variable/jetbrains-mono/wght.css";
 @import "tailwindcss";
 
 /*
@@ -10,30 +15,44 @@
   --color-ink-3: #141a2e;
 
   /* Gold measures 9.22:1 on ink and 1.81:1 on bone. It is an accent for dark
-     grounds only. Never set gold type on a light ground - use gold-deep. */
+     grounds only. Components read --accent from <Section>, which picks the
+     legible one, so this rule is enforced by structure rather than memory. */
   --color-gold: #ccaa50;
   --color-gold-lift: #e0c47a;
   --color-gold-deep: #7a5f1e;
 
   --color-silver: #929ca8;
   --color-silver-dim: #5c6675;
+  --color-muted: #55504a;
 
   --color-bone: #f7f0e6;
   --color-bone-2: #faf7f2;
 
-  /* Phase 2 self-hosts Geist and JetBrains Mono. System stacks until then. */
-  --font-display: "Segoe UI Variable Display", "SF Pro Display", -apple-system,
-    BlinkMacSystemFont, system-ui, sans-serif;
-  --font-sans: "Segoe UI Variable Text", "SF Pro Text", -apple-system,
-    BlinkMacSystemFont, system-ui, sans-serif;
-  --font-mono: ui-monospace, "Cascadia Code", "SF Mono", "JetBrains Mono", Menlo,
-    Consolas, monospace;
+  --font-display: "Geist Variable", "Segoe UI", system-ui, sans-serif;
+  --font-sans: "Geist Variable", "Segoe UI", system-ui, sans-serif;
+  --font-mono: "JetBrains Mono Variable", ui-monospace, Consolas, monospace;
+
+  /* 1.250 major third, 8pt grid. Overriding Tailwind's defaults keeps every
+     size on the scale - there is no off-scale value to reach for. */
+  --text-caption: 0.75rem;
+  --text-sm: 0.875rem;
+  --text-base: 1rem;
+  --text-lg: 1.125rem;
+  --text-xl: 1.25rem;
+  --text-2xl: 1.5625rem;
+  --text-3xl: 1.9375rem;
+  --text-4xl: 2.4375rem;
+  --text-5xl: 3.0625rem;
+  --text-6xl: 3.8125rem;
 
   --ease-brand: cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 :root {
   color-scheme: dark;
+  /* Overridden per band by <Section>. Gold on dark, gold-deep on light. */
+  --accent: var(--color-gold);
+  --accent-line: rgb(204 170 80 / 0.2);
 }
 
 html {
@@ -44,19 +63,76 @@ body {
   margin: 0;
   color: var(--color-bone);
   font-family: var(--font-sans);
+  font-size: var(--text-base);
+  line-height: 1.6;
   -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+h1,
+h2,
+h3,
+h4 {
+  font-family: var(--font-display);
+  letter-spacing: -0.035em;
+  line-height: 1.05;
+  text-wrap: balance;
+  margin: 0;
+}
+
+p {
+  text-wrap: pretty;
 }
 
 :focus-visible {
-  outline: 2px solid var(--color-gold);
+  outline: 2px solid var(--accent);
   outline-offset: 3px;
+  border-radius: 2px;
+}
+
+/*
+  Scroll reveal.
+
+  Deliberately CSS + IntersectionObserver rather than a motion library:
+  Framer Motion would add roughly 50 kB gzipped to every page for an effect
+  this small, and the performance budget we publish is a brand promise.
+  It is reserved for Phase 3's genuinely interactive motion, code-split there.
+
+  Content is visible by default. src/lib/reveal.ts adds .js to <html> before
+  paint, which is what arms the hidden state - so if scripting is unavailable
+  or the script fails, everything still renders.
+*/
+[data-reveal] {
+  opacity: 1;
+}
+
+.js [data-reveal] {
+  opacity: 0;
+  transform: translateY(16px);
+}
+
+.js [data-reveal].is-visible {
+  opacity: 1;
+  transform: none;
+  transition:
+    opacity 0.5s var(--ease-brand),
+    transform 0.5s var(--ease-brand);
+  transition-delay: var(--reveal-delay, 0ms);
 }
 
 @media (prefers-reduced-motion: reduce) {
+  .js [data-reveal] {
+    opacity: 1;
+    transform: none;
+  }
+  .js [data-reveal].is-visible {
+    transition: none;
+  }
   *,
   *::before,
   *::after {
     animation-duration: 0.01ms !important;
     transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
   }
 }

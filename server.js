@@ -62,9 +62,9 @@ app.post('/api/regenerate', async (req, res) => {
 
   try {
     const { loadServerBundle, renderPage } = await import('./scripts/prerender.mjs');
-    const { readAssetsForRuntime } = await import('./scripts/runtime-assets.mjs');
+    const { readAssets } = await import('./scripts/assets.mjs');
     const bundle = await loadServerBundle();
-    const assets = await readAssetsForRuntime();
+    const assets = await readAssets();
     const file = await renderPage(path, bundle, assets);
     res.json({ ok: true, path, file: file.replace(ROOT, '') });
   } catch (err) {

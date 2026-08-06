@@ -1,57 +1,126 @@
-const STANDARDS = [
-  { k: 'Largest Contentful Paint', v: '< 2.0 s', tag: 'Enforced' },
-  { k: 'Interaction to Next Paint', v: '< 200 ms', tag: 'Enforced' },
-  { k: 'Cumulative Layout Shift', v: '< 0.05', tag: 'Enforced' },
-  { k: 'Accessibility', v: 'WCAG 2.2 AA', tag: 'Audited' },
-  { k: 'Test coverage floor', v: '80%', tag: 'CI gate' },
+import Section from '../components/ui/Section';
+import Container from '../components/ui/Container';
+import Eyebrow from '../components/ui/Eyebrow';
+import Button from '../components/ui/Button';
+import SpecTable, { type SpecRow } from '../components/ui/SpecTable';
+import Card from '../components/ui/Card';
+import Reveal from '../components/Reveal';
+
+const STANDARDS: SpecRow[] = [
+  { label: 'Largest Contentful Paint', value: '< 2.0 s', tag: 'Enforced' },
+  { label: 'Interaction to Next Paint', value: '< 200 ms', tag: 'Enforced' },
+  { label: 'Cumulative Layout Shift', value: '< 0.05', tag: 'Enforced' },
+  { label: 'Accessibility', value: 'WCAG 2.2 AA', tag: 'Audited' },
+  { label: 'Test coverage floor', value: '80%', tag: 'CI gate' },
+];
+
+const DISCIPLINES = [
+  {
+    index: '01',
+    title: 'Build',
+    items: ['Custom Software', 'Web Development', 'Mobile App', 'iOS & Android'],
+  },
+  {
+    index: '02',
+    title: 'Platforms',
+    items: ['SaaS', 'Ecommerce', 'CMS', 'CRM', 'ERP'],
+  },
+  {
+    index: '03',
+    title: 'Data & AI',
+    items: ['AI Development', 'Machine Learning', 'Database'],
+  },
+  {
+    index: '04',
+    title: 'Cloud & Operations',
+    items: ['Cloud Application', 'DevOps', 'QA', 'Legacy Modernization'],
+  },
 ];
 
 export default function Home() {
   return (
-    <main className="mx-auto max-w-5xl px-6 py-24 md:py-32">
-      <p className="flex items-center gap-2.5 font-mono text-[11px] uppercase tracking-[0.18em] text-gold">
-        <span className="opacity-50">&lt;</span>
-        software engineering
-        <span className="opacity-50">&gt;</span>
-      </p>
+    <main>
+      <Section tone="ink" as="div" className="pt-16 md:pt-24">
+        <Container>
+          <div className="grid items-center gap-10 lg:grid-cols-[1.15fr_0.85fr] lg:gap-16">
+            <div>
+              <Reveal as="div">
+                <Eyebrow>software engineering</Eyebrow>
+              </Reveal>
 
-      <h1 className="mt-6 font-display text-4xl font-extrabold leading-[1.05] tracking-[-0.035em] text-balance md:text-6xl">
-        Built to a standard,
-        <br />
-        not to a <em className="not-italic text-gold">deadline</em>.
-      </h1>
+              <Reveal as="div" delay={60}>
+                <h1 className="mt-6 text-4xl font-extrabold md:text-6xl">
+                  Built to a standard,
+                  <br />
+                  not to a <em className="not-italic text-[var(--accent)]">deadline</em>.
+                </h1>
+              </Reveal>
 
-      <p className="mt-6 max-w-[60ch] text-silver md:text-lg">
-        We build custom software, cloud platforms, and mobile apps. Every project
-        ships typed end to end, reviewed line by line, and measured against
-        numbers we commit to before the work starts.
-      </p>
+              <Reveal as="div" delay={120}>
+                <p className="mt-6 max-w-[60ch] text-silver md:text-lg">
+                  We build custom software, cloud platforms, and mobile apps.
+                  Every project ships typed end to end, reviewed line by line,
+                  and measured against numbers we commit to before the work
+                  starts.
+                </p>
+              </Reveal>
 
-      <section
-        aria-labelledby="standards"
-        className="mt-16 border border-gold/20 bg-ink-2"
-      >
-        <h2
-          id="standards"
-          className="border-b border-gold/20 px-6 py-4 font-mono text-[10px] uppercase tracking-[0.14em] text-silver-dim"
-        >
-          Definition of done
-        </h2>
-        <dl className="px-6">
-          {STANDARDS.map(({ k, v, tag }) => (
-            <div
-              key={k}
-              className="flex items-center gap-4 border-b border-silver/10 py-3.5 last:border-b-0"
-            >
-              <dt className="flex-1 text-sm text-silver">{k}</dt>
-              <dd className="font-mono text-[13px] tabular-nums">{v}</dd>
-              <span className="border border-gold/35 px-2 py-0.5 font-mono text-[9.5px] uppercase tracking-[0.1em] text-gold">
-                {tag}
-              </span>
+              <Reveal as="div" delay={180} className="mt-9 flex flex-wrap gap-3.5">
+                <Button to="/">See our work</Button>
+                <Button variant="ghost" href="#standards">
+                  Our standards
+                </Button>
+              </Reveal>
             </div>
-          ))}
-        </dl>
-      </section>
+
+            <Reveal as="div" delay={240}>
+              <SpecTable id="standards" caption="Definition of done" rows={STANDARDS} />
+            </Reveal>
+          </div>
+        </Container>
+      </Section>
+
+      <Section tone="bone">
+        <Container>
+          <Reveal as="div" className="mb-12 grid gap-4">
+            <Eyebrow>what we do</Eyebrow>
+            <h2 className="max-w-[22ch] text-3xl font-extrabold md:text-4xl">
+              Four disciplines, twenty specialisms, one standard across all of
+              them.
+            </h2>
+            <p className="max-w-[60ch] text-muted">
+              We group our work the way clients actually buy it, not
+              alphabetically.
+            </p>
+          </Reveal>
+
+          <div className="grid gap-px bg-[var(--accent-line)] sm:grid-cols-2 lg:grid-cols-4">
+            {/* Reveal is the grid item, so it must generate a box. display:contents
+                would drop it from the layout and silently kill the animation,
+                since opacity cannot apply to a box-less element. */}
+            {DISCIPLINES.map(({ index, title, items }, i) => (
+              <Reveal key={title} delay={i * 60} className="h-full">
+                <Card
+                  index={index}
+                  title={title}
+                  className="h-full border-0 bg-bone-2 hover:bg-white"
+                >
+                  <ul className="grid gap-2">
+                    {items.map((item) => (
+                      <li key={item} className="text-sm text-muted">
+                        <span aria-hidden="true" className="mr-2 font-bold text-[var(--accent)]">
+                          ·
+                        </span>
+                        {item}
+                      </li>
+                    ))}
+                  </ul>
+                </Card>
+              </Reveal>
+            ))}
+          </div>
+        </Container>
+      </Section>
     </main>
   );
 }

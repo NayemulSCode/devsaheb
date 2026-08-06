@@ -9,14 +9,14 @@
  * without a full rebuild.
  */
 
-import { mkdir, readFile, writeFile, rename } from 'node:fs/promises';
+import { mkdir, writeFile, rename } from 'node:fs/promises';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
+import { readAssets } from './assets.mjs';
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const CLIENT_DIR = join(ROOT, 'dist', 'client');
 const SERVER_ENTRY = join(ROOT, 'dist', 'server', 'entry-server.js');
-const MANIFEST = join(CLIENT_DIR, '.vite', 'manifest.json');
 
 const escape = (s) =>
   String(s)
@@ -24,29 +24,6 @@ const escape = (s) =>
     .replace(/</g, '&lt;')
     .replace(/>/g, '&gt;')
     .replace(/"/g, '&quot;');
-
-/** Entry JS plus every stylesheet it pulls in, transitively. */
-async function readAssets() {
-  const manifest = JSON.parse(await readFile(MANIFEST, 'utf8'));
-  const entry = Object.values(manifest).find((c) => c.isEntry);
-  if (!entry) throw new Error('No entry chunk in the Vite manifest.');
-
-  const css = new Set(entry.css ?? []);
-  const seen = new Set();
-  const walk = (names = []) => {
-    for (const name of names) {
-      if (seen.has(name)) continue;
-      seen.add(name);
-      const chunk = manifest[name];
-      if (!chunk) continue;
-      for (const f of chunk.css ?? []) css.add(f);
-      walk(chunk.imports);
-    }
-  };
-  walk(entry.imports);
-
-  return { js: `/${entry.file}`, css: [...css].map((f) => `/${f}`) };
-}
 
 function organizationJsonLd(site) {
   return {
@@ -64,6 +41,15 @@ function buildDocument({ appHtml, meta, assets, site, jsonLd }) {
     .map((href) => `    <link rel="stylesheet" href="${href}">`)
     .join('\n');
 
+  // crossorigin is mandatory on font preloads even same-origin. Without it the
+  // browser fetches the file twice and the preload is worse than useless.
+  const preloads = (assets.preload ?? [])
+    .map(
+      (href) =>
+        `    <link rel="preload" href="${href}" as="font" type="font/woff2" crossorigin>`,
+    )
+    .join('\n');
+
   const ld = jsonLd
     ? `    <script type="application/ld+json">${JSON.stringify(jsonLd)}</script>\n`
     : '';
@@ -73,6 +59,12 @@ function buildDocument({ appHtml, meta, assets, site, jsonLd }) {
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <!-- Arms the scroll-reveal hidden state before first paint. Deliberately
+         inline and blocking: deferring it would flash finished content and
+         then hide it. If scripting is off this never runs, the .js class is
+         never set, and every [data-reveal] block simply stays visible. -->
+    <script>document.documentElement.classList.add('js')</script>
 
     <title>${escape(meta.title)}</title>
     <meta name="description" content="${escape(meta.description)}">
@@ -98,6 +90,7 @@ function buildDocument({ appHtml, meta, assets, site, jsonLd }) {
     <link rel="manifest" href="/site.webmanifest">
     <meta name="theme-color" content="#0B1020">
 
+${preloads}
 ${styles}
 ${ld}    <script type="module" src="${assets.js}"></script>
   </head>

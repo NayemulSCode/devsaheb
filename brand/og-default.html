@@ -6,17 +6,33 @@
   Phase 5 generates per-page cards from this same composition.
 -->
 <style>
+  /* Self-hosted Geist, read straight from node_modules so the card uses the
+     same face as the site. Headless Chrome loads it with
+     --allow-file-access-from-files; see build-icons.ps1. */
+  @font-face {
+    font-family: 'Geist Variable';
+    font-weight: 100 900;
+    font-display: block;
+    src: url('../node_modules/@fontsource-variable/geist/files/geist-latin-wght-normal.woff2') format('woff2-variations');
+  }
+  @font-face {
+    font-family: 'JetBrains Mono Variable';
+    font-weight: 100 800;
+    font-display: block;
+    src: url('../node_modules/@fontsource-variable/jetbrains-mono/files/jetbrains-mono-latin-wght-normal.woff2') format('woff2-variations');
+  }
+
   html, body { margin:0; padding:0; width:1200px; height:630px; overflow:hidden; }
   body {
     background:#0B1020;
     display:flex; flex-direction:column; justify-content:space-between;
     padding:72px 80px; box-sizing:border-box;
-    font-family:"Segoe UI",system-ui,sans-serif; color:#F7F0E6;
+    font-family:'Geist Variable',"Segoe UI",system-ui,sans-serif; color:#F7F0E6;
   }
   .top { display:flex; align-items:center; justify-content:space-between; }
   .top img { height:96px; }
   .kicker {
-    font-family:ui-monospace,Consolas,monospace; font-size:17px;
+    font-family:'JetBrains Mono Variable',ui-monospace,Consolas,monospace; font-size:17px;
     letter-spacing:.22em; text-transform:uppercase; color:#CCAA50;
   }
   h1 {
@@ -27,7 +43,7 @@
   .rule { height:1px; background:rgba(204,170,80,.28); margin:38px 0 26px; }
   .foot {
     display:flex; justify-content:space-between; align-items:center;
-    font-family:ui-monospace,Consolas,monospace; font-size:18px;
+    font-family:'JetBrains Mono Variable',ui-monospace,Consolas,monospace; font-size:18px;
     letter-spacing:.1em; text-transform:uppercase; color:#929CA8;
   }
   .foot b { color:#CCAA50; font-weight:400; }
