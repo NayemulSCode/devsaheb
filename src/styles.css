@@ -22,7 +22,10 @@
   --color-gold-deep: #7a5f1e;
 
   --color-silver: #929ca8;
-  --color-silver-dim: #5c6675;
+  /* Was #5c6675, which measured 3.26:1 on ink and 3.09:1 on ink-2 - both below
+     AA for normal text, and it is used at 9-11px where it matters most.
+     #7a8698 measures 5.13:1 and 4.86:1. Caught by scripts/audit-a11y.mjs. */
+  --color-silver-dim: #7a8698;
   --color-muted: #55504a;
 
   --color-bone: #f7f0e6;

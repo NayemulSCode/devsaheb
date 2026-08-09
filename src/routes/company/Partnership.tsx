@@ -34,6 +34,13 @@ export default function Partnership() {
 
       <Section tone="bone">
         <Container>
+          {/* The cards render h3. Without an h2 the page jumped h1 to h3,
+              which breaks the outline screen-reader users navigate by. */}
+          <Reveal className="mb-12">
+            <h2 className="max-w-[24ch] text-3xl font-extrabold md:text-4xl">
+              Three ways we work with you.
+            </h2>
+          </Reveal>
           <div className="grid gap-px bg-[var(--accent-line)] md:grid-cols-3">
             {MODELS.map(({ index, title, body }, i) => (
               <Reveal key={title} delay={i * 60} className="h-full">

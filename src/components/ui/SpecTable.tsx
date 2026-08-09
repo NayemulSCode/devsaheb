@@ -34,6 +34,9 @@ export default function SpecTable({
       <p className="border-b border-[var(--accent-line)] px-6 py-4 font-mono text-[10px] uppercase tracking-[0.14em] text-silver-dim">
         {caption}
       </p>
+      {/* The chip lives inside the <dd>. A <span> sitting as a sibling of
+          dt/dd inside the wrapper div fails the definition-list rule - a dl's
+          groups may contain only dt and dd. */}
       <dl className="px-6">
         {rows.map(({ label, value, tag }) => (
           <div
@@ -41,12 +44,14 @@ export default function SpecTable({
             className="flex items-center gap-4 border-b border-silver/10 py-3.5 last:border-b-0"
           >
             <dt className="flex-1 text-sm text-silver">{label}</dt>
-            <dd className="font-mono text-[13px] tabular-nums">{value}</dd>
-            {tag ? (
-              <span className="border border-[var(--accent)]/35 px-2 py-0.5 font-mono text-[9.5px] uppercase tracking-[0.1em] text-[var(--accent)]">
-                {tag}
-              </span>
-            ) : null}
+            <dd className="flex items-center gap-4 font-mono text-[13px] tabular-nums">
+              {value}
+              {tag ? (
+                <span className="border border-[var(--accent)]/35 px-2 py-0.5 text-[9.5px] uppercase tracking-[0.1em] text-[var(--accent)]">
+                  {tag}
+                </span>
+              ) : null}
+            </dd>
           </div>
         ))}
       </dl>

@@ -171,13 +171,18 @@ export default function TaxonomyDetail() {
           <Reveal className="mb-10">
             <h2 className="text-2xl font-extrabold md:text-3xl">Common questions</h2>
           </Reveal>
+          {/* Reveal renders the single wrapper div. Nesting a second div inside
+              it put dt/dd two levels below the dl, which fails the dlitem rule -
+              a dl's children may be dt, dd, or one grouping div. */}
           <dl className="grid max-w-[70ch] gap-px border-t border-[var(--accent-line)]">
             {data.faq.map((item, i) => (
-              <Reveal key={item.q} delay={i * 50}>
-                <div className="border-b border-[var(--accent-line)] py-6">
-                  <dt className="font-display text-lg font-bold">{item.q}</dt>
-                  <dd className="mt-3 text-muted">{item.a}</dd>
-                </div>
+              <Reveal
+                key={item.q}
+                delay={i * 50}
+                className="border-b border-[var(--accent-line)] py-6"
+              >
+                <dt className="font-display text-lg font-bold">{item.q}</dt>
+                <dd className="mt-3 text-muted">{item.a}</dd>
               </Reveal>
             ))}
           </dl>

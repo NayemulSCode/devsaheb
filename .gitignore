@@ -19,3 +19,6 @@ npm-debug.log*
 # Brand build harnesses, not shipped
 brand/_proof.html
 brand/_icon.html
+
+# Lighthouse CI output
+.lighthouseci/

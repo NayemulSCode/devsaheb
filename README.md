@@ -127,6 +127,37 @@ deciding whether to click.
 missing card breaks nothing on the site — it just silently fails to appear when
 someone shares the link, which is the worst kind of bug to ship.
 
+## Audits
+
+The home page publishes LCP < 2.0s, CLS < 0.05, WCAG 2.2 AA and a Lighthouse
+floor as contractual commitments. These scripts are what make that true rather
+than copy. Run against a live server (`npm start`):
+
+```bash
+npm run audit          # bundle, then accessibility, then performance
+```
+
+| Script | Gates on |
+|---|---|
+| `audit:bundle` | Entry ≤ 120 kB gzipped, and Puck/zod absent from it |
+| `audit:a11y` | axe-core WCAG 2.2 AA on every page, reflow at 320/640px, skip link is the first tab stop |
+| `audit:perf` | Lighthouse ≥ 95 in all four categories, LCP, CLS, TBT |
+
+**Read the performance numbers with a caveat.** They run against localhost on
+developer hardware. Lighthouse's desktop preset throttles CPU and network, but
+real users will be slower. Treat them as a regression gate; field data comes
+from CrUX once the site has traffic.
+
+INP is not gated because it cannot be measured in a lab run — it needs real
+interactions. Total Blocking Time is the accepted lab proxy and is gated at
+200 ms in its place.
+
+Both `check-links` and `audit-bundle` were verified by deliberately breaking
+them: deleting an OG card, and importing Puck into a shared module. The bundle
+check's original needle (`@measured/puck`) did not survive minification and
+reported a clean result on a bundle that had genuinely leaked — it now matches
+on identifiers that do.
+
 ## Adding a page
 
 Add an entry to `routes` in [src/routes.tsx](src/routes.tsx). That is all — it
@@ -169,9 +200,14 @@ a `contentPath` to make it editable in the admin.
 | `start` | Express. API, regeneration, and static files for local preview. |
 | `preview` | `build` then `start`. |
 | `typecheck` | `tsc --noEmit`. |
+| `audit` | Bundle, accessibility, and performance gates. Needs a running server. |
 
 ## Status
 
-Phases 0-5 are complete: brand, render spine, design system, marketing pages,
-the content layer with the Puck admin, taxonomy detail pages, and the SEO
-layer. Next: Phase 6 - Lighthouse CI and the accessibility audit.
+All planned phases are complete: brand, render spine, design system, marketing
+pages, the content layer with the Puck admin, taxonomy detail pages, the SEO
+layer, and the audit gates.
+
+Outstanding before launch: real case studies and named engineers on the taxonomy
+pages, real social profile URLs for `sameAs`, drafted legal pages, and the
+cPanel Node version check in the deploy section above.

@@ -44,7 +44,9 @@ export default function ServicesHub() {
                             <span className="font-display text-lg font-bold text-muted">
                               {item.name}
                             </span>
-                            <span className="font-mono text-[9.5px] uppercase tracking-[0.1em] text-muted/70">
+                            {/* Full muted, not muted/70 - the blend measured
+                                3.45:1 on bone, below AA. */}
+                            <span className="font-mono text-[9.5px] uppercase tracking-[0.1em] text-muted">
                               Page in progress
                             </span>
                           </div>
