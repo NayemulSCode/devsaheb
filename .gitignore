@@ -22,3 +22,4 @@ brand/_icon.html
 
 # Lighthouse CI output
 .lighthouseci/
+release/
