@@ -88,11 +88,29 @@ function homeJsonLd(site) {
     description: site.description,
   };
 
-  // Emitted only once real profiles exist. sameAs pointing at a network's
-  // homepage rather than our own profile is worse than omitting the field.
-  if (Array.isArray(site.sameAs) && site.sameAs.length > 0) {
-    org.sameAs = site.sameAs;
+  const contact = site.contact ?? {};
+  if (contact.email) org.email = contact.email;
+  if (contact.phone) org.telephone = contact.phone;
+
+  // A real PostalAddress is what local intent queries key on, so it is emitted
+  // as soon as the fields are filled rather than waiting for a full profile.
+  const addr = contact.address ?? {};
+  if (addr.street || addr.locality) {
+    org.address = {
+      '@type': 'PostalAddress',
+      ...(addr.street ? { streetAddress: addr.street } : {}),
+      ...(addr.locality ? { addressLocality: addr.locality } : {}),
+      ...(addr.region ? { addressRegion: addr.region } : {}),
+      ...(addr.postalCode ? { postalCode: addr.postalCode } : {}),
+      ...(addr.country ? { addressCountry: addr.country } : {}),
+    };
   }
+
+  // sameAs is derived from the social links rather than stored twice. Only
+  // profiles that exist are emitted - pointing at a network's homepage instead
+  // of our own profile is worse than omitting the field.
+  const sameAs = (site.social ?? []).map((s) => s.href).filter((h) => h && h.trim());
+  if (sameAs.length > 0) org.sameAs = sameAs;
 
   return {
     '@context': 'https://schema.org',

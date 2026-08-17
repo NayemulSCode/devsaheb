@@ -3,10 +3,20 @@ import Section from '../components/ui/Section';
 import Container from '../components/ui/Container';
 import Reveal from '../components/Reveal';
 
+import { telHref, addressLines, type SiteConfig } from '../lib/seo';
+import siteJson from '../../content/site.json';
+
+const site = siteJson as SiteConfig;
+
 const DIRECT = [
-  { label: 'Email', value: 'hello@devsaheb.com', href: 'mailto:hello@devsaheb.com' },
-  { label: 'Phone', value: '+880 0000 000 000', href: 'tel:+880000000000' },
-  { label: 'Careers', value: 'careers@devsaheb.com', href: 'mailto:careers@devsaheb.com' },
+  { label: 'Email', value: site.contact.email, href: `mailto:${site.contact.email}` },
+  { label: 'Phone', value: site.contact.phone, href: telHref(site.contact.phone) },
+  {
+    label: 'Careers',
+    value: site.contact.careersEmail,
+    href: `mailto:${site.contact.careersEmail}`,
+  },
+  { label: 'Office', value: addressLines(site.contact.address).join(', '), href: null },
 ];
 
 export default function Contact() {
@@ -33,9 +43,13 @@ export default function Contact() {
                       {label}
                     </dt>
                     <dd>
-                      <a href={href} className="text-silver transition-colors hover:text-gold">
-                        {value}
-                      </a>
+                      {href ? (
+                        <a href={href} className="text-silver transition-colors hover:text-gold">
+                          {value}
+                        </a>
+                      ) : (
+                        <span className="text-silver">{value}</span>
+                      )}
                     </dd>
                   </div>
                 ))}

@@ -3,6 +3,10 @@ import Container from '../ui/Container';
 // Only published pages are linked. A footer link to an unwritten page is a 404
 // on every page of the site at once.
 import { PUBLISHED_SERVICES, servicePath } from '../../content/taxonomy';
+import { telHref, addressLines, activeSocial, type SiteConfig } from '../../lib/seo';
+import siteJson from '../../../content/site.json';
+
+const site = siteJson as SiteConfig;
 
 const COMPANY = [
   { name: 'About Us', path: '/company/about' },
@@ -19,12 +23,13 @@ const RESOURCES = [
   { name: 'Technologies', path: '/technologies' },
 ];
 
-const SOCIALS = [
-  { label: 'LinkedIn', href: 'https://www.linkedin.com/', d: 'M4.98 3.5a2.5 2.5 0 1 0 0 5 2.5 2.5 0 0 0 0-5ZM3 9h4v12H3ZM10 9h3.8v1.7h.05a4.2 4.2 0 0 1 3.75-2c4 0 4.75 2.6 4.75 6V21h-4v-5.3c0-1.3 0-2.9-1.8-2.9s-2.05 1.4-2.05 2.8V21h-4Z' },
-  { label: 'GitHub', href: 'https://github.com/', d: 'M12 2a10 10 0 0 0-3.16 19.49c.5.09.68-.22.68-.48v-1.7c-2.78.6-3.37-1.34-3.37-1.34-.45-1.15-1.11-1.46-1.11-1.46-.91-.62.07-.6.07-.6 1 .07 1.53 1.03 1.53 1.03.9 1.53 2.36 1.09 2.94.83.09-.65.35-1.09.63-1.34-2.22-.25-4.56-1.11-4.56-4.94 0-1.09.39-1.98 1.03-2.68-.1-.25-.45-1.27.1-2.65 0 0 .84-.27 2.75 1.02a9.5 9.5 0 0 1 5 0c1.91-1.29 2.75-1.02 2.75-1.02.55 1.38.2 2.4.1 2.65.64.7 1.03 1.59 1.03 2.68 0 3.84-2.34 4.69-4.57 4.94.36.31.68.92.68 1.85v2.74c0 .27.18.58.69.48A10 10 0 0 0 12 2Z' },
-  { label: 'X', href: 'https://x.com/', d: 'M18.24 2H21l-6.55 7.49L22.5 22h-6.3l-4.93-6.44L5.6 22H2.84l7.01-8.01L1.5 2h6.45l4.46 5.89ZM17.1 20.3h1.53L7.01 3.6H5.37Z' },
-  { label: 'Facebook', href: 'https://facebook.com/', d: 'M22 12a10 10 0 1 0-11.56 9.88v-6.99H7.9V12h2.54V9.8c0-2.5 1.49-3.89 3.77-3.89 1.09 0 2.24.2 2.24.2v2.46h-1.26c-1.24 0-1.63.77-1.63 1.56V12h2.78l-.45 2.89h-2.33v6.99A10 10 0 0 0 22 12Z' },
-];
+/** Icon geometry only. The hrefs live in content/site.json. */
+const SOCIAL_ICONS: Record<string, string> = {
+  LinkedIn: 'M4.98 3.5a2.5 2.5 0 1 0 0 5 2.5 2.5 0 0 0 0-5ZM3 9h4v12H3ZM10 9h3.8v1.7h.05a4.2 4.2 0 0 1 3.75-2c4 0 4.75 2.6 4.75 6V21h-4v-5.3c0-1.3 0-2.9-1.8-2.9s-2.05 1.4-2.05 2.8V21h-4Z',
+  GitHub: 'M12 2a10 10 0 0 0-3.16 19.49c.5.09.68-.22.68-.48v-1.7c-2.78.6-3.37-1.34-3.37-1.34-.45-1.15-1.11-1.46-1.11-1.46-.91-.62.07-.6.07-.6 1 .07 1.53 1.03 1.53 1.03.9 1.53 2.36 1.09 2.94.83.09-.65.35-1.09.63-1.34-2.22-.25-4.56-1.11-4.56-4.94 0-1.09.39-1.98 1.03-2.68-.1-.25-.45-1.27.1-2.65 0 0 .84-.27 2.75 1.02a9.5 9.5 0 0 1 5 0c1.91-1.29 2.75-1.02 2.75-1.02.55 1.38.2 2.4.1 2.65.64.7 1.03 1.59 1.03 2.68 0 3.84-2.34 4.69-4.57 4.94.36.31.68.92.68 1.85v2.74c0 .27.18.58.69.48A10 10 0 0 0 12 2Z',
+  X: 'M18.24 2H21l-6.55 7.49L22.5 22h-6.3l-4.93-6.44L5.6 22H2.84l7.01-8.01L1.5 2h6.45l4.46 5.89ZM17.1 20.3h1.53L7.01 3.6H5.37Z',
+  Facebook: 'M22 12a10 10 0 1 0-11.56 9.88v-6.99H7.9V12h2.54V9.8c0-2.5 1.49-3.89 3.77-3.89 1.09 0 2.24.2 2.24.2v2.46h-1.26c-1.24 0-1.63.77-1.63 1.56V12h2.78l-.45 2.89h-2.33v6.99A10 10 0 0 0 22 12Z',
+};
 
 export default function Footer() {
   return (
@@ -47,46 +52,53 @@ export default function Footer() {
 
             <address className="mt-7 grid gap-4 not-italic">
               <ContactLine icon="pin">
-                Street address, Area,
-                <br />
-                Dhaka, Bangladesh
+                {addressLines(site.contact.address).map((line, i, all) => (
+                  <span key={line}>
+                    {line}
+                    {i < all.length - 1 ? <br /> : null}
+                  </span>
+                ))}
               </ContactLine>
               <ContactLine icon="mail">
-                <a href="mailto:hello@devsaheb.com" className="hover:text-gold">
-                  hello@devsaheb.com
+                <a href={`mailto:${site.contact.email}`} className="hover:text-gold">
+                  {site.contact.email}
                 </a>
               </ContactLine>
               <ContactLine icon="phone">
-                <a href="tel:+880000000000" className="hover:text-gold">
-                  +880 0000 000 000
+                <a href={telHref(site.contact.phone)} className="hover:text-gold">
+                  {site.contact.phone}
                 </a>
               </ContactLine>
             </address>
 
-            <div className="mt-9">
-              <p className="mb-4 flex items-center gap-3 font-mono text-[10px] uppercase tracking-[0.16em] text-silver">
-                <span aria-hidden="true" className="h-px w-6 bg-gold" />
-                Follow us
-              </p>
-              <ul className="flex gap-2">
-                {SOCIALS.map(({ label, href, d }) => (
-                  <li key={label}>
-                    {/* Bare icons announce as nothing, so each carries its own label. */}
-                    <a
-                      href={href}
-                      aria-label={`DevSaheb on ${label}`}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="grid size-9 place-items-center border border-silver/15 text-silver transition-[color,border-color,transform] duration-200 hover:-translate-y-0.5 hover:border-gold hover:text-gold"
-                    >
-                      <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
-                        <path d={d} />
-                      </svg>
-                    </a>
-                  </li>
-                ))}
-              </ul>
-            </div>
+            {/* Only profiles that exist. Linking a network's homepage because we
+                have no profile yet is worse than showing nothing. */}
+            {activeSocial(site).length > 0 ? (
+              <div className="mt-9">
+                <p className="mb-4 flex items-center gap-3 font-mono text-[10px] uppercase tracking-[0.16em] text-silver">
+                  <span aria-hidden="true" className="h-px w-6 bg-gold" />
+                  Follow us
+                </p>
+                <ul className="flex gap-2">
+                  {activeSocial(site).map(({ label, href }) => (
+                    <li key={label}>
+                      {/* Bare icons announce as nothing, so each carries its own label. */}
+                      <a
+                        href={href}
+                        aria-label={`${site.name} on ${label}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="grid size-9 place-items-center border border-silver/15 text-silver transition-[color,border-color,transform] duration-200 hover:-translate-y-0.5 hover:border-gold hover:text-gold"
+                      >
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                          <path d={SOCIAL_ICONS[label] ?? ''} />
+                        </svg>
+                      </a>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            ) : null}
           </div>
 
           <FooterColumn title="Company" links={COMPANY} />
@@ -129,7 +141,10 @@ export default function Footer() {
         </div>
 
         <div className="mt-12 flex flex-wrap justify-between gap-4 border-t border-gold/20 py-6 font-mono text-[10.5px] tracking-[0.06em] text-silver-dim">
-          <span>© {new Date().getFullYear()} DevSaheb · Reg. No. 0000000</span>
+          <span>
+            © {new Date().getFullYear()} {site.name}
+            {site.registrationNumber ? ` · Reg. No. ${site.registrationNumber}` : ''}
+          </span>
           <nav aria-label="Legal" className="flex gap-6">
             <Link to="/privacy" className="hover:text-gold">
               Privacy

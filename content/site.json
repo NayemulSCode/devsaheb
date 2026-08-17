@@ -5,5 +5,23 @@
   "description": "DevSaheb is a software development company building custom software, cloud platforms, mobile apps, and AI systems to a published engineering standard.",
   "image": "/og-default.png",
   "locale": "en_US",
-  "sameAs": []
+  "registrationNumber": "0000000",
+  "contact": {
+    "email": "hello@devsaheb.com",
+    "careersEmail": "careers@devsaheb.com",
+    "phone": "+880 0000 000 000",
+    "address": {
+      "street": "Street address, Area",
+      "locality": "Dhaka",
+      "region": "",
+      "postalCode": "",
+      "country": "Bangladesh"
+    }
+  },
+  "social": [
+    { "label": "LinkedIn", "href": "" },
+    { "label": "GitHub", "href": "" },
+    { "label": "X", "href": "" },
+    { "label": "Facebook", "href": "" }
+  ]
 }

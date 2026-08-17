@@ -24,6 +24,20 @@ export type RouteMeta = {
   noindex?: boolean;
 };
 
+export type SiteAddress = {
+  street: string;
+  locality: string;
+  region?: string;
+  postalCode?: string;
+  country: string;
+};
+
+export type SocialLink = {
+  label: string;
+  /** Empty until a real profile exists. Empty links are not rendered. */
+  href: string;
+};
+
 export type SiteConfig = {
   name: string;
   url: string;
@@ -32,7 +46,38 @@ export type SiteConfig = {
   description: string;
   image: string;
   locale: string;
+  registrationNumber?: string;
+  contact: {
+    email: string;
+    careersEmail: string;
+    phone: string;
+    address: SiteAddress;
+  };
+  social: SocialLink[];
 };
+
+/**
+ * tel: needs the number without spaces or punctuation, so it is derived rather
+ * than stored twice. Two fields drift the moment someone edits one of them.
+ */
+export function telHref(phone: string): string {
+  const digits = phone.replace(/[^\d+]/g, '');
+  return `tel:${digits}`;
+}
+
+/** Display lines for the address block, skipping the parts left blank. */
+export function addressLines(address: SiteAddress): string[] {
+  const tail = [address.locality, address.region, address.postalCode, address.country]
+    .map((p) => (p ?? '').trim())
+    .filter(Boolean)
+    .join(', ');
+  return [address.street.trim(), tail].filter(Boolean);
+}
+
+/** Profiles that actually exist. Used for links and for sameAs. */
+export function activeSocial(site: SiteConfig): SocialLink[] {
+  return (site.social ?? []).filter((s) => s.href.trim().length > 0);
+}
 
 export type ResolvedMeta = {
   title: string;

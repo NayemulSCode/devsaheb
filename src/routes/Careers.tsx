@@ -3,6 +3,10 @@ import Section from '../components/ui/Section';
 import Container from '../components/ui/Container';
 import Reveal from '../components/Reveal';
 import Button from '../components/ui/Button';
+import type { SiteConfig } from '../lib/seo';
+import siteJson from '../../content/site.json';
+
+const site = siteJson as SiteConfig;
 
 /**
  * Careers stays on-domain deliberately.
@@ -34,7 +38,9 @@ export default function Careers() {
                 wrong, write anyway — we would rather know you early.
               </p>
               <div className="mt-8">
-                <Button href="mailto:careers@devsaheb.com">Send an introduction</Button>
+                <Button href={`mailto:${site.contact.careersEmail}`}>
+                  Send an introduction
+                </Button>
               </div>
             </Reveal>
 
