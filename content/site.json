@@ -9,19 +9,31 @@
   "contact": {
     "email": "hello@devsaheb.com",
     "careersEmail": "careers@devsaheb.com",
-    "phone": "+880 0000 000 000",
+    "phone": "+880 1760 988571",
     "address": {
-      "street": "Street address, Area",
+      "street": "Road #06, House #146, Mohammadia Housing Society",
       "locality": "Dhaka",
       "region": "",
-      "postalCode": "",
+      "postalCode": "1207",
       "country": "Bangladesh"
     }
   },
   "social": [
-    { "label": "LinkedIn", "href": "" },
-    { "label": "GitHub", "href": "" },
-    { "label": "X", "href": "" },
-    { "label": "Facebook", "href": "" }
+    {
+      "label": "LinkedIn",
+      "href": ""
+    },
+    {
+      "label": "GitHub",
+      "href": ""
+    },
+    {
+      "label": "X",
+      "href": ""
+    },
+    {
+      "label": "Facebook",
+      "href": ""
+    }
   ]
 }
