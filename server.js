@@ -5,42 +5,26 @@
  * prerendered HTML in dist/client directly, via deploy/.htaccess. This process
  * exists for two jobs only:
  *
- *   1. /api/*  - the content save endpoints (Phase 4) and health checks
+ *   1. /api/*  - the content save endpoints and health checks
  *   2. regeneration - after a save, re-render the affected page to disk
  *
- * The static handler below is a convenience for local production testing
- * (`npm run preview`). On the real host Apache never reaches it.
+ * The API itself lives in server/api.js so the Vite dev server can mount the
+ * same routes. The static handling below is a convenience for local production
+ * testing (`npm run preview`); on the real host Apache never reaches it.
  */
 
 import express from 'express';
 import compression from 'compression';
-import cookieParser from 'cookie-parser';
 import { dirname, extname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { existsSync } from 'node:fs';
-import { createAuth } from './server/auth.js';
-import { createAdminRouter } from './server/admin.js';
-import { ensureDirs, ensureMediaLink, MEDIA_DIR } from './server/content.js';
+import { createApi } from './server/api.js';
 
 const ROOT = dirname(fileURLToPath(import.meta.url));
 const CLIENT_DIR = join(ROOT, 'dist', 'client');
 const PORT = Number(process.env.PORT) || 3000;
 
-await ensureDirs();
-
-// In production Apache serves dist/client and never sees content/media, so the
-// upload directory is linked into the document root. Recreated here because a
-// deploy replaces dist/ wholesale.
-const mediaLink = await ensureMediaLink(join(ROOT, 'dist', 'client'));
-if (mediaLink instanceof Error) {
-  console.warn('[media] could not link uploads into the document root:', mediaLink.message);
-}
-
-const auth = createAuth({
-  passwordHash: process.env.ADMIN_PASSWORD_HASH,
-  sessionSecret: process.env.SESSION_SECRET,
-  secureCookies: process.env.SECURE_COOKIES === '1',
-});
+const { api } = await createApi({ linkMedia: true });
 
 const app = express();
 app.disable('x-powered-by');
@@ -48,14 +32,14 @@ app.disable('x-powered-by');
 // Without this the login rate limiter would key every attempt to the proxy.
 app.set('trust proxy', 1);
 app.use(compression());
-app.use(cookieParser());
-app.use(express.json({ limit: '2mb' }));
 
 // --- Canonical host and path -------------------------------------------------
 // Trailing-slash and case duplicates split ranking signals, so normalise with a
-// 301 rather than serving the same page at several URLs.
+// 301 rather than serving the same page at several URLs. /api and /media are
+// exempt - the same exemption deploy/.htaccess makes in production.
 app.use((req, res, next) => {
   const url = req.originalUrl.split('?')[0];
+  if (/^\/(api|media)(\/|$)/.test(url)) return next();
   if (url.length > 1 && url.endsWith('/')) {
     const query = req.originalUrl.slice(url.length);
     return res.redirect(301, url.replace(/\/+$/, '') + query);
@@ -63,66 +47,7 @@ app.use((req, res, next) => {
   next();
 });
 
-// --- API ---------------------------------------------------------------------
-app.get('/api/health', (_req, res) => {
-  res.json({
-    ok: true,
-    node: process.version,
-    prerendered: existsSync(join(CLIENT_DIR, 'index.html')),
-  });
-});
-
-/**
- * Regenerates one page from the current content on disk.
- *
- * The SSR bundle is imported fresh each time rather than cached, because a
- * cached module would keep serving the content it read when first loaded -
- * which is exactly what a save needs to invalidate.
- */
-async function regeneratePage(path) {
-  const { loadServerBundle, renderPage } = await import('./scripts/prerender.mjs');
-  const { readAssets } = await import('./scripts/assets.mjs');
-  const bundle = await loadServerBundle();
-  const assets = await readAssets();
-  const file = await renderPage(path, bundle, assets);
-
-  // The social card carries the headline, so it has to be rebuilt with the
-  // page. A card failure must not fail the save - the content is already
-  // written and correct at this point.
-  try {
-    const { generateOgImageForPath } = await import('./scripts/og.mjs');
-    await generateOgImageForPath(path);
-  } catch (err) {
-    console.error('[regenerate] og card failed for', path, err);
-  }
-
-  return file.replace(ROOT, '');
-}
-
-/** Schema comes from the built SSR bundle so it cannot drift from the renderer. */
-async function getSchema() {
-  const { loadServerBundle } = await import('./scripts/prerender.mjs');
-  const { pageSchema, slugSchema } = await loadServerBundle();
-  return { pageSchema, slugSchema };
-}
-
-app.use('/api/admin', createAdminRouter({ auth, getSchema, regenerate: regeneratePage }));
-
-// Uploaded media. Served from the content directory, which persists across
-// deploys - this is why cPanel's real filesystem matters for this design.
-app.use(
-  '/media',
-  express.static(MEDIA_DIR, {
-    index: false,
-    redirect: false,
-    setHeaders(res) {
-      res.setHeader('Cache-Control', 'public, max-age=604800');
-      // Uploads are user-supplied bytes on our own origin; never let a browser
-      // sniff one into something executable.
-      res.setHeader('X-Content-Type-Options', 'nosniff');
-    },
-  }),
-);
+app.use(api);
 
 // --- Static (local preview only) ---------------------------------------------
 //

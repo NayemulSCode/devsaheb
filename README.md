@@ -57,9 +57,14 @@ it cannot cause a hydration mismatch. One source of truth, real tags for crawler
 ## Editing content
 
 ```bash
-node scripts/hash-password.mjs "a long password"   # prints two .env lines
-npm run build && npm start                          # then visit /admin
+node scripts/hash-password.mjs "a long password"   # prints two .env lines, paste into .env
+npm run build                                       # once, so the save schema exists
+npm run dev                                         # then visit /admin
 ```
+
+`npm run dev` mounts the real API inside the Vite dev server, so /admin works
+without a second process. It reads `.env` directly. The one build is needed
+because saves validate against the schema exported from the built SSR bundle.
 
 Content lives in `content/pages/*.json`. The editor at `/admin` is Puck, behind
 a password. Saving does three things in order: validate against the zod schema,
@@ -191,7 +196,7 @@ a `contentPath` to make it editable in the admin.
 
 | Script | Does |
 |---|---|
-| `dev` | Vite dev server (SPA mode, HMR). |
+| `dev` | Vite dev server with the real API mounted (SPA mode, HMR). |
 | `build` | Client build → SSR build → prerender → OG cards → link check. |
 | `og` | Regenerate social cards from an existing build. |
 | `check:links` | Fail on any broken internal link or missing og:image. |

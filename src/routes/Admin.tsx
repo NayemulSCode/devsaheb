@@ -10,7 +10,15 @@ import { lazy, Suspense, useEffect, useState, type FormEvent } from 'react';
  */
 const PuckEditor = lazy(() => import('../admin/PuckEditor'));
 
-type Session = { configured: boolean; signedIn: boolean };
+/**
+ * `reachable` is tracked separately from `configured` on purpose.
+ *
+ * An earlier version collapsed both into one flag, so a failed fetch rendered
+ * "Admin is not configured" and sent you to edit .env - when the real problem
+ * was that no API was answering at all. Two different faults deserve two
+ * different messages.
+ */
+type Session = { reachable: boolean; configured: boolean; signedIn: boolean };
 
 export default function Admin() {
   const [session, setSession] = useState<Session | null>(null);
@@ -21,11 +29,22 @@ export default function Admin() {
   useEffect(() => {
     let active = true;
     fetch('/api/admin/session')
-      .then((r) => r.json())
-      .then((j) => {
-        if (active) setSession({ configured: !!j.configured, signedIn: !!j.signedIn });
+      .then(async (r) => {
+        // Vite and Apache both answer an unmatched path with HTML, so a 200
+        // is not proof the API replied. The content type is.
+        if (!r.headers.get('content-type')?.includes('application/json')) {
+          throw new Error('not-json');
+        }
+        return r.json();
       })
-      .catch(() => active && setSession({ configured: false, signedIn: false }));
+      .then((j) => {
+        if (active) {
+          setSession({ reachable: true, configured: !!j.configured, signedIn: !!j.signedIn });
+        }
+      })
+      .catch(() => {
+        if (active) setSession({ reachable: false, configured: false, signedIn: false });
+      });
     return () => {
       active = false;
     };
@@ -44,7 +63,7 @@ export default function Admin() {
       const json = await res.json();
       if (!res.ok) throw new Error(json.error ?? 'Sign-in failed.');
       setPassword('');
-      setSession({ configured: true, signedIn: true });
+      setSession({ reachable: true, configured: true, signedIn: true });
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Sign-in failed.');
     } finally {
@@ -54,15 +73,43 @@ export default function Admin() {
 
   if (!session) return <Shell>Checking session…</Shell>;
 
+  if (!session.reachable) {
+    return (
+      <Shell>
+        <h1 className="text-2xl font-extrabold">The API is not responding</h1>
+        <p className="mt-4 max-w-[56ch] text-silver">
+          <code className="text-gold">/api/admin/session</code> did not return JSON,
+          so nothing is serving the admin routes. This is a routing problem, not
+          a credentials one.
+        </p>
+        <ul className="mt-5 grid max-w-[56ch] gap-2.5 text-sm text-silver">
+          <li>
+            <b className="text-bone">In development:</b> restart{' '}
+            <code className="text-gold">npm run dev</code> — the API is mounted by
+            a Vite plugin, so a config change needs a restart.
+          </li>
+          <li>
+            <b className="text-bone">In production:</b> check that cPanel&rsquo;s
+            Passenger block is present in{' '}
+            <code className="text-gold">dist/client/.htaccess</code> and that the
+            Node app is started. A redeploy replaces{' '}
+            <code className="text-gold">dist/</code> and removes it.
+          </li>
+        </ul>
+      </Shell>
+    );
+  }
+
   if (!session.configured) {
     return (
       <Shell>
         <h1 className="text-2xl font-extrabold">Admin is not configured</h1>
         <p className="mt-4 max-w-[52ch] text-silver">
-          Generate credentials and put them in <code className="text-gold">.env</code>:
+          The API is running, but no credentials are set. Generate them and put
+          them in <code className="text-gold">.env</code>, then restart:
         </p>
         <pre className="mt-4 overflow-x-auto border border-gold/20 bg-ink-2 p-4 font-mono text-[12.5px] text-silver">
-          node scripts/hash-password.mjs &quot;your password&quot;
+          node scripts/hash-password.mjs &quot;a long password&quot;
         </pre>
       </Shell>
     );
@@ -105,7 +152,7 @@ export default function Admin() {
 
   return (
     <Suspense fallback={<Shell>Loading editor…</Shell>}>
-      <PuckEditor onSignOut={() => setSession({ configured: true, signedIn: false })} />
+      <PuckEditor onSignOut={() => setSession({ reachable: true, configured: true, signedIn: false })} />
     </Suspense>
   );
 }
