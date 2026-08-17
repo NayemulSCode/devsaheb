@@ -2,7 +2,7 @@
   "slug": "custom-software",
   "primaryQuery": "custom software development company",
   "title": "Custom Software Development Company",
-  "description": "We build bespoke software for organisations whose process does not fit an off-the-shelf product. Typed end to end, reviewed line by line, measured against numbers agreed before the work starts.",
+  "description": "We build bespoke software for organisations whose process does not fit an off-the-shelf product. Typed end to end, reviewed line by line, measured against agreed numbers.",
   "h1": "Custom software for processes that do not fit a product",
   "intro": "Most organisations should buy software, not build it. We say that first because the decision to build is the expensive one, and it is usually made for the wrong reason. Custom software earns its cost when your process is the thing that makes you competitive — and bending it to fit someone else's product would give that advantage away.",
   "sections": [
@@ -54,7 +54,17 @@
     "body": "If your requirement is standard accounting, payroll, CRM, or helpdesk, buy the product. Those markets are mature, the products are good, and a custom version will cost more and do less for at least three years. We would rather lose the project than build you a worse Salesforce. The same applies if the real problem is that nobody agrees on the process yet — software will harden the disagreement rather than resolve it."
   },
   "related": {
-    "services": ["web-development", "cloud-application", "devops"],
-    "technologies": ["typescript", "reactjs", "nodejs", "python", "aws"]
+    "services": [
+      "web-development",
+      "cloud-application",
+      "devops"
+    ],
+    "technologies": [
+      "typescript",
+      "reactjs",
+      "nodejs",
+      "python",
+      "aws"
+    ]
   }
 }

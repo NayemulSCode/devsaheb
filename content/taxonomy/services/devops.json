@@ -50,7 +50,16 @@
     "body": "If your application has no tests, a deployment pipeline will automate shipping bugs faster. Coverage comes first — there is no point automating a process whose output nobody trusts. Equally, if you are pre-launch with one environment and three users, this is premature. Ship something, find out what breaks, then automate the parts that hurt."
   },
   "related": {
-    "services": ["cloud-application", "custom-software", "qa"],
-    "technologies": ["aws", "docker", "typescript", "nodejs"]
+    "services": [
+      "cloud-application",
+      "custom-software",
+      "qa"
+    ],
+    "technologies": [
+      "aws",
+      "docker",
+      "typescript",
+      "nodejs"
+    ]
   }
 }

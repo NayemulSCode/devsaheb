@@ -25,9 +25,9 @@ const CLIENT_DIR = join(ROOT, 'dist', 'client');
 /**
  * Regenerates one page from the current content on disk.
  *
- * The SSR bundle is imported fresh each time rather than cached, because a
- * cached module would keep serving the content it read when first loaded -
- * which is exactly what a save needs to invalidate.
+ * loadServerBundle busts the ESM module cache on mtime, so a rebuilt bundle is
+ * picked up without restarting the process. Page content itself is read from
+ * disk at render time, so a save is always reflected regardless.
  */
 async function regeneratePage(path) {
   const { loadServerBundle, renderPage } = await import('../scripts/prerender.mjs');

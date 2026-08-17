@@ -50,7 +50,16 @@
     "body": "A content site with a contact form does not need React. It will be faster, cheaper, and easier to maintain as server-rendered HTML with a small amount of JavaScript. We would rather tell you that than bill for the framework. React earns its weight when there is real client-side state — an editor, a dashboard, a multi-step flow with live validation. If your interface is mostly reading, the framework is overhead you pay for on every page load."
   },
   "related": {
-    "services": ["web-development", "front-end", "custom-software"],
-    "technologies": ["typescript", "nextjs", "nodejs", "react-native"]
+    "services": [
+      "web-development",
+      "front-end",
+      "custom-software"
+    ],
+    "technologies": [
+      "typescript",
+      "nextjs",
+      "nodejs",
+      "react-native"
+    ]
   }
 }

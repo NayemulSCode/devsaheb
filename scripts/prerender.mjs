@@ -222,8 +222,29 @@ function outputPath(routePath) {
   return join(CLIENT_DIR, routePath.replace(/^\/+/, ''), 'index.html');
 }
 
+/**
+ * Loads the built SSR bundle, picking up a rebuild without a restart.
+ *
+ * The cache-busting query is load-bearing. ESM `import()` caches by URL, so a
+ * long-running process keeps returning the module object it first imported
+ * even after `npm run build` replaces the file underneath it. That produced a
+ * bare "Cannot read properties of undefined (reading 'parse')" when saving a
+ * taxonomy page: the running server held a bundle from before the taxonomy
+ * schema existed, so the export was simply missing.
+ *
+ * Keying on mtime rather than Date.now() means a new module is only created
+ * when the file actually changes - one per rebuild, not one per request, which
+ * would leak module instances into the registry.
+ */
 export async function loadServerBundle() {
-  return import(pathToFileURL(SERVER_ENTRY).href);
+  const url = pathToFileURL(SERVER_ENTRY).href;
+  try {
+    const { mtimeMs } = await stat(SERVER_ENTRY);
+    return await import(`${url}?v=${mtimeMs}`);
+  } catch {
+    // No build yet, or stat failed. Let the plain import raise the real error.
+    return import(url);
+  }
 }
 
 /** Renders one route and writes its HTML file. Returns the path written. */

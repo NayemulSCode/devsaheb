@@ -117,8 +117,18 @@ export function createAdminRouter({ auth, getBundle, regenerate }) {
 
       // Validate before touching disk. A malformed save should be rejected at
       // the boundary, not discovered as a white screen in production.
-      const schema =
-        kindOf(contentPath) === 'taxonomy' ? bundle.taxonomyPageSchema : bundle.pageSchema;
+      const kind = kindOf(contentPath);
+      const schema = kind === 'taxonomy' ? bundle.taxonomyPageSchema : bundle.pageSchema;
+
+      // A missing schema means the running process is holding a bundle older
+      // than the code that needs it. Say so, rather than letting schema.parse
+      // throw "Cannot read properties of undefined" and look like bad input.
+      if (!schema?.parse) {
+        throw new Error(
+          `The server is running an out-of-date build (no ${kind} schema). ` +
+            'Run npm run build, then restart the server.',
+        );
+      }
 
       const saved = await writeContent(contentPath, req.body?.data, (d) => schema.parse(d));
       const regenerated = await regenerate(route);
