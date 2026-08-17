@@ -55,8 +55,19 @@ for (const item of APP_ITEMS) {
   cpSync(from, to, { recursive: true });
 }
 
-// .htaccess belongs in the document root, which is dist/client.
-cpSync(join(ROOT, 'deploy', '.htaccess'), join(APP, 'dist', 'client', '.htaccess'));
+/*
+ * .htaccess is shipped OUTSIDE app/, deliberately.
+ *
+ * The document root is app/dist/client, and cPanel writes its Passenger block
+ * into the .htaccess there when the Node app is created. But `vite build` sets
+ * emptyOutDir, so dist/ is wiped and rebuilt every time - and an earlier
+ * version of this script copied our .htaccess straight into dist/client.
+ * Either one would delete cPanel's Passenger config on the next deploy, and
+ * /api would stop routing with nothing obviously broken to point at.
+ *
+ * So it ships as a snippet to append once, by hand, and is never overwritten.
+ */
+cpSync(join(ROOT, 'deploy', '.htaccess'), join(OUT, 'htaccess-append-to-docroot.txt'));
 
 cpSync(join(ROOT, 'content'), CONTENT, { recursive: true });
 
@@ -65,30 +76,80 @@ writeFileSync(
   `DevSaheb release
 ================
 
-app/      -> upload to the application root. Safe to overwrite every deploy.
-content/  -> FIRST DEPLOY ONLY. After launch this is live content edited
-             through /admin, and re-uploading it destroys those edits.
-             There is no database and no backup other than content/.versions.
+WHAT IS IN HERE
 
-On the server, in the application root:
+  app/                            upload to the application root.
+                                  Safe to overwrite on every deploy.
 
-  1. npm install --omit=dev
-  2. Create .env with ADMIN_PASSWORD_HASH and SESSION_SECRET
-     (generate locally: node scripts/hash-password.mjs "a long password")
-     Add SECURE_COOKIES=1 - the site is HTTPS, and without this the session
-     cookie is sent without the Secure flag.
-  3. Document root for the domain -> <app root>/dist/client
-  4. cPanel > Setup Node.js App:
-       Application root = <app root>
-       Application URL  = /api
-       Startup file     = app.js
-       Node version     = 20 or higher   <-- verify this FIRST
-  5. Ensure the app user can write to content/ and content/media/
+  content/                        FIRST DEPLOY ONLY. After launch this is live
+                                  content edited through /admin, and
+                                  re-uploading it destroys those edits. There
+                                  is no database; the only other copy is
+                                  content/.versions on the server.
 
-Check after deploy:
+  htaccess-append-to-docroot.txt  APPEND ONCE, by hand. See step 6.
+
+
+LAYOUT (cPanel, devsaheb.com as an addon domain)
+
+  /home/devsaheb/devsaheb-app/              <- application root, app/ goes here
+  /home/devsaheb/devsaheb-app/dist/client/  <- document root for devsaheb.com
+
+  The document root is INSIDE the application root. That is intentional: it is
+  what keeps Node out of the request path for public pages.
+
+
+STEPS
+
+  1. cPanel > Domains > Create A Domain
+       Domain:        devsaheb.com
+       Document root: /home/devsaheb/devsaheb-app/dist/client
+       (uncheck "share document root with primary domain")
+
+  2. Upload app/ to /home/devsaheb/devsaheb-app/
+     Upload content/ to /home/devsaheb/devsaheb-app/content/   (first time only)
+
+  3. cPanel > Setup Node.js App > CREATE APPLICATION
+       Node version:     22.23.2
+       Application mode: production
+       Application root: devsaheb-app
+       Application URL:  devsaheb.com/api
+       Startup file:     app.js
+
+  4. In that app's panel, click "Run NPM Install"
+     (or use its terminal command, then: npm install --omit=dev)
+
+  5. Create /home/devsaheb/devsaheb-app/.env containing:
+       ADMIN_PASSWORD_HASH=...     from: node scripts/hash-password.mjs "..."
+       SESSION_SECRET=...          from the same command
+       SECURE_COOKIES=1            required - the site is HTTPS
+
+  6. Open /home/devsaheb/devsaheb-app/dist/client/.htaccess
+     cPanel will have written a Passenger block into it in step 3.
+     APPEND the contents of htaccess-append-to-docroot.txt BELOW that block.
+     Do not replace the file and do not touch the Passenger lines.
+
+  7. Ensure the app user can write to content/ and content/media/  (755 is fine)
+
+  8. Restart the app from the Node.js panel.
+
+
+REDEPLOY
+
+  Re-upload app/ only. Do NOT re-upload content/.
+  dist/ is rebuilt from scratch each build, which means dist/client/.htaccess
+  is deleted with it - so after every redeploy, redo step 6.
+
+
+CHECK
+
   curl -sI https://www.devsaheb.com/            -> 200, text/html
-  curl -s  https://www.devsaheb.com/api/health  -> {"ok":true,...}
+  curl -s  https://www.devsaheb.com/api/health  -> {"ok":true,"node":"v22...."}
   curl -sI https://www.devsaheb.com/services/   -> 301 to /services
+  curl -s  https://www.devsaheb.com/robots.txt  -> lists the sitemap
+
+  DNS must point devsaheb.com at 198.177.120.114 (or this host's nameservers)
+  before any of the above will answer.
 `,
 );
 

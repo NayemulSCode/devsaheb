@@ -406,9 +406,10 @@ Mitigation: `/admin` behind `React.lazy()` at the route boundary, editor package
 | 1 | **Node 16.16.0 is what's on your PATH.** Vite 8, React 19, and TypeScript 6 all need Node 20+. | Install Node 22 LTS before Phase 0. Pin with `.nvmrc` + `engines`. |
 | 2 | **Logo PNGs are opaque and unusable.** | Redraw as SVG in Phase 0. Blocks header, favicon, and OG images. |
 | 3 | ~~File-based content requires a persistent disk~~ — **closed.** cPanel shared hosting has a real persistent filesystem, so the JSON content model is safe. | Confirm the app user has write permission on `/content` and `/content/media`. |
-| 3b | **cPanel's Node version may be too old.** Vite 8, React 19, and TS 6 need Node 20+; the cPanel selector is frequently capped lower. | Check cPanel → Setup Node.js App → version dropdown **first**. Blocks everything. |
+| 3b | ~~cPanel's Node version may be too old~~ — **closed.** The host offers **Node 22.23.2**, already running the primary domain's app. Well clear of the ≥20.9.0 requirement. | — |
 | 3c | Shared-hosting memory limits kill `vite build` | Build locally or in CI; upload `dist/` and prerendered HTML. Never build on the server. |
 | 3d | Passenger buffers streamed responses | Prerender with `renderToString`; no streaming SSR in the request path. |
+| 3e | **cPanel writes its Passenger block into the docroot .htaccess, and `vite build` wipes `dist/` on every build.** A redeploy silently deletes the routing config and /api stops working with nothing obviously broken. | Ship .htaccess outside the app bundle as an append-once snippet; redo the append after every redeploy. |
 | 4 | Gold-on-cream fails contrast at 1.81:1 | `--gold-deep` token, enforced in the design system, not left to per-component judgement. |
 | 5 | Editor bundles leaking into public routes | Route-level lazy loading + a CI bundle-size gate. |
 | 6 | Concurrent JSON writes corrupting content | Atomic rename + write lock + versioned snapshots. |
