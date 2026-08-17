@@ -8,7 +8,7 @@ import { lazy, Suspense, useEffect, useState, type FormEvent } from 'react';
  * eagerly, the editor would ride along in every marketing page's bundle and
  * blow the performance budget the site publicly commits to.
  */
-const PuckEditor = lazy(() => import('../admin/PuckEditor'));
+const AdminApp = lazy(() => import('../admin/AdminApp'));
 
 /**
  * `reachable` is tracked separately from `configured` on purpose.
@@ -152,7 +152,7 @@ export default function Admin() {
 
   return (
     <Suspense fallback={<Shell>Loading editor…</Shell>}>
-      <PuckEditor onSignOut={() => setSession({ reachable: true, configured: true, signedIn: false })} />
+      <AdminApp onSignOut={() => setSession({ reachable: true, configured: true, signedIn: false })} />
     </Suspense>
   );
 }

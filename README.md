@@ -66,10 +66,27 @@ npm run dev                                         # then visit /admin
 without a second process. It reads `.env` directly. The one build is needed
 because saves validate against the schema exported from the built SSR bundle.
 
-Content lives in `content/pages/*.json`. The editor at `/admin` is Puck, behind
-a password. Saving does three things in order: validate against the zod schema,
-snapshot the previous version, then write atomically and regenerate that page's
-HTML through the same SSR bundle the build uses. No rebuild, no restart.
+The editor at `/admin` is behind a password and can edit **every content-backed
+page** — pick one from the dropdown. Saving validates against the zod schema,
+snapshots the previous version, then writes atomically and regenerates that
+page's HTML through the same SSR bundle the build uses. No rebuild, no restart.
+
+Two editors, because the content has two shapes:
+
+| Shape | Where | Editor |
+|---|---|---|
+| Block list | `content/pages/*.json` | Puck canvas |
+| Structured record | `content/taxonomy/**/*.json` | Form |
+
+Taxonomy pages are deliberately not Puck documents. Their `faq` drives FAQPage
+schema and `related` drives the internal link graph between the two taxonomies;
+flattening them into a free-form block list would lose both, and that
+structured data is most of why those pages are worth publishing.
+
+The document list is derived from the route table in the built bundle, so a new
+content-backed route becomes editable the moment it ships — there is no second
+registry to keep in step. A path that no route renders is refused, which is
+also what stops the admin writing outside the content tree.
 
 **Puck never reaches the public bundle.** Public pages render through our own
 registry in [src/components/blocks](src/components/blocks) rather than Puck's
@@ -100,8 +117,9 @@ silently ignores.
 | `GET /api/admin/session` | — | Whether admin is configured and signed in |
 | `POST /api/admin/login` | — | Password → session cookie. Rate limited, 5 per 15 min per IP |
 | `POST /api/admin/logout` | — | Clears the cookie |
-| `GET /api/admin/pages/:slug` | yes | Current content plus version list |
-| `PUT /api/admin/pages/:slug` | yes | Validate, snapshot, write, regenerate |
+| `GET /api/admin/documents` | yes | Every editable page, derived from the route table |
+| `GET /api/admin/content?path=` | yes | Current content plus version list |
+| `PUT /api/admin/content?path=` | yes | Validate, snapshot, write, regenerate |
 | `POST /api/admin/media` | yes | Upload. 5 MB cap, image types only |
 
 Uploads live under `content/media` and are served from `/media`. SVG is

@@ -14,7 +14,7 @@ export const siteConfig = site as SiteConfig;
 
 // Re-exported so server/admin.js validates saves with exactly the schema this
 // bundle's renderer was compiled against - no drift between the two.
-export { pageSchema, slugSchema } from './content/schema';
+export { pageSchema, slugSchema, taxonomyPageSchema } from './content/schema';
 
 export type RenderResult = {
   html: string;

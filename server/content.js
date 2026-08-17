@@ -37,29 +37,46 @@ function withLock(key, task) {
   return next;
 }
 
+/** Only these trees are addressable by the admin. */
+const EDITABLE_ROOTS = new Set(['pages', 'taxonomy']);
+const SEGMENT = /^[a-z0-9][a-z0-9-]{0,63}$/;
+
 /**
- * Resolves a slug to a path under CONTENT_DIR, refusing anything that escapes.
- * The slug is already regex-validated upstream; this is the backstop that
- * makes traversal impossible even if that check is ever loosened.
+ * Resolves a content path like "taxonomy/services/custom-software" to a file
+ * under CONTENT_DIR, refusing anything that escapes.
+ *
+ * Two independent checks, deliberately. The per-segment regex rejects "..",
+ * absolute paths and anything exotic before a path is built; the prefix check
+ * afterwards is the backstop that still holds if the regex is ever loosened.
+ * Traversal here would expose or overwrite any file the app user can reach.
  */
-export function pagePath(slug) {
-  const file = join(CONTENT_DIR, 'pages', `${slug}.json`);
-  const base = join(CONTENT_DIR, 'pages');
-  if (!file.startsWith(base + (process.platform === 'win32' ? '\\' : '/'))) {
+export function contentFile(relPath) {
+  const segments = String(relPath).split('/');
+
+  if (segments.length < 2 || !EDITABLE_ROOTS.has(segments[0])) {
+    throw new Error(`Not an editable content path: ${relPath}`);
+  }
+  if (!segments.every((s) => SEGMENT.test(s))) {
+    throw new Error('Path segments must be lowercase letters, digits and hyphens.');
+  }
+
+  const file = join(CONTENT_DIR, `${segments.join('/')}.json`);
+  const base = CONTENT_DIR + (process.platform === 'win32' ? '\\' : '/');
+  if (!file.startsWith(base)) {
     throw new Error('Resolved path escapes the content directory.');
   }
   return file;
 }
 
-export async function readPage(slug) {
-  const file = pagePath(slug);
+export async function readContent(relPath) {
+  const file = contentFile(relPath);
   if (!existsSync(file)) return null;
   return JSON.parse(await readFile(file, 'utf8'));
 }
 
-async function snapshot(slug, file) {
+async function snapshot(relPath, file) {
   if (!existsSync(file)) return;
-  const dir = join(VERSIONS_DIR, 'pages', slug);
+  const dir = join(VERSIONS_DIR, relPath);
   await mkdir(dir, { recursive: true });
   const stamp = new Date().toISOString().replace(/[:.]/g, '-');
   await copyFile(file, join(dir, `${stamp}.json`));
@@ -76,13 +93,13 @@ async function snapshot(slug, file) {
  * module stays free of the schema - the caller passes the compiled zod schema
  * from the SSR bundle, which is the same one the renderer was built against.
  */
-export async function writePage(slug, data, validate) {
+export async function writeContent(relPath, data, validate) {
   const parsed = validate(data);
-  const file = pagePath(slug);
+  const file = contentFile(relPath);
 
   return withLock(file, async () => {
     await mkdir(dirname(file), { recursive: true });
-    await snapshot(slug, file);
+    await snapshot(relPath, file);
 
     const tmp = `${file}.${process.pid}.tmp`;
     await writeFile(tmp, `${JSON.stringify(parsed, null, 2)}\n`, 'utf8');
@@ -91,8 +108,9 @@ export async function writePage(slug, data, validate) {
   });
 }
 
-export async function listVersions(slug) {
-  const dir = join(VERSIONS_DIR, 'pages', slug);
+export async function listVersions(relPath) {
+  contentFile(relPath); // validates before touching the versions tree
+  const dir = join(VERSIONS_DIR, relPath);
   if (!existsSync(dir)) return [];
   return (await readdir(dir)).filter((f) => f.endsWith('.json')).sort().reverse();
 }

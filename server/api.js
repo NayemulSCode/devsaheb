@@ -49,11 +49,15 @@ async function regeneratePage(path) {
   return file.replace(ROOT, '');
 }
 
-/** Schema comes from the built SSR bundle so it cannot drift from the renderer. */
-async function getSchema() {
+/**
+ * The built SSR bundle: route table and schemas.
+ *
+ * Imported fresh rather than cached so the admin always validates against the
+ * schema the current renderer was compiled with, and sees the current routes.
+ */
+async function getBundle() {
   const { loadServerBundle } = await import('../scripts/prerender.mjs');
-  const { pageSchema, slugSchema } = await loadServerBundle();
-  return { pageSchema, slugSchema };
+  return loadServerBundle();
 }
 
 /**
@@ -95,7 +99,7 @@ export async function createApi({ linkMedia = true } = {}) {
     });
   });
 
-  api.use('/api/admin', createAdminRouter({ auth, getSchema, regenerate: regeneratePage }));
+  api.use('/api/admin', createAdminRouter({ auth, getBundle, regenerate: regeneratePage }));
 
   // Uploaded media. Served from the content directory, which persists across
   // deploys - this is why cPanel's real filesystem matters for this design.

@@ -1,15 +1,19 @@
 /**
  * Admin API.
  *
- * Every mutating route is behind auth.require. The read route is too - page
+ * Every mutating route is behind auth.require. The read routes are too - page
  * drafts are not public information.
+ *
+ * Documents are addressed by content path ("pages/home",
+ * "taxonomy/services/custom-software") rather than a bare slug, so the editor
+ * reaches every content-backed page rather than just the home page.
  */
 
 import { Router } from 'express';
 import multer from 'multer';
 import { extname, join } from 'node:path';
 import { randomBytes } from 'node:crypto';
-import { readPage, writePage, listVersions, MEDIA_DIR } from './content.js';
+import { readContent, writeContent, listVersions, MEDIA_DIR } from './content.js';
 
 const MAX_UPLOAD_BYTES = 5 * 1024 * 1024;
 
@@ -43,14 +47,17 @@ const upload = multer({
   },
 });
 
+/** Which editor a document needs, and which schema validates it. */
+function kindOf(contentPath) {
+  return contentPath.startsWith('taxonomy/') ? 'taxonomy' : 'blocks';
+}
+
 /**
  * @param auth       from createAuth()
- * @param schema     { pageSchema, slugSchema } from the built SSR bundle, so
- *                   saves are validated against exactly the schema the
- *                   renderer was compiled with
+ * @param getBundle  () => the built SSR bundle (routes + schemas)
  * @param regenerate (path) => Promise<string>
  */
-export function createAdminRouter({ auth, getSchema, regenerate }) {
+export function createAdminRouter({ auth, getBundle, regenerate }) {
   const router = Router();
 
   router.get('/session', (req, res) => {
@@ -60,32 +67,63 @@ export function createAdminRouter({ auth, getSchema, regenerate }) {
   router.post('/login', (req, res) => auth.login(req, res));
   router.post('/logout', (req, res) => auth.logout(req, res));
 
-  router.get('/pages/:slug', auth.require, async (req, res) => {
+  /**
+   * Everything the admin can edit, derived from the route table in the built
+   * bundle. Deriving it means the list cannot drift from what actually
+   * renders - a new route with a contentPath is editable the moment it ships,
+   * with no second registry to keep in step.
+   */
+  router.get('/documents', auth.require, async (_req, res) => {
     try {
-      const { slugSchema } = await getSchema();
-      const slug = slugSchema.parse(req.params.slug);
-      const page = await readPage(slug);
-      if (!page) return res.status(404).json({ ok: false, error: 'No such page.' });
-      res.json({ ok: true, slug, data: page, versions: await listVersions(slug) });
+      const { routes } = await getBundle();
+      const documents = routes
+        .filter((r) => r.contentPath)
+        .map((r) => ({
+          contentPath: r.contentPath,
+          route: r.path,
+          title: r.meta.title,
+          kind: kindOf(r.contentPath),
+        }));
+      res.json({ ok: true, documents });
+    } catch (err) {
+      res.status(500).json({ ok: false, error: messageFor(err) });
+    }
+  });
+
+  router.get('/content', auth.require, async (req, res) => {
+    try {
+      const contentPath = String(req.query.path ?? '');
+      const { route } = await locate(getBundle, contentPath);
+      const data = await readContent(contentPath);
+      if (!data) return res.status(404).json({ ok: false, error: 'No such document.' });
+
+      res.json({
+        ok: true,
+        contentPath,
+        route,
+        kind: kindOf(contentPath),
+        data,
+        versions: await listVersions(contentPath),
+      });
     } catch (err) {
       res.status(400).json({ ok: false, error: messageFor(err) });
     }
   });
 
-  router.put('/pages/:slug', auth.require, async (req, res) => {
+  router.put('/content', auth.require, async (req, res) => {
     try {
-      const { slugSchema, pageSchema } = await getSchema();
-      const slug = slugSchema.parse(req.params.slug);
+      const contentPath = String(req.query.path ?? '');
+      const { route, bundle } = await locate(getBundle, contentPath);
 
       // Validate before touching disk. A malformed save should be rejected at
       // the boundary, not discovered as a white screen in production.
-      const saved = await writePage(slug, req.body?.data, (d) => pageSchema.parse(d));
+      const schema =
+        kindOf(contentPath) === 'taxonomy' ? bundle.taxonomyPageSchema : bundle.pageSchema;
 
-      const path = typeof req.body?.path === 'string' ? req.body.path : null;
-      let regenerated = null;
-      if (path?.startsWith('/')) regenerated = await regenerate(path);
+      const saved = await writeContent(contentPath, req.body?.data, (d) => schema.parse(d));
+      const regenerated = await regenerate(route);
 
-      res.json({ ok: true, slug, regenerated, blocks: saved.content.length });
+      res.json({ ok: true, contentPath, route, regenerated, saved: summarise(saved) });
     } catch (err) {
       res.status(400).json({ ok: false, error: messageFor(err) });
     }
@@ -108,8 +146,27 @@ export function createAdminRouter({ auth, getSchema, regenerate }) {
   return router;
 }
 
-export const MEDIA_ROUTE_DIR = MEDIA_DIR;
-export const mediaPath = (name) => join(MEDIA_DIR, name);
+/**
+ * Maps a content path back to the route that renders it.
+ *
+ * Refusing an unknown path is the point: it means only documents the site
+ * actually renders can be written, so the admin cannot create orphan files or
+ * be pointed at something outside the route table.
+ */
+async function locate(getBundle, contentPath) {
+  const bundle = await getBundle();
+  const route = bundle.routes.find((r) => r.contentPath === contentPath);
+  if (!route) throw new Error(`No route renders "${contentPath}".`);
+  return { route: route.path, bundle };
+}
+
+function summarise(doc) {
+  if (Array.isArray(doc?.content)) return `${doc.content.length} block(s)`;
+  if (Array.isArray(doc?.sections)) {
+    return `${doc.sections.length} section(s), ${doc.faq?.length ?? 0} FAQ`;
+  }
+  return 'saved';
+}
 
 /** zod errors carry useful field paths; anything else gets a generic message. */
 function messageFor(err) {
@@ -121,3 +178,5 @@ function messageFor(err) {
   }
   return err instanceof Error ? err.message : 'Request failed.';
 }
+
+export const mediaPath = (name) => join(MEDIA_DIR, name);

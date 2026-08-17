@@ -50,7 +50,16 @@
     "body": "If you are running one application with predictable traffic and no compliance requirement, a managed platform will cost less in both money and attention. AWS earns its complexity when you need fine-grained control, specific compliance boundaries, or services that genuinely have no equivalent elsewhere. Choosing it because it is the default is how teams end up with a platform engineer they did not budget for."
   },
   "related": {
-    "services": ["cloud-application", "devops", "custom-software"],
-    "technologies": ["docker", "nodejs", "python", "typescript"]
+    "services": [
+      "cloud-application",
+      "devops",
+      "custom-software"
+    ],
+    "technologies": [
+      "docker",
+      "nodejs",
+      "python",
+      "typescript"
+    ]
   }
 }

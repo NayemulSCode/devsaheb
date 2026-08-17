@@ -1,22 +1,25 @@
-import { useEffect, useState } from 'react';
-import { Puck, type Config, type Data } from '@measured/puck';
-import '@measured/puck/puck.css';
+import type { Config } from '@measured/puck';
 import HeroBlock from '../components/blocks/HeroBlock';
 import SpecTableBlock from '../components/blocks/SpecTableBlock';
 import CardGridBlock from '../components/blocks/CardGridBlock';
 import ProseBlock from '../components/blocks/ProseBlock';
-import type { HeroProps, SpecTableProps, CardGridProps, ProseProps } from '../components/blocks/types';
+import type {
+  HeroProps,
+  SpecTableProps,
+  CardGridProps,
+  ProseProps,
+} from '../components/blocks/types';
 
 /**
- * Puck config.
+ * Puck config for block-shaped pages.
  *
- * Every component here renders through the exact same block component the
- * public site uses, so what the editor previews is what visitors get. The
- * field definitions mirror src/content/schema.ts; the server validates every
- * save against that schema regardless, so a mismatch is rejected rather than
+ * Every component renders through the exact same block component the public
+ * site uses, so what the editor previews is what visitors get. The field
+ * definitions mirror src/content/schema.ts; the server validates every save
+ * against that schema regardless, so a mismatch is rejected rather than
  * written.
  */
-const config: Config = {
+export const puckConfig: Config = {
   components: {
     Hero: {
       fields: {
@@ -109,81 +112,3 @@ const config: Config = {
     },
   },
 };
-
-const SLUG = 'home';
-const PATH = '/';
-
-export default function PuckEditor({ onSignOut }: { onSignOut: () => void }) {
-  const [data, setData] = useState<Data | null>(null);
-  const [status, setStatus] = useState<string | null>(null);
-  const [error, setError] = useState<string | null>(null);
-
-  useEffect(() => {
-    fetch(`/api/admin/pages/${SLUG}`)
-      .then((r) => r.json())
-      .then((j) => {
-        if (!j.ok) throw new Error(j.error ?? 'Could not load page.');
-        setData(j.data as Data);
-      })
-      .catch((e) => setError(e instanceof Error ? e.message : 'Could not load page.'));
-  }, []);
-
-  async function publish(next: Data) {
-    setStatus('Saving…');
-    setError(null);
-    try {
-      const res = await fetch(`/api/admin/pages/${SLUG}`, {
-        method: 'PUT',
-        headers: { 'content-type': 'application/json' },
-        body: JSON.stringify({ data: next, path: PATH }),
-      });
-      const json = await res.json();
-      if (!res.ok) throw new Error(json.error ?? 'Save failed.');
-      setStatus(`Published. ${json.blocks} block(s), page regenerated.`);
-    } catch (e) {
-      setStatus(null);
-      setError(e instanceof Error ? e.message : 'Save failed.');
-    }
-  }
-
-  async function signOut() {
-    await fetch('/api/admin/logout', { method: 'POST' });
-    onSignOut();
-  }
-
-  if (error && !data) {
-    return (
-      <main className="mx-auto max-w-3xl px-6 py-24">
-        <p role="alert" className="text-[#e0876a]">
-          {error}
-        </p>
-      </main>
-    );
-  }
-
-  if (!data) return <main className="px-6 py-24 text-silver">Loading content…</main>;
-
-  return (
-    <div className="min-h-screen bg-white text-black">
-      <div className="flex flex-wrap items-center gap-4 border-b border-black/10 px-5 py-3">
-        <strong className="font-mono text-[11px] uppercase tracking-[0.14em]">
-          Editing: {SLUG}
-        </strong>
-        {status ? <span className="text-[13px] text-green-700">{status}</span> : null}
-        {error ? (
-          <span role="alert" className="text-[13px] text-red-700">
-            {error}
-          </span>
-        ) : null}
-        <button
-          type="button"
-          onClick={signOut}
-          className="ml-auto border border-black/20 px-3 py-1.5 font-mono text-[11px] uppercase tracking-[0.1em]"
-        >
-          Sign out
-        </button>
-      </div>
-      <Puck config={config} data={data} onPublish={publish} />
-    </div>
-  );
-}
