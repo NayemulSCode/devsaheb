@@ -63,8 +63,13 @@ npm run dev                                         # then visit /admin
 ```
 
 `npm run dev` mounts the real API inside the Vite dev server, so /admin works
-without a second process. It reads `.env` directly. The one build is needed
-because saves validate against the schema exported from the built SSR bundle.
+without a second process, and injects each route's content into the dev shell
+so pages render what is actually published. It reads `.env` directly.
+
+The one build is needed because saves validate against the schema exported
+from the built SSR bundle. **Rebuild after changing anything under `src/`
+that the admin depends on** — the server picks up a new bundle on its own
+(the module cache is busted on mtime), but the bundle has to exist first.
 
 The editor at `/admin` is behind a password and can edit **every content-backed
 page** — pick one from the dropdown. Saving validates against the zod schema,

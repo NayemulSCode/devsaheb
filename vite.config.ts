@@ -1,4 +1,9 @@
 import { defineConfig, type PluginOption } from 'vite';
+import { existsSync, readFileSync } from 'node:fs';
+import { dirname, resolve } from 'node:path';
+import { fileURLToPath } from 'node:url';
+
+const __dirname = dirname(fileURLToPath(import.meta.url));
 import react from '@vitejs/plugin-react';
 import tailwindcss from '@tailwindcss/vite';
 
@@ -14,10 +19,60 @@ import tailwindcss from '@tailwindcss/vite';
  * schema is read from the built SSR bundle.
  */
 function devApi(): PluginOption {
+  let devServer: import('vite').ViteDevServer | undefined;
+
   return {
     name: 'devsaheb-dev-api',
     apply: 'serve',
+
+    /**
+     * Injects the page's content into the dev shell.
+     *
+     * In production the prerender embeds this script and the client reads it
+     * back on hydration. The dev server serves a bare index.html, so without
+     * this every content-driven route finds nothing and renders its fallback -
+     * taxonomy pages showed "This page is being written" no matter what had
+     * been published. The home page hid the problem behind its coded fallback.
+     *
+     * The route table is loaded through Vite so there is still one source of
+     * truth for which content file backs which URL, and an edit shows up on
+     * the next reload with no build.
+     */
+    transformIndexHtml: {
+      order: 'pre',
+      async handler(html, ctx) {
+        if (!devServer) return html;
+
+        const url = (ctx.originalUrl ?? '/').split('?')[0] ?? '/';
+        const path = url.replace(/\/+$/, '') || '/';
+
+        try {
+          const mod = await devServer.ssrLoadModule('/src/routes.tsx');
+          const route = mod.routes.find(
+            (r: { path: string; contentPath?: string }) => r.path === path,
+          );
+          if (!route?.contentPath) return html;
+
+          const file = resolve(__dirname, 'content', `${route.contentPath}.json`);
+          if (!existsSync(file)) return html;
+
+          // Same escaping as the prerender: an unescaped </script> inside the
+          // JSON would close the tag early.
+          const json = readFileSync(file, 'utf8').replace(/</g, '\\u003c');
+          return html.replace(
+            '</body>',
+            `  <script type="application/json" id="__DS_PAGE_DATA__">${json}</script>\n  </body>`,
+          );
+        } catch {
+          // A broken route module must not take the dev server down; the page
+          // just falls back as it did before.
+          return html;
+        }
+      },
+    },
+
     async configureServer(server) {
+      devServer = server;
       // server/ is plain JS with no declarations; it is Node-side code that
       // never enters the client build, so a typed shim would be noise.
       // @ts-expect-error -- untyped local module
