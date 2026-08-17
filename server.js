@@ -20,13 +20,21 @@ import { fileURLToPath } from 'node:url';
 import { existsSync } from 'node:fs';
 import { createAuth } from './server/auth.js';
 import { createAdminRouter } from './server/admin.js';
-import { ensureDirs, MEDIA_DIR } from './server/content.js';
+import { ensureDirs, ensureMediaLink, MEDIA_DIR } from './server/content.js';
 
 const ROOT = dirname(fileURLToPath(import.meta.url));
 const CLIENT_DIR = join(ROOT, 'dist', 'client');
 const PORT = Number(process.env.PORT) || 3000;
 
 await ensureDirs();
+
+// In production Apache serves dist/client and never sees content/media, so the
+// upload directory is linked into the document root. Recreated here because a
+// deploy replaces dist/ wholesale.
+const mediaLink = await ensureMediaLink(join(ROOT, 'dist', 'client'));
+if (mediaLink instanceof Error) {
+  console.warn('[media] could not link uploads into the document root:', mediaLink.message);
+}
 
 const auth = createAuth({
   passwordHash: process.env.ADMIN_PASSWORD_HASH,

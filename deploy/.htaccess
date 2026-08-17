@@ -8,8 +8,19 @@ Options -Indexes
 DirectoryIndex index.html
 ErrorDocument 404 /404.html
 
+# Uploaded media lives in content/media, outside this document root, so that a
+# redeploy (which replaces dist/ wholesale) cannot delete it. The app recreates
+# a dist/client/media symlink to it on every boot; Apache needs this to follow it.
+Options +SymLinksIfOwnerMatch
+
 <IfModule mod_rewrite.c>
   RewriteEngine On
+
+  # /api belongs to the Node app via Passenger, and /media resolves through the
+  # symlink above. Neither may be touched by the rules below - without this the
+  # trailing-slash redirect rewrites API calls and the admin stops working.
+  RewriteCond %{REQUEST_URI} ^/(api|media)(/|$)
+  RewriteRule ^ - [L]
 
   # Trailing slashes create duplicate URLs for the same page, which splits
   # ranking signals. Redirect once, permanently. Real directories are exempt.

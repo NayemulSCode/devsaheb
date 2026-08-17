@@ -12,7 +12,7 @@
  *      it. Rename is atomic; read-modify-write is not.
  */
 
-import { mkdir, readFile, writeFile, rename, copyFile, readdir, unlink } from 'node:fs/promises';
+import { mkdir, readFile, writeFile, rename, copyFile, readdir, unlink, symlink } from 'node:fs/promises';
 import { existsSync } from 'node:fs';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -101,4 +101,30 @@ export async function ensureDirs() {
   await mkdir(join(CONTENT_DIR, 'pages'), { recursive: true });
   await mkdir(MEDIA_DIR, { recursive: true });
   await mkdir(VERSIONS_DIR, { recursive: true });
+}
+
+/**
+ * Links the document root's /media at the real upload directory.
+ *
+ * In production Apache serves dist/client directly and only /api reaches the
+ * Node app, so uploads stored in content/media would 404 - every image added
+ * through the admin would be broken, and nothing in the app log would say so.
+ *
+ * The symlink cannot live in the repo or the release: `vite build` empties
+ * dist/, so a deploy replaces the whole directory. Recreating it at boot means
+ * it comes back on the app restart that follows every deploy, with no manual
+ * step to forget.
+ */
+export async function ensureMediaLink(clientDir) {
+  const link = join(clientDir, 'media');
+  if (existsSync(link)) return null;
+
+  try {
+    // 'junction' is required for directories on Windows and ignored on POSIX.
+    await symlink(MEDIA_DIR, link, 'junction');
+    return link;
+  } catch (err) {
+    // Not fatal: the site still serves, only uploaded images are missing.
+    return err instanceof Error ? err : new Error(String(err));
+  }
 }
