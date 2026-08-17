@@ -85,8 +85,14 @@ Two editors, because the content has two shapes:
 
 Taxonomy pages are deliberately not Puck documents. Their `faq` drives FAQPage
 schema and `related` drives the internal link graph between the two taxonomies;
-flattening them into a free-form block list would lose both, and that
-structured data is most of why those pages are worth publishing.
+flattening them into a free-form block list would let someone reorder or delete
+those sections and break the structured data silently. The fixed structure is
+also what keeps every service page consistent, which matters when there are
+eventually 45 of them.
+
+The form has a live preview beside it, rendering the real route component with
+the draft in place of stored content — so it cannot drift from the page it is
+previewing. Desktop and mobile widths, scaled to fit, and it can be hidden.
 
 The document list is derived from the route table in the built bundle, so a new
 content-backed route becomes editable the moment it ships — there is no second

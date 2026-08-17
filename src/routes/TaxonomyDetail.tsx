@@ -58,7 +58,14 @@ function RelatedLink({
 export default function TaxonomyDetail() {
   const data = useRouteData<TaxonomyPage>();
   const { pathname } = useLocation();
-  const isService = pathname.startsWith('/services/');
+
+  // Derived from the content, not the URL. The data is authoritative, and it
+  // lets the admin preview render this component correctly without faking a
+  // location - React Router refuses to nest a second Router to supply one.
+  // The pathname is only a fallback for the no-content case.
+  const isService = data
+    ? SERVICES.some((s) => s.slug === data.slug)
+    : pathname.startsWith('/services/');
 
   if (!data) {
     return (

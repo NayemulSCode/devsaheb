@@ -1,8 +1,18 @@
 import type { ReactNode } from 'react';
+import { useLocation } from 'react-router-dom';
 import Header from './Header';
 import Footer from './Footer';
 
 export default function Layout({ children }: { children: ReactNode }) {
+  const { pathname } = useLocation();
+
+  // The admin is a full-height tool, not a page on the site. Wrapping it in
+  // the marketing header and footer cost vertical space the editor needs and
+  // left a site footer sitting under a 100vh split view.
+  if (pathname.startsWith('/admin')) {
+    return <>{children}</>;
+  }
+
   return (
     <div className="flex min-h-screen flex-col">
       {/* First tab stop on every page. Sighted keyboard users would otherwise

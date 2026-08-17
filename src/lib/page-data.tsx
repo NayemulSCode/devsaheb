@@ -80,6 +80,23 @@ export function useRouteData<T>(): T | null {
   return (useContext(RouteDataContext) as T | null) ?? null;
 }
 
+/**
+ * Supplies content directly, with no fetching or caching.
+ *
+ * The admin preview needs a new value on every keystroke, which is exactly
+ * what PageDataProvider's cache is designed to prevent. Preview is the one
+ * caller that should bypass it.
+ */
+export function RouteDataPreview({
+  value,
+  children,
+}: {
+  value: unknown;
+  children: ReactNode;
+}) {
+  return <RouteDataContext.Provider value={value}>{children}</RouteDataContext.Provider>;
+}
+
 /** Reads the embedded payload on the client. Returns null if absent or invalid. */
 export function readEmbeddedPageData(): unknown {
   if (typeof document === 'undefined') return null;

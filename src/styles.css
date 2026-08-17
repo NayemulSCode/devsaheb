@@ -123,6 +123,18 @@ p {
   transition-delay: var(--reveal-delay, 0ms);
 }
 
+/*
+  The admin preview renders inside a scaled, independently scrolling container,
+  where the reveal observer cannot reliably decide what is on screen. Left
+  armed, the preview would sit blank while the editor looked broken. Content is
+  always shown there.
+*/
+.ds-preview [data-reveal] {
+  opacity: 1 !important;
+  transform: none !important;
+  transition: none !important;
+}
+
 @media (prefers-reduced-motion: reduce) {
   .js [data-reveal] {
     opacity: 1;

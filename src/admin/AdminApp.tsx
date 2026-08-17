@@ -1,8 +1,12 @@
-import { useCallback, useEffect, useState } from 'react';
+import { lazy, Suspense, useCallback, useEffect, useState } from 'react';
 import { Puck, type Config, type Data } from '@measured/puck';
 import '@measured/puck/puck.css';
 import TaxonomyEditor from './TaxonomyEditor';
 import { puckConfig } from './puck-config';
+
+// Pulls in the site's route components. Split out so opening a block page does
+// not pay for a preview it never shows.
+const PagePreview = lazy(() => import('./PagePreview'));
 import type { TaxonomyPage } from '../content/schema';
 
 type DocKind = 'blocks' | 'taxonomy';
@@ -36,6 +40,7 @@ export default function AdminApp({ onSignOut }: { onSignOut: () => void }) {
   const [status, setStatus] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
+  const [preview, setPreview] = useState(true);
 
   useEffect(() => {
     fetch('/api/admin/documents')
@@ -171,25 +176,58 @@ export default function AdminApp({ onSignOut }: { onSignOut: () => void }) {
       ) : null}
 
       {current?.kind === 'taxonomy' ? (
-        <div className="mx-auto grid max-w-3xl gap-6 p-6">
-          <TaxonomyEditor
-            value={draft as TaxonomyPage}
-            onChange={(next) => setDraft(next)}
-          />
-          <div className="sticky bottom-0 flex items-center gap-4 border-t border-black/10 bg-neutral-100 py-4">
-            <button
-              type="button"
-              onClick={() => publish(draft)}
-              disabled={saving}
-              className="border border-black bg-black px-6 py-2.5 font-mono text-[11px] uppercase tracking-[0.12em] text-white disabled:opacity-50"
-            >
-              {saving ? 'Publishing…' : 'Publish'}
-            </button>
-            <span className="text-[12px] text-black/50">
-              {current.versions.length} previous version
-              {current.versions.length === 1 ? '' : 's'} kept
-            </span>
+        <div
+          className={
+            preview
+              ? 'grid h-[calc(100vh-108px)] grid-cols-1 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]'
+              : 'h-[calc(100vh-108px)] overflow-auto'
+          }
+        >
+          <div className="min-h-0 overflow-auto">
+            <div className="mx-auto grid max-w-3xl gap-6 p-6">
+              <TaxonomyEditor
+                value={draft as TaxonomyPage}
+                onChange={(next) => setDraft(next)}
+              />
+            </div>
           </div>
+
+          {preview ? (
+            <div className="min-h-0 border-l border-black/10">
+              <Suspense
+                fallback={<Centered>Loading preview…</Centered>}
+              >
+                <PagePreview route={current.route} data={draft} />
+              </Suspense>
+            </div>
+          ) : null}
+        </div>
+      ) : null}
+
+      {current?.kind === 'taxonomy' ? (
+        <div className="fixed inset-x-0 bottom-0 flex items-center gap-4 border-t border-black/10 bg-white px-5 py-3">
+          <button
+            type="button"
+            onClick={() => publish(draft)}
+            disabled={saving}
+            className="border border-black bg-black px-6 py-2.5 font-mono text-[11px] uppercase tracking-[0.12em] text-white disabled:opacity-50"
+          >
+            {saving ? 'Publishing…' : 'Publish'}
+          </button>
+
+          <button
+            type="button"
+            onClick={() => setPreview(!preview)}
+            aria-pressed={preview}
+            className="border border-black/20 px-4 py-2.5 font-mono text-[11px] uppercase tracking-[0.1em]"
+          >
+            {preview ? 'Hide preview' : 'Show preview'}
+          </button>
+
+          <span className="text-[12px] text-black/50">
+            {current.versions.length} previous version
+            {current.versions.length === 1 ? '' : 's'} kept
+          </span>
         </div>
       ) : null}
     </div>
