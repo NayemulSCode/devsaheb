@@ -14,7 +14,7 @@ const initialData = readEmbeddedPageData();
 const tree = (
   <StrictMode>
     <BrowserRouter>
-      <App initialData={initialData} />
+      <App initialData={initialData} initialPath={window.location.pathname} />
     </BrowserRouter>
   </StrictMode>
 );

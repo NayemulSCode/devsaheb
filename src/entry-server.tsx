@@ -48,7 +48,7 @@ export function render(url: string): RenderResult {
 
   const html = renderToString(
     <StaticRouter location={url}>
-      <App initialData={data} />
+      <App initialData={data} initialPath={url} />
     </StaticRouter>,
   );
 

@@ -8,9 +8,15 @@ import site from '../content/site.json';
 
 const NotFound = notFoundRoute.Component;
 
-export default function App({ initialData = null }: { initialData?: unknown }) {
+export default function App({
+  initialData = null,
+  initialPath,
+}: {
+  initialData?: unknown;
+  initialPath?: string | undefined;
+}) {
   return (
-    <PageDataProvider value={initialData}>
+    <PageDataProvider initialData={initialData} initialPath={initialPath}>
       <Layout>
         <HeadSync site={site as SiteConfig} />
         <Routes>

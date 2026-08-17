@@ -275,6 +275,19 @@ export async function renderPage(routePath, bundle, assets) {
   });
   const file = outputPath(routePath);
   await writeAtomic(file, doc);
+
+  // Client-side navigation cannot read another page's embedded script, so the
+  // same content is also emitted as a static JSON file. Apache serves it like
+  // any other asset - Node stays out of the request path, which is the whole
+  // point of the architecture.
+  const route = bundle.findRoute(routePath);
+  if (route?.contentPath && data) {
+    await writeAtomic(
+      join(CLIENT_DIR, '_data', `${route.contentPath}.json`),
+      JSON.stringify(data),
+    );
+  }
+
   return file;
 }
 

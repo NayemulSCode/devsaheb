@@ -73,6 +73,35 @@ function devApi(): PluginOption {
 
     async configureServer(server) {
       devServer = server;
+
+      /**
+       * Serves the per-route content files that client-side navigation fetches.
+       *
+       * In production the prerender writes these into dist/client/_data and
+       * Apache serves them. Nothing writes them in dev, so without this every
+       * SPA navigation to a content page would 404 and fall back - working in
+       * production and broken locally, which is the worst way round.
+       */
+      server.middlewares.use((req, res, next) => {
+        const url = (req.url ?? '').split('?')[0] ?? '';
+        if (!url.startsWith('/_data/') || !url.endsWith('.json')) return next();
+
+        const rel = url.slice('/_data/'.length, -'.json'.length);
+        if (!rel.split('/').every((s) => /^[a-z0-9][a-z0-9-]{0,63}$/.test(s))) {
+          res.statusCode = 400;
+          return res.end('Bad path');
+        }
+
+        const file = resolve(__dirname, 'content', `${rel}.json`);
+        if (!existsSync(file)) {
+          res.statusCode = 404;
+          return res.end('Not found');
+        }
+
+        res.setHeader('content-type', 'application/json');
+        res.setHeader('cache-control', 'no-store');
+        return res.end(readFileSync(file, 'utf8'));
+      });
       // server/ is plain JS with no declarations; it is Node-side code that
       // never enters the client build, so a typed shim would be noise.
       // @ts-expect-error -- untyped local module
