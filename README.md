@@ -181,6 +181,28 @@ check's original needle (`@measured/puck`) did not survive minification and
 reported a clean result on a bundle that had genuinely leaked — it now matches
 on identifiers that do.
 
+## Site-wide details
+
+Contact details, the registration number, and social profiles live in
+[content/site.json](content/site.json) — one file, no code. They feed the
+footer, the contact page, the careers page, and the Organization schema.
+
+| Field | Where it shows |
+|---|---|
+| `contact.email` | Footer, contact page |
+| `contact.careersEmail` | Careers page, contact page |
+| `contact.phone` | Footer, contact page. The `tel:` href is derived, not stored twice |
+| `contact.address` | Footer, contact page, and `PostalAddress` in the Organization schema |
+| `registrationNumber` | Footer bottom bar. Omitted if blank |
+| `social[].href` | Footer icons, and `sameAs` in the schema |
+
+A social entry with an empty `href` is not rendered at all, and the whole
+"Follow us" block disappears if none are set. Linking a network's homepage
+because there is no profile yet is worse than showing nothing, and `sameAs`
+pointing anywhere but your own profile is worse than omitting the field.
+
+**These are still placeholders.** Replace them before launch.
+
 ## Adding a page
 
 Add an entry to `routes` in [src/routes.tsx](src/routes.tsx). That is all — it
