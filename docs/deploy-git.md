@@ -62,9 +62,29 @@ slowest step.
 cPanel → **Domains → Create A Domain**
 
 - Domain: `devsaheb.com`
-- Document root: `/home/devsaheb/devsaheb-app` — leave cPanel's suggestion; the
-  Node app takes over this path in step 3
+- Document root: `/home/devsaheb/devsaheb.com` — cPanel's own suggestion, and
+  **keep it separate from the application root**
 - Uncheck "share document root with primary domain"
+
+The document root and the application root are different directories, and that
+is deliberate. Step 3 writes a Passenger `.htaccess` into the *document* root;
+if that were also the git repository, the file would sit there permanently
+untracked and `scripts/deploy.sh` would refuse to deploy every time. Keeping
+them apart leaves the repository clean.
+
+The document root ends up empty apart from that `.htaccess`. That is correct —
+Apache finds nothing to serve, so every request falls through to Passenger,
+which is the whole point of a root mount.
+
+cPanel also creates `devsaheb.com.thaitemptation.restaurant` as an addon
+subdomain. It is unavoidable and harmless: `CANONICAL_HOST` 301s it to
+`www.devsaheb.com` along with everything else.
+
+**Confirm `www.devsaheb.com` appears in the domain list afterwards.** cPanel
+normally adds it as an alias. It is not optional here — `www` is the canonical
+host, so every request 301s to it. If it is missing, add it as an alias
+(Domains → Create A Domain → `www.devsaheb.com`, same document root) before
+going further, or the site redirects to a host nothing answers on.
 
 ## 3. Create the Node app
 
@@ -216,6 +236,12 @@ needed in every new SSH session.
 
 **Build killed, or heap error** — the build does not fit in the memory this
 plan allows. Build locally and upload instead.
+
+**"Refusing to deploy: uncommitted changes outside content/"** with an
+`.htaccess` listed — the document root was pointed at the application root, so
+cPanel wrote its Passenger config inside the repository. Move the domain's
+document root to `/home/devsaheb/devsaheb.com` (Domains → Manage) rather than
+deleting the file; Passenger needs it where it is.
 
 **`/api/health` returns HTML** — the app is not running. Check the Node.js panel
 and the app's stderr log.

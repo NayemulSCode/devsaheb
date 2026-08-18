@@ -1,16 +1,21 @@
 /**
  * Express app for cPanel / Phusion Passenger.
  *
- * Public pages are NOT served from here in production - Apache serves the
- * prerendered HTML in dist/client directly, via deploy/.htaccess. This process
- * exists for two jobs only:
+ * Two deployments are supported and they differ in who serves public pages:
  *
- *   1. /api/*  - the content save endpoints and health checks
- *   2. regeneration - after a save, re-render the affected page to disk
+ *   Root mount (docs/deploy-git.md) - Application URL is the bare domain, so
+ *   Passenger sees every request and the static handling below IS production.
+ *   Nothing else canonicalises the host or sets cache headers, which is why
+ *   both live in here rather than in an .htaccess.
  *
- * The API itself lives in server/api.js so the Vite dev server can mount the
- * same routes. The static handling below is a convenience for local production
- * testing (`npm run preview`); on the real host Apache never reaches it.
+ *   Split (RELEASE.md) - Application URL is <domain>/api, the document root
+ *   points at dist/client, and Apache serves the prerendered HTML directly via
+ *   deploy/.htaccess. Node never enters the request path for a public page.
+ *
+ * Either way this process owns /api/* - the content save endpoints and health
+ * checks - and regeneration, re-rendering the affected page to disk after a
+ * save. The API lives in server/api.js so the Vite dev server can mount the
+ * same routes.
  */
 
 import express from 'express';
@@ -71,7 +76,9 @@ app.use((req, res, next) => {
 
 app.use(api);
 
-// --- Static (local preview only) ---------------------------------------------
+// --- Static ------------------------------------------------------------------
+//
+// Live under a root mount; local preview only under the split design.
 //
 // Serve /services from /services/index.html directly, mirroring the
 // mod_rewrite rule in deploy/.htaccess.
