@@ -24,7 +24,8 @@
     "audit:bundle": "node scripts/audit-bundle.mjs",
     "audit": "npm run audit:bundle && npm run audit:a11y && npm run audit:perf",
     "release": "npm run build && node scripts/package-release.mjs",
-    "check:content": "node scripts/check-content.mjs"
+    "check:content": "node scripts/check-content.mjs",
+    "new:page": "node scripts/new-page.mjs"
   },
   "dependencies": {
     "@fontsource-variable/geist": "^5.3.0",

@@ -4,8 +4,8 @@ import Container from '../ui/Container';
 import Button from '../ui/Button';
 import { cn } from '../../lib/cn';
 import {
-  SERVICE_GROUPS,
-  TECHNOLOGY_GROUPS,
+  VISIBLE_SERVICE_GROUPS,
+  VISIBLE_TECHNOLOGY_GROUPS,
   servicePath,
   technologyPath,
   type TaxonomyGroup,
@@ -136,7 +136,7 @@ export default function Header() {
                 registerTrigger={(el) => (triggers.current.services = el)}
                 width="lg:w-[760px]"
               >
-                <TaxonomyPanel groups={SERVICE_GROUPS} toPath={servicePath} hub="/services" />
+                <TaxonomyPanel groups={VISIBLE_SERVICE_GROUPS} toPath={servicePath} hub="/services" />
               </NavDropdown>
 
               <NavDropdown
@@ -150,7 +150,7 @@ export default function Header() {
                 width="lg:w-[700px]"
               >
                 <TaxonomyPanel
-                  groups={TECHNOLOGY_GROUPS}
+                  groups={VISIBLE_TECHNOLOGY_GROUPS}
                   toPath={technologyPath}
                   hub="/technologies"
                 />

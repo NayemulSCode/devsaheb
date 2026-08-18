@@ -3,7 +3,7 @@ import PageHero from '../components/ui/PageHero';
 import Section from '../components/ui/Section';
 import Container from '../components/ui/Container';
 import Reveal from '../components/Reveal';
-import { SERVICE_GROUPS, servicePath } from '../content/taxonomy';
+import { VISIBLE_SERVICE_GROUPS, servicePath } from '../content/taxonomy';
 
 export default function ServicesHub() {
   return (
@@ -17,7 +17,7 @@ export default function ServicesHub() {
       <Section tone="bone">
         <Container>
           <div className="grid gap-14">
-            {SERVICE_GROUPS.map((group, gi) => (
+            {VISIBLE_SERVICE_GROUPS.map((group, gi) => (
               <Reveal key={group.name} delay={gi * 60}>
                 <div className="grid gap-6 md:grid-cols-[220px_1fr] md:gap-10">
                   <h2 className="font-mono text-[11px] uppercase tracking-[0.16em] text-[var(--accent)]">

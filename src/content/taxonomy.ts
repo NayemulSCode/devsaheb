@@ -24,6 +24,15 @@ export type TaxonomyItem = {
    * and the worse option of shipping a thin page to fill the gap.
    */
   published?: boolean;
+  /**
+   * Removes the item from the menus, hubs, footer and sitemap entirely.
+   *
+   * Different from `published`. Unpublished means "we do this, the page is not
+   * written yet" and still shows as plain text. Hidden means "do not advertise
+   * this at all" — use it for work you have stopped offering, rather than
+   * deleting the entry and losing the record of the slug.
+   */
+  hidden?: boolean;
 };
 
 export type TaxonomyGroup = {
@@ -130,12 +139,26 @@ export const TECHNOLOGY_GROUPS: TaxonomyGroup[] = [
 
 const flatten = (groups: TaxonomyGroup[]) => groups.flatMap((g) => g.items);
 
+/**
+ * Groups with hidden items removed, and any group left empty dropped.
+ *
+ * Menus and hubs render from these. SERVICES and TECHNOLOGIES below stay
+ * complete, so a name lookup still resolves for anything already referenced.
+ */
+export const visibleGroups = (groups: TaxonomyGroup[]): TaxonomyGroup[] =>
+  groups
+    .map((g) => ({ ...g, items: g.items.filter((i) => !i.hidden) }))
+    .filter((g) => g.items.length > 0);
+
+export const VISIBLE_SERVICE_GROUPS = visibleGroups(SERVICE_GROUPS);
+export const VISIBLE_TECHNOLOGY_GROUPS = visibleGroups(TECHNOLOGY_GROUPS);
+
 export const SERVICES = flatten(SERVICE_GROUPS);
 export const TECHNOLOGIES = flatten(TECHNOLOGY_GROUPS);
 
 export const TIER1_SERVICES = SERVICES.filter((s) => s.tier1);
-export const PUBLISHED_SERVICES = SERVICES.filter((s) => s.published);
-export const PUBLISHED_TECHNOLOGIES = TECHNOLOGIES.filter((t) => t.published);
+export const PUBLISHED_SERVICES = SERVICES.filter((s) => s.published && !s.hidden);
+export const PUBLISHED_TECHNOLOGIES = TECHNOLOGIES.filter((t) => t.published && !t.hidden);
 export const TIER1_TECHNOLOGIES = TECHNOLOGIES.filter((t) => t.tier1);
 
 export const servicePath = (slug: string) => `/services/${slug}`;

@@ -3,7 +3,7 @@ import PageHero from '../components/ui/PageHero';
 import Section from '../components/ui/Section';
 import Container from '../components/ui/Container';
 import Reveal from '../components/Reveal';
-import { TECHNOLOGY_GROUPS, technologyPath } from '../content/taxonomy';
+import { VISIBLE_TECHNOLOGY_GROUPS, technologyPath } from '../content/taxonomy';
 
 export default function TechnologiesHub() {
   return (
@@ -17,7 +17,7 @@ export default function TechnologiesHub() {
       <Section tone="ink">
         <Container>
           <div className="grid gap-12 lg:grid-cols-2 lg:gap-x-16">
-            {TECHNOLOGY_GROUPS.map((group, gi) => (
+            {VISIBLE_TECHNOLOGY_GROUPS.map((group, gi) => (
               <Reveal key={group.name} delay={gi * 60}>
                 <h2 className="border-b border-gold/20 pb-3 font-mono text-[11px] uppercase tracking-[0.16em] text-gold">
                   {group.name}
