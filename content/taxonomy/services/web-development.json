@@ -1,0 +1,43 @@
+{
+  "slug": "web-development",
+  "primaryQuery": "TODO — the one query this page owns, from docs/keyword-map.md",
+  "title": "TODO — web development (max 70 chars, shown in search results)",
+  "description": "TODO — max 180 characters. Written for someone deciding whether to click.",
+  "h1": "TODO — the headline, written for a human rather than the search result",
+  "intro": "TODO — open with the thing a buyer actually needs to hear first.",
+  "sections": [
+    {
+      "heading": "TODO — first section",
+      "body": "TODO.\n\nBlank line between paragraphs."
+    },
+    {
+      "heading": "TODO — second section",
+      "body": "TODO."
+    }
+  ],
+  "deliverables": [
+    "TODO — what the client actually receives"
+  ],
+  "faq": [
+    {
+      "q": "TODO — a real question you get asked?",
+      "a": "TODO."
+    },
+    {
+      "q": "TODO — another?",
+      "a": "TODO."
+    },
+    {
+      "q": "TODO — a third? Three is the minimum.",
+      "a": "TODO."
+    }
+  ],
+  "notFor": {
+    "heading": "When we would recommend something else",
+    "body": "TODO — the honest counter-case. Hard to template, and the section buyers remember."
+  },
+  "related": {
+    "services": [],
+    "technologies": []
+  }
+}
