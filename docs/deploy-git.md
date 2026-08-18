@@ -76,9 +76,34 @@ The document root ends up empty apart from that `.htaccess`. That is correct —
 Apache finds nothing to serve, so every request falls through to Passenger,
 which is the whole point of a root mount.
 
-cPanel also creates `devsaheb.com.thaitemptation.restaurant` as an addon
-subdomain. It is unavoidable and harmless: `CANONICAL_HOST` 301s it to
-`www.devsaheb.com` along with everything else.
+### The addon subdomain
+
+cPanel also creates `devsaheb.com.thaitemptation.restaurant`. That is how the
+addon-domain mechanism works — the addon is implemented as a subdomain of the
+account's primary domain, with the real domain attached as an alias. It is not
+where the site lives, and it cannot be deleted without removing the addon
+domain and taking the site down with it.
+
+For visitors and for search it is a non-issue: `CANONICAL_HOST` 301s it to
+`www.devsaheb.com`, path preserved.
+
+The residue is **Certificate Transparency**. AutoSSL puts that hostname in the
+certificate, every certificate is published to public append-only CT logs, and
+so anyone searching crt.sh for `thaitemptation.restaurant` learns that a client
+site and this company share hosting.
+
+To close that: cPanel → SSL/TLS Status → **Exclude from AutoSSL** on
+`devsaheb.com.thaitemptation.restaurant`. No certificate covers it, so it never
+reaches a log. HTTPS on that hostname then warns, which does not matter —
+nothing should visit it and it redirects regardless.
+
+Two structural fixes exist if the coupling ever matters more than that.
+Making `devsaheb.com` the account's primary domain reverses the direction, so
+the artifact becomes `thaitemptation.restaurant.devsaheb.com` — a software firm
+hosting a client, rather than the reverse. It needs a Namecheap support request
+and it disturbs a live client site, so it is not worth doing for cosmetics.
+Separate cPanel accounts are the only complete separation, and cost a second
+plan.
 
 **Confirm `www.devsaheb.com` appears in the domain list afterwards.** cPanel
 normally adds it as an alias. It is not optional here — `www` is the canonical
