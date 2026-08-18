@@ -1,5 +1,9 @@
 # Releasing devsaheb.com
 
+> Building **on the server** and pulling from GitHub instead? See
+> [docs/deploy-git.md](docs/deploy-git.md). This document covers the split
+> design, where Apache serves static files and Node only handles /api.
+
 Target: **https://www.devsaheb.com** on cPanel (`devsaheb@server703`, shared IP
 `198.177.120.114`), as an addon domain beside `thaitemptation.restaurant`.
 
