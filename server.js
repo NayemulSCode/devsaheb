@@ -33,10 +33,32 @@ app.disable('x-powered-by');
 app.set('trust proxy', 1);
 app.use(compression());
 
-// --- Canonical host and path -------------------------------------------------
-// Trailing-slash and case duplicates split ranking signals, so normalise with a
-// 301 rather than serving the same page at several URLs. /api and /media are
-// exempt - the same exemption deploy/.htaccess makes in production.
+/**
+ * Canonical host.
+ *
+ * Opt-in through CANONICAL_HOST so local preview is untouched; set it in .env
+ * on the server. When the app is mounted at the domain root rather than behind
+ * a document-root .htaccess, this is the only thing redirecting the apex to
+ * www - and every canonical tag, sitemap entry and og:url in the build points
+ * at www, so without it the site answers on two hosts.
+ */
+const CANONICAL_HOST = process.env.CANONICAL_HOST?.trim();
+
+app.use((req, res, next) => {
+  if (!CANONICAL_HOST) return next();
+
+  const host = req.headers.host;
+  if (!host || host === CANONICAL_HOST) return next();
+
+  // Apache terminates TLS, so the scheme arrives in X-Forwarded-Proto.
+  const proto = req.get('x-forwarded-proto') ?? req.protocol;
+  return res.redirect(301, `${proto}://${CANONICAL_HOST}${req.originalUrl}`);
+});
+
+// --- Canonical path ----------------------------------------------------------
+// Trailing-slash duplicates split ranking signals, so normalise with a 301
+// rather than serving the same page at several URLs. /api and /media are
+// exempt - the same exemption deploy/.htaccess makes.
 app.use((req, res, next) => {
   const url = req.originalUrl.split('?')[0];
   if (/^\/(api|media)(\/|$)/.test(url)) return next();
@@ -75,11 +97,21 @@ app.use(
     redirect: false,
     index: false,
     setHeaders(res, filePath) {
-      // Hashed assets are immutable; HTML must always revalidate or edits
-      // made through the admin would stay invisible behind a cache.
+      res.setHeader('X-Content-Type-Options', 'nosniff');
+
       if (/[\\/]assets[\\/]/.test(filePath)) {
+        // Hashed by the build, so a change means a new URL.
         res.setHeader('Cache-Control', 'public, max-age=31536000, immutable');
       } else if (filePath.endsWith('.html')) {
+        // Must revalidate, or a page edited through the admin stays invisible.
+        res.setHeader('Cache-Control', 'no-cache');
+      } else if (/\.(png|svg|ico|jpe?g|webp|avif|woff2?)$/.test(filePath)) {
+        // Unhashed root assets: favicons, OG cards. Long enough to help, short
+        // enough that a brand change is not stuck in caches for a year.
+        res.setHeader('Cache-Control', 'public, max-age=604800');
+      } else if (/_data[\\/].*\.json$/.test(filePath)) {
+        // Route content fetched on client-side navigation. Revalidates for the
+        // same reason HTML does.
         res.setHeader('Cache-Control', 'no-cache');
       }
     },
