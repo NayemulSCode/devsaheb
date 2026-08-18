@@ -222,6 +222,8 @@ a `contentPath` to make it editable in the admin.
 
 ## Deploying to cPanel
 
+Full step-by-step in [RELEASE.md](RELEASE.md). Summary:
+
 1. **Check the Node version first.** cPanel → Setup Node.js App → version
    dropdown. This project needs **Node 20+**. If the selector caps lower, stop
    here — the stack will not run.

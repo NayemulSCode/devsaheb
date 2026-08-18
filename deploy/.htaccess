@@ -22,6 +22,12 @@ Options +SymLinksIfOwnerMatch
   RewriteCond %{REQUEST_URI} ^/(api|media)(/|$)
   RewriteRule ^ - [L]
 
+  # One canonical host. www.devsaheb.com is what every canonical tag, sitemap
+  # entry and og:url in the build points at; serving the apex as well would put
+  # identical pages on two hosts and split the ranking signal between them.
+  RewriteCond %{HTTP_HOST} ^devsaheb\.com$ [NC]
+  RewriteRule ^(.*)$ https://www.devsaheb.com/$1 [R=301,L,QSA]
+
   # Trailing slashes create duplicate URLs for the same page, which splits
   # ranking signals. Redirect once, permanently. Real directories are exempt.
   RewriteCond %{REQUEST_FILENAME} !-d
