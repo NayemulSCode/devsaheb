@@ -247,10 +247,52 @@ server's copy wins — it is the one people actually used. If the same file
 changed on both sides it stops and tells you, rather than picking silently.
 
 **Content and git.** `content/` is tracked, and it is also written by the
-running app. That works while edits are occasional. Once you are editing
-regularly, the cleaner arrangement is to stop tracking `content/` and treat the
-server as its only home — say the word and I will make that change. Either way,
-`content/.versions/` on the server keeps the last 20 versions of every document.
+running app. Seven files are in git today; everything edited through `/admin`
+from now on exists only on the server.
+
+There is no database, so there is nothing else holding that content. If the
+server is lost, the account lapses, or the site is migrated without someone
+remembering to copy the directory, it is gone. `content/.versions/` keeps the
+last 20 versions of every document, but it lives on the same disk, so it
+protects against a bad edit and not against losing the machine.
+
+The fix is to push the server's content back to git periodically, which gives
+both an offsite copy and a one-step migration. Ask for `scripts/push-content.sh`
+when you want it; it needs a deploy key with write access.
+
+---
+
+## Moving off this host later
+
+The plan is to run here for six to twelve months, then give devsaheb its own
+hosting. Nothing about this setup works against that, and two decisions taken
+now decide whether the move is an hour or a bad week.
+
+**What the move actually costs.** There is no database, nothing in the code
+refers to this host, and `app.js` is a three-line shim over a plain Express app
+that runs anywhere Node 20+ runs. So the move is: clone the repo, restore
+`content/`, write `.env`, `npm install && npm run build`, repoint DNS. The
+cPanel-specific parts — Passenger, the startup-file field, the nodevenv
+`activate` — are the only things left behind, and none of them are load-bearing.
+
+**Search sees nothing.** The domain, the paths and the `www` canonical are all
+unchanged by a host move. No redirects, no re-indexing, no ranking risk. Drop
+the DNS TTL a day before the cutover and run both hosts in parallel until it
+propagates.
+
+**Do the AutoSSL exclusion before the first certificate issues.** Certificate
+Transparency logs are append-only. Deleting the domain from this account in a
+year does not remove the record that `devsaheb.com.thaitemptation.restaurant`
+existed — that entry is permanent from the moment a certificate covering it is
+issued. This is the only step here that cannot be done later.
+
+**Keep email off this account.** `contact.email` in
+[content/site.json](../content/site.json) is still the `hello@devsaheb.com`
+placeholder, so nothing is committed yet. Create that mailbox in cPanel and the
+migration grows a second half: MX cutover, message history, and a sending
+reputation built on a shared host's IP. An independent provider — Zoho's free
+tier covers one domain, Google Workspace if you want the rest — costs nothing
+extra now and survives every hosting change afterwards.
 
 ---
 
