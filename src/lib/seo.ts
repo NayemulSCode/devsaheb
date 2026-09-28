@@ -43,6 +43,11 @@ export type SiteConfig = {
   url: string;
   /** %s is replaced by the route title. */
   titleTemplate: string;
+  /**
+   * Short brand line shown under the footer logo and emitted as the
+   * Organization's `slogan`. Optional - omitted rather than rendered empty.
+   */
+  tagline?: string;
   description: string;
   image: string;
   locale: string;

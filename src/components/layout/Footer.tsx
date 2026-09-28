@@ -50,6 +50,12 @@ export default function Footer() {
               />
             </Link>
 
+            {site.tagline ? (
+              <p className="mt-4 max-w-[22ch] font-display text-lg leading-snug text-bone">
+                {site.tagline}
+              </p>
+            ) : null}
+
             <address className="mt-7 grid gap-4 not-italic">
               <ContactLine icon="pin">
                 {addressLines(site.contact.address).map((line, i, all) => (

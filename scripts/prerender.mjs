@@ -88,6 +88,8 @@ function homeJsonLd(site) {
     description: site.description,
   };
 
+  if (site.tagline) org.slogan = site.tagline;
+
   const contact = site.contact ?? {};
   if (contact.email) org.email = contact.email;
   if (contact.phone) org.telephone = contact.phone;
