@@ -1,3 +1,4 @@
+import BlockPage from '../components/BlockPage';
 import PageHero from '../components/ui/PageHero';
 import Section from '../components/ui/Section';
 import Container from '../components/ui/Container';
@@ -32,40 +33,44 @@ const PROCESS = [
 
 export default function Work() {
   return (
-    <main>
-      <PageHero
-        eyebrow="selected work"
-        title="Every case study ends in a number."
-        lede="Problem, constraints, approach, architecture, result. The same structure every time, because consistency is the point."
-      />
+    <BlockPage
+      fallback={
+        <>
+          <PageHero
+            eyebrow="selected work"
+            title="Every case study ends in a number."
+            lede="Problem, constraints, approach, architecture, result. The same structure every time, because consistency is the point."
+          />
 
-      <Section tone="bone">
-        <Container>
-          <Reveal className="mb-12">
-            <h2 className="max-w-[24ch] text-3xl font-extrabold md:text-4xl">
-              What each case study will tell you.
-            </h2>
-          </Reveal>
-
-          <div className="grid gap-px bg-[var(--accent-line)] md:grid-cols-3">
-            {PROCESS.map(({ index, title, body }, i) => (
-              <Reveal key={title} delay={i * 60} className="h-full">
-                <Card index={index} title={title} className="h-full border-0 bg-bone-2">
-                  <p className="text-sm text-muted">{body}</p>
-                </Card>
+          <Section tone="bone">
+            <Container>
+              <Reveal className="mb-12">
+                <h2 className="max-w-[24ch] text-3xl font-extrabold md:text-4xl">
+                  What each case study will tell you.
+                </h2>
               </Reveal>
-            ))}
-          </div>
 
-          <Reveal delay={200}>
-            <p className="mt-12 max-w-[62ch] text-muted">
-              Case studies are being prepared with client permission. We would
-              rather publish three real ones than a dozen invented, which is the
-              same reason our metrics carry the measurement method next to them.
-            </p>
-          </Reveal>
-        </Container>
-      </Section>
-    </main>
+              <div className="grid gap-px bg-[var(--accent-line)] md:grid-cols-3">
+                {PROCESS.map(({ index, title, body }, i) => (
+                  <Reveal key={title} delay={i * 60} className="h-full">
+                    <Card index={index} title={title} className="h-full border-0 bg-bone-2">
+                      <p className="text-sm text-muted">{body}</p>
+                    </Card>
+                  </Reveal>
+                ))}
+              </div>
+
+              <Reveal delay={200}>
+                <p className="mt-12 max-w-[62ch] text-muted">
+                  Case studies are being prepared with client permission. We would
+                  rather publish three real ones than a dozen invented, which is the
+                  same reason our metrics carry the measurement method next to them.
+                </p>
+              </Reveal>
+            </Container>
+          </Section>
+        </>
+      }
+    />
   );
 }

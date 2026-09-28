@@ -1,0 +1,20 @@
+{
+  "root": { "props": { "title": "Our team" } },
+  "content": [
+    {
+      "type": "Hero",
+      "props": {
+        "eyebrow": "our team",
+        "title": "The people who will actually be on your project.",
+        "lede": "You will meet the engineers doing the work, not an account manager who hands you over after signing."
+      }
+    },
+    {
+      "type": "Prose",
+      "props": {
+        "tone": "bone",
+        "body": "Team profiles are being prepared. Each will name the person, what they work on, and which of our services and technologies they actually own — so the specialism pages can point at a real engineer rather than a claim."
+      }
+    }
+  ]
+}

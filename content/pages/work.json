@@ -1,0 +1,44 @@
+{
+  "root": { "props": { "title": "Work" } },
+  "content": [
+    {
+      "type": "Hero",
+      "props": {
+        "eyebrow": "selected work",
+        "title": "Every case study ends in a number.",
+        "lede": "Problem, constraints, approach, architecture, result. The same structure every time, because consistency is the point."
+      }
+    },
+    {
+      "type": "CardGrid",
+      "props": {
+        "tone": "bone",
+        "heading": "What each case study will tell you.",
+        "cards": [
+          {
+            "index": "01",
+            "title": "Problem",
+            "body": "The constraint as the client stated it, and the one we found underneath."
+          },
+          {
+            "index": "02",
+            "title": "Approach",
+            "body": "Architecture, trade-offs we rejected, and why."
+          },
+          {
+            "index": "03",
+            "title": "Result",
+            "body": "A number. Measured before and after, not estimated."
+          }
+        ]
+      }
+    },
+    {
+      "type": "Prose",
+      "props": {
+        "tone": "bone",
+        "body": "Case studies are being prepared with client permission. We would rather publish three real ones than a dozen invented, which is the same reason our metrics carry the measurement method next to them."
+      }
+    }
+  ]
+}

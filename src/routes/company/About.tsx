@@ -1,3 +1,4 @@
+import BlockPage from '../../components/BlockPage';
 import PageHero from '../../components/ui/PageHero';
 import Section from '../../components/ui/Section';
 import Container from '../../components/ui/Container';
@@ -44,62 +45,66 @@ const STANDARDS: SpecRow[] = [
 
 export default function About() {
   return (
-    <main>
-      <PageHero
-        eyebrow="about us"
-        title="We treat engineering standards as the product."
-        lede="Most software fails slowly: it ships, it works, and eighteen months later nobody can change it safely. We build so that the second year is cheaper than the first."
-      />
+    <BlockPage
+      fallback={
+        <>
+          <PageHero
+            eyebrow="about us"
+            title="We treat engineering standards as the product."
+            lede="Most software fails slowly: it ships, it works, and eighteen months later nobody can change it safely. We build so that the second year is cheaper than the first."
+          />
 
-      <Section tone="bone">
-        <Container>
-          <Reveal className="mb-12">
-            <h2 className="max-w-[24ch] text-3xl font-extrabold md:text-4xl">
-              Five stages. Nothing skipped when the schedule tightens.
-            </h2>
-          </Reveal>
-          {/* Numbered because this genuinely is a sequence - the order carries
-              information. Decorative numbering elsewhere would not. */}
-          <ol className="grid gap-8 md:grid-cols-3 lg:grid-cols-5">
-            {STEPS.map(({ no, title, body }, i) => (
-              <Reveal key={no} as="li" delay={i * 60} className="relative pt-7">
-                <span
-                  aria-hidden="true"
-                  className="absolute inset-x-0 top-0 h-px bg-[var(--accent-line)]"
-                />
-                <span
-                  aria-hidden="true"
-                  className="absolute -top-1 left-0 size-2 rounded-full bg-[var(--accent)]"
-                />
-                <span className="font-mono text-[10.5px] tracking-[0.14em] text-[var(--accent)]">
-                  {no}
-                </span>
-                <h3 className="mt-3 text-lg font-bold">{title}</h3>
-                <p className="mt-3 text-sm text-muted">{body}</p>
+          <Section tone="bone">
+            <Container>
+              <Reveal className="mb-12">
+                <h2 className="max-w-[24ch] text-3xl font-extrabold md:text-4xl">
+                  Five stages. Nothing skipped when the schedule tightens.
+                </h2>
               </Reveal>
-            ))}
-          </ol>
-        </Container>
-      </Section>
+              {/* Numbered because this genuinely is a sequence - the order carries
+                  information. Decorative numbering elsewhere would not. */}
+              <ol className="grid gap-8 md:grid-cols-3 lg:grid-cols-5">
+                {STEPS.map(({ no, title, body }, i) => (
+                  <Reveal key={no} as="li" delay={i * 60} className="relative pt-7">
+                    <span
+                      aria-hidden="true"
+                      className="absolute inset-x-0 top-0 h-px bg-[var(--accent-line)]"
+                    />
+                    <span
+                      aria-hidden="true"
+                      className="absolute -top-1 left-0 size-2 rounded-full bg-[var(--accent)]"
+                    />
+                    <span className="font-mono text-[10.5px] tracking-[0.14em] text-[var(--accent)]">
+                      {no}
+                    </span>
+                    <h3 className="mt-3 text-lg font-bold">{title}</h3>
+                    <p className="mt-3 text-sm text-muted">{body}</p>
+                  </Reveal>
+                ))}
+              </ol>
+            </Container>
+          </Section>
 
-      <Section tone="ink">
-        <Container>
-          <div className="grid gap-10 lg:grid-cols-[0.9fr_1.1fr] lg:gap-16">
-            <Reveal>
-              <h2 className="max-w-[20ch] text-3xl font-extrabold md:text-4xl">
-                Most agencies say &ldquo;quality&rdquo;. Here is ours, as numbers.
-              </h2>
-              <p className="mt-5 max-w-[54ch] text-silver">
-                These are contractual, not aspirational. If a build misses one it
-                does not ship, and you do not pay for the sprint that fixes it.
-              </p>
-            </Reveal>
-            <Reveal delay={100}>
-              <SpecTable caption="Definition of done" rows={STANDARDS} />
-            </Reveal>
-          </div>
-        </Container>
-      </Section>
-    </main>
+          <Section tone="ink">
+            <Container>
+              <div className="grid gap-10 lg:grid-cols-[0.9fr_1.1fr] lg:gap-16">
+                <Reveal>
+                  <h2 className="max-w-[20ch] text-3xl font-extrabold md:text-4xl">
+                    Most agencies say &ldquo;quality&rdquo;. Here is ours, as numbers.
+                  </h2>
+                  <p className="mt-5 max-w-[54ch] text-silver">
+                    These are contractual, not aspirational. If a build misses one it
+                    does not ship, and you do not pay for the sprint that fixes it.
+                  </p>
+                </Reveal>
+                <Reveal delay={100}>
+                  <SpecTable caption="Definition of done" rows={STANDARDS} />
+                </Reveal>
+              </div>
+            </Container>
+          </Section>
+        </>
+      }
+    />
   );
 }

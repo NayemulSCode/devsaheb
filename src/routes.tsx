@@ -72,6 +72,7 @@ export const routes: AppRoute[] = [
   {
     path: '/work',
     Component: Work,
+    contentPath: 'pages/work',
     meta: {
       title: 'Work',
       description:
@@ -81,6 +82,7 @@ export const routes: AppRoute[] = [
   {
     path: '/company/about',
     Component: About,
+    contentPath: 'pages/company-about',
     meta: {
       title: 'About us',
       description:
@@ -90,6 +92,7 @@ export const routes: AppRoute[] = [
   {
     path: '/company/team',
     Component: Team,
+    contentPath: 'pages/company-team',
     meta: {
       title: 'Our team',
       description:
@@ -99,6 +102,7 @@ export const routes: AppRoute[] = [
   {
     path: '/company/ceo',
     Component: Ceo,
+    contentPath: 'pages/company-ceo',
     meta: {
       title: 'Our CEO',
       description:
@@ -108,6 +112,7 @@ export const routes: AppRoute[] = [
   {
     path: '/company/partnership',
     Component: Partnership,
+    contentPath: 'pages/company-partnership',
     meta: {
       title: 'Partnership',
       description:
