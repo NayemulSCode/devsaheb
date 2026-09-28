@@ -1,0 +1,37 @@
+{
+  "root": { "props": { "title": "Careers" } },
+  "content": [
+    {
+      "type": "Hero",
+      "props": {
+        "eyebrow": "careers",
+        "title": "We hire engineers who argue with the spec.",
+        "lede": "If you have ever refused to ship something you could not defend in review, you will recognise how we work.",
+        "primaryLabel": "Send an introduction",
+        "primaryHref": "mailto:careers@devsaheb.com"
+      }
+    },
+    {
+      "type": "Prose",
+      "props": {
+        "tone": "ink",
+        "heading": "No open roles listed right now.",
+        "body": "We keep this page honest rather than perpetually advertising positions that do not exist. If you are strong and the timing is wrong, write anyway — we would rather know you early."
+      }
+    },
+    {
+      "type": "CardGrid",
+      "props": {
+        "tone": "ink",
+        "eyebrow": "what we look for",
+        "heading": "Four things we check for in every hire.",
+        "cards": [
+          { "index": "01", "title": "Reads the codebase before proposing a rewrite." },
+          { "index": "02", "title": "Writes the test that would have caught it." },
+          { "index": "03", "title": "Can explain a trade-off to someone non-technical." },
+          { "index": "04", "title": "Says “I do not know” early rather than late." }
+        ]
+      }
+    }
+  ]
+}

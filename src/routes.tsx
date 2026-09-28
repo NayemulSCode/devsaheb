@@ -122,6 +122,7 @@ export const routes: AppRoute[] = [
   {
     path: '/careers',
     Component: Careers,
+    contentPath: 'pages/careers',
     meta: {
       title: 'Careers',
       description:

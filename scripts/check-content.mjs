@@ -56,6 +56,38 @@ const published = new Set(
   (bundle.routes ?? []).filter((r) => r.contentPath).map((r) => r.contentPath),
 );
 
+/**
+ * Contact details that site.json owns.
+ *
+ * A mailto: or tel: typed into a block is a second copy of a value that already
+ * lives in site.json, and the two drift the moment one of them is edited. On
+ * the careers page that means applications addressed to a mailbox nobody reads,
+ * with nothing on screen to show it. Cheaper to fail the build.
+ */
+const siteRaw = JSON.parse(await readFile(join(CONTENT_DIR, 'site.json'), 'utf8'));
+const contact = siteRaw.contact ?? {};
+
+const known = new Set(
+  [
+    ...[contact.email, contact.careersEmail]
+      .filter(Boolean)
+      .map((e) => `mailto:${String(e).trim().toLowerCase()}`),
+    ...(contact.phone ? [`tel:${String(contact.phone).replace(/[^\d+]/g, '')}`] : []),
+  ],
+);
+
+/** Every mailto:/tel: in a content file, normalised the same way. */
+function strayContacts(raw) {
+  return [...raw.matchAll(/"((?:mailto|tel):[^"]+)"/gi)]
+    .map((m) => m[1])
+    .filter((href) => {
+      const v = href.toLowerCase().startsWith('tel:')
+        ? `tel:${href.slice(4).replace(/[^\d+]/g, '')}`
+        : href.trim().toLowerCase();
+      return !known.has(v);
+    });
+}
+
 const failures = [];
 
 /**
@@ -95,6 +127,18 @@ for (const { file, schema, kind } of targets) {
       continue;
     }
 
+    const stray = strayContacts(raw);
+    if (stray.length > 0) {
+      failures.push({
+        rel,
+        kind,
+        issues: [
+          `contact details not in site.json: ${[...new Set(stray)].join(', ')}`,
+          'Use the address or number from content/site.json, or update site.json to match',
+        ],
+      });
+    }
+
     if (published.has(contentPath) && /\bTODO\b/.test(raw)) {
       const fields = [...raw.matchAll(/"([a-zA-Z]+)":\s*"TODO[^"]*"/g)].map((m) => m[1]);
       failures.push({
@@ -128,6 +172,7 @@ for (const f of failures) {
 }
 console.error(
   'A schema failure means the admin cannot save that file.\n' +
-    'A missing or TODO failure means a placeholder page is live and indexable.\n',
+    'A missing or TODO failure means a placeholder page is live and indexable.\n' +
+    'A contact failure means a page points somewhere site.json does not.\n',
 );
 process.exit(1);
