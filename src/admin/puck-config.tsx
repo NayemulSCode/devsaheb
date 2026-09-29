@@ -12,6 +12,7 @@ import TeamGridBlock from '../components/blocks/TeamGridBlock';
 import MediaTextBlock from '../components/blocks/MediaTextBlock';
 import LogoWallBlock from '../components/blocks/LogoWallBlock';
 import ChecklistBlock from '../components/blocks/ChecklistBlock';
+import MediaField from './MediaField';
 import type {
   HeroProps,
   SpecTableProps,
@@ -64,6 +65,27 @@ const textItems = (label: string) => ({
   label,
   arrayFields: { text: { type: 'text' as const, label: 'Text' } },
   getItemSummary: (item: { text?: string }) => item?.text || 'Item',
+});
+
+/**
+ * Image field: upload, or pick something already uploaded.
+ *
+ * Stores the served path, so the value in the JSON is exactly what ends up in
+ * src and exactly what the schema validates. A hand-typed https URL still
+ * works - this is an easier way to fill the field, not the only one.
+ */
+const imageField = (label: string) => ({
+  type: 'custom' as const,
+  label,
+  render: ({
+    value,
+    onChange,
+    readOnly,
+  }: {
+    value: string;
+    onChange: (next: string) => void;
+    readOnly?: boolean;
+  }) => <MediaField value={value ?? ''} onChange={onChange} readOnly={readOnly} />,
 });
 
 export const puckConfig: Config = {
@@ -126,7 +148,7 @@ export const puckConfig: Config = {
             { label: 'Right', value: 'right' },
           ],
         },
-        image: { type: 'text', label: 'Image URL (/media/... or https://)' },
+        image: imageField('Image'),
         imageAlt: { type: 'text', label: 'Alt text (leave blank if decorative)' },
         eyebrow: { type: 'text', label: 'Eyebrow' },
         heading: { type: 'text', label: 'Heading' },
@@ -242,7 +264,7 @@ export const puckConfig: Config = {
           label: 'Logos',
           arrayFields: {
             name: { type: 'text', label: 'Name' },
-            image: { type: 'text', label: 'Image URL (blank shows the name)' },
+            image: imageField('Logo (blank shows the name)'),
             href: { type: 'text', label: 'Link' },
           },
           getItemSummary: (item: { name?: string }) => item?.name || 'Logo',
@@ -353,7 +375,7 @@ export const puckConfig: Config = {
             name: { type: 'text', label: 'Name' },
             role: { type: 'text', label: 'Role' },
             focus: { type: 'textarea', label: 'What they own' },
-            image: { type: 'text', label: 'Photo URL (/media/...)' },
+            image: imageField('Photo'),
           },
           getItemSummary: (item: { name?: string }) => item?.name || 'Person',
         },

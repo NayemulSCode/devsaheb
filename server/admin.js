@@ -11,8 +11,9 @@
 
 import { Router } from 'express';
 import multer from 'multer';
-import { extname, join } from 'node:path';
+import { join } from 'node:path';
 import { randomBytes } from 'node:crypto';
+import { readdir, stat, unlink, writeFile, rename } from 'node:fs/promises';
 import { readContent, writeContent, listVersions, MEDIA_DIR } from './content.js';
 
 const MAX_UPLOAD_BYTES = 5 * 1024 * 1024;
@@ -27,17 +28,50 @@ const ALLOWED = new Map([
   ['image/gif', '.gif'],
 ]);
 
+const EXTENSIONS = new Set(ALLOWED.values());
+
+/**
+ * What the bytes actually are.
+ *
+ * The multipart Content-Type is supplied by whoever made the request, so on its
+ * own it decides nothing - a caller can label anything image/png. These are the
+ * container signatures, checked against the real bytes before the file is
+ * written, so the extension we hand back always matches the content.
+ */
+function sniff(buf) {
+  if (buf.length >= 3 && buf[0] === 0xff && buf[1] === 0xd8 && buf[2] === 0xff) return '.jpg';
+  if (buf.length >= 8 && buf.subarray(0, 8).equals(Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]))) {
+    return '.png';
+  }
+  const head = buf.subarray(0, 6).toString('latin1');
+  if (head === 'GIF87a' || head === 'GIF89a') return '.gif';
+  if (buf.length >= 12) {
+    const riff = buf.subarray(0, 4).toString('latin1');
+    const kind = buf.subarray(8, 12).toString('latin1');
+    if (riff === 'RIFF' && kind === 'WEBP') return '.webp';
+    // ISO-BMFF: size, then 'ftyp', then the brand.
+    if (buf.subarray(4, 8).toString('latin1') === 'ftyp') {
+      const brand = buf.subarray(8, 12).toString('latin1');
+      if (brand === 'avif' || brand === 'avis') return '.avif';
+    }
+  }
+  return null;
+}
+
+/**
+ * Names this server generated, and nothing else.
+ *
+ * Delete and any other name-addressed route match against this rather than
+ * sanitising what arrives, so a traversal sequence cannot be expressed in the
+ * first place - there is no encoding of "../" that satisfies it.
+ */
+const GENERATED_NAME = /^\d{13}-[0-9a-f]{12}\.(jpg|png|webp|avif|gif)$/;
+
+// Held in memory so the bytes can be checked before anything reaches the disk.
+// Capped at 5 MB with one file per request, so the ceiling is bounded.
 const upload = multer({
+  storage: multer.memoryStorage(),
   limits: { fileSize: MAX_UPLOAD_BYTES, files: 1 },
-  storage: multer.diskStorage({
-    destination: (_req, _file, cb) => cb(null, MEDIA_DIR),
-    filename: (_req, file, cb) => {
-      // The client-supplied name is never used on disk. It is the easiest way
-      // to smuggle a traversal sequence or a second extension.
-      const ext = ALLOWED.get(file.mimetype) ?? extname(file.originalname).toLowerCase();
-      cb(null, `${Date.now()}-${randomBytes(6).toString('hex')}${ext}`);
-    },
-  }),
   fileFilter: (_req, file, cb) => {
     if (!ALLOWED.has(file.mimetype)) {
       cb(new Error(`Unsupported type: ${file.mimetype}`));
@@ -139,8 +173,28 @@ export function createAdminRouter({ auth, getBundle, regenerate }) {
     }
   });
 
+  /** Everything already uploaded, newest first, for the editor's picker. */
+  router.get('/media', auth.require, async (_req, res) => {
+    try {
+      const names = await readdir(MEDIA_DIR).catch(() => []);
+      const files = [];
+
+      for (const name of names) {
+        if (!EXTENSIONS.has(name.slice(name.lastIndexOf('.')).toLowerCase())) continue;
+        const info = await stat(join(MEDIA_DIR, name)).catch(() => null);
+        if (!info?.isFile()) continue;
+        files.push({ name, url: `/media/${name}`, bytes: info.size, modified: info.mtimeMs });
+      }
+
+      files.sort((a, b) => b.modified - a.modified);
+      res.json({ ok: true, files });
+    } catch (err) {
+      res.status(500).json({ ok: false, error: messageFor(err) });
+    }
+  });
+
   router.post('/media', auth.require, (req, res) => {
-    upload.single('file')(req, res, (err) => {
+    upload.single('file')(req, res, async (err) => {
       if (err) {
         const tooBig = err.code === 'LIMIT_FILE_SIZE';
         return res.status(tooBig ? 413 : 400).json({
@@ -148,9 +202,49 @@ export function createAdminRouter({ auth, getBundle, regenerate }) {
           error: tooBig ? 'File exceeds 5 MB.' : err.message,
         });
       }
-      if (!req.file) return res.status(400).json({ ok: false, error: 'No file received.' });
-      res.json({ ok: true, url: `/media/${req.file.filename}`, bytes: req.file.size });
+      if (!req.file?.buffer?.length) {
+        return res.status(400).json({ ok: false, error: 'No file received.' });
+      }
+
+      // The declared type only got it this far; the bytes decide the extension.
+      const ext = sniff(req.file.buffer);
+      if (!ext) {
+        return res.status(400).json({
+          ok: false,
+          error: 'That file is not a JPEG, PNG, WebP, AVIF or GIF. SVG is not accepted.',
+        });
+      }
+
+      try {
+        const name = `${Date.now()}-${randomBytes(6).toString('hex')}${ext}`;
+        const target = join(MEDIA_DIR, name);
+
+        // Written to a neighbour and renamed, so a half-written file is never
+        // reachable at its final URL - the same bargain content saves make.
+        const temp = `${target}.tmp`;
+        await writeFile(temp, req.file.buffer);
+        await rename(temp, target);
+
+        res.json({ ok: true, name, url: `/media/${name}`, bytes: req.file.size });
+      } catch (writeErr) {
+        res.status(500).json({ ok: false, error: messageFor(writeErr) });
+      }
     });
+  });
+
+  router.delete('/media/:name', auth.require, async (req, res) => {
+    const name = String(req.params.name ?? '');
+    if (!GENERATED_NAME.test(name)) {
+      return res.status(400).json({ ok: false, error: 'Not an uploaded file name.' });
+    }
+
+    try {
+      await unlink(join(MEDIA_DIR, name));
+      res.json({ ok: true, name });
+    } catch (err) {
+      if (err?.code === 'ENOENT') return res.status(404).json({ ok: false, error: 'Already gone.' });
+      res.status(500).json({ ok: false, error: messageFor(err) });
+    }
   });
 
   return router;
