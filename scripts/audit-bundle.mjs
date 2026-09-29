@@ -33,6 +33,10 @@ const ENTRY_BUDGET_KB = 120;
  */
 const FORBIDDEN = [
   { needles: ['usePuck', 'dnd-kit'], label: 'Puck editor' },
+  // ProseMirror is the class name Tiptap puts on the editor element and tiptap
+  // appears in its own class names, so both are string literals that survive
+  // minification. Verified present in the admin chunk and absent from entry.
+  { needles: ['ProseMirror', 'tiptap'], label: 'Tiptap editor' },
   { needles: ['ZodError', 'invalid_type'], label: 'zod' },
 ];
 

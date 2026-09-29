@@ -17,12 +17,25 @@
       }
     },
     {
-      "type": "Prose",
+      "type": "RichText",
       "props": {
         "tone": "ink",
         "heading": "No open roles listed right now.",
-        "body": "We keep this page honest rather than perpetually advertising positions that do not exist. If you are strong and the timing is wrong, write anyway — we would rather know you early.",
-        "id": "prose-2"
+        "id": "prose-2",
+        "doc": {
+          "type": "doc",
+          "content": [
+            {
+              "type": "paragraph",
+              "content": [
+                {
+                  "type": "text",
+                  "text": "We keep this page honest rather than perpetually advertising positions that do not exist. If you are strong and the timing is wrong, write anyway — we would rather know you early."
+                }
+              ]
+            }
+          ]
+        }
       }
     },
     {

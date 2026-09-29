@@ -2,7 +2,7 @@ import type { Block, PageContent } from '../../content/schema';
 import HeroBlock from './HeroBlock';
 import SpecTableBlock from './SpecTableBlock';
 import CardGridBlock from './CardGridBlock';
-import ProseBlock from './ProseBlock';
+import RichTextBlock from './RichTextBlock';
 import StatsBlock from './StatsBlock';
 import StepsBlock from './StepsBlock';
 import FaqBlock from './FaqBlock';
@@ -25,7 +25,7 @@ const REGISTRY = {
   Hero: HeroBlock,
   SpecTable: SpecTableBlock,
   CardGrid: CardGridBlock,
-  Prose: ProseBlock,
+  RichText: RichTextBlock,
   Stats: StatsBlock,
   Steps: StepsBlock,
   Faq: FaqBlock,
@@ -55,8 +55,8 @@ function BlockRenderer({ block }: { block: Block }) {
       return <SpecTableBlock {...block.props} />;
     case 'CardGrid':
       return <CardGridBlock {...block.props} />;
-    case 'Prose':
-      return <ProseBlock {...block.props} />;
+    case 'RichText':
+      return <RichTextBlock {...block.props} />;
     case 'Stats':
       return <StatsBlock {...block.props} />;
     case 'Steps':

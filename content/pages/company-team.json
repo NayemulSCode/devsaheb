@@ -28,16 +28,35 @@
             "role": "CEO",
             "focus": "Main Course",
             "image": "/media/1790662882385-4ecc86cf1d54.png"
+          },
+          {
+            "name": "Mr .x",
+            "role": "COO",
+            "focus": "",
+            "image": "/media/1790667003763-1238a86d5fb2.jpg"
           }
         ]
       }
     },
     {
-      "type": "Prose",
+      "type": "RichText",
       "props": {
         "id": "prose-2",
         "tone": "bone",
-        "body": "More profiles are being added. Each names the person, what they work on, and which of our services and technologies they actually own — so the specialism pages can point at a real engineer rather than a claim."
+        "doc": {
+          "type": "doc",
+          "content": [
+            {
+              "type": "paragraph",
+              "content": [
+                {
+                  "type": "text",
+                  "text": "More profiles are being added. Each names the person, what they work on, and which of our services and technologies they actually own — so the specialism pages can point at a real engineer rather than a claim."
+                }
+              ]
+            }
+          ]
+        }
       }
     }
   ]

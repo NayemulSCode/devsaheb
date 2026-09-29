@@ -124,15 +124,95 @@ const cardGridBlock = z.object({
   }),
 });
 
-const proseBlock = z.object({
-  type: z.literal('Prose'),
+/**
+ * Rich text, stored as a document tree rather than HTML.
+ *
+ * The editor is Tiptap, whose native format this is. Storing its JSON instead
+ * of its HTML output is the whole security argument: the renderer walks these
+ * nodes into React elements, so there is no dangerouslySetInnerHTML anywhere
+ * and no parse step that could be tricked. A `<script>` cannot be expressed in
+ * this shape at all - it is not one of the node types.
+ *
+ * zod strips unknown keys, so an attribute nobody asked for is dropped rather
+ * than carried through to the page.
+ */
+const ALIGN = z.enum(['left', 'center', 'right', 'justify']);
+
+const RICH_NODES = [
+  'paragraph',
+  'heading',
+  'bulletList',
+  'orderedList',
+  'listItem',
+  'blockquote',
+  'horizontalRule',
+  'hardBreak',
+  'table',
+  'tableRow',
+  'tableCell',
+  'tableHeader',
+  'text',
+] as const;
+
+/** Link hrefs go through the same check as every other link on the site. */
+const richMark = z.discriminatedUnion('type', [
+  z.object({ type: z.literal('bold') }),
+  z.object({ type: z.literal('italic') }),
+  z.object({ type: z.literal('underline') }),
+  z.object({ type: z.literal('strike') }),
+  z.object({ type: z.literal('code') }),
+  z.object({
+    type: z.literal('link'),
+    attrs: z.object({
+      href,
+      target: z.string().max(20).nullish(),
+      rel: z.string().max(80).nullish(),
+    }),
+  }),
+]);
+
+const richAttrs = z.object({
+  // h1 belongs to the page, not to a paragraph of copy, so the editor offers
+  // only h2 and h3 and the schema refuses anything else.
+  level: z.union([z.literal(2), z.literal(3)]).nullish(),
+  textAlign: ALIGN.nullish(),
+  start: z.number().int().min(1).max(999).nullish(),
+  colspan: z.number().int().min(1).max(20).nullish(),
+  rowspan: z.number().int().min(1).max(20).nullish(),
+  colwidth: z.array(z.number()).max(20).nullish(),
+});
+
+export type RichNode = {
+  type: (typeof RICH_NODES)[number];
+  text?: string | undefined;
+  marks?: z.infer<typeof richMark>[] | undefined;
+  attrs?: z.infer<typeof richAttrs> | undefined;
+  content?: RichNode[] | undefined;
+};
+
+const richNode: z.ZodType<RichNode> = z.lazy(() =>
+  z.object({
+    type: z.enum(RICH_NODES),
+    text: z.string().max(10000).optional(),
+    marks: z.array(richMark).max(8).optional(),
+    attrs: richAttrs.optional(),
+    content: z.array(richNode).max(400).optional(),
+  }),
+);
+
+const richDoc = z.object({
+  type: z.literal('doc'),
+  content: z.array(richNode).max(400).default([]),
+});
+
+const richTextBlock = z.object({
+  type: z.literal('RichText'),
   props: z.object({
     id: blockId,
     tone,
     eyebrow: trimmed(60).optional(),
     heading: trimmed(200).optional(),
-    /** Plain paragraphs for now. Tiptap replaces this when the blog lands. */
-    body: trimmed(4000),
+    doc: richDoc,
   }),
 });
 
@@ -279,7 +359,7 @@ export const blockSchema = z.discriminatedUnion('type', [
   heroBlock,
   specTableBlock,
   cardGridBlock,
-  proseBlock,
+  richTextBlock,
   statsBlock,
   stepsBlock,
   faqBlock,
@@ -330,7 +410,7 @@ export const BLOCK_TYPES = [
   'Hero',
   'SpecTable',
   'CardGrid',
-  'Prose',
+  'RichText',
   'Stats',
   'Steps',
   'Faq',

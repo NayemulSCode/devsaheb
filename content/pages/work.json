@@ -40,11 +40,24 @@
       }
     },
     {
-      "type": "Prose",
+      "type": "RichText",
       "props": {
         "tone": "bone",
-        "body": "Case studies are being prepared with client permission. We would rather publish three real ones than a dozen invented, which is the same reason our metrics carry the measurement method next to them.",
-        "id": "prose-3"
+        "id": "prose-3",
+        "doc": {
+          "type": "doc",
+          "content": [
+            {
+              "type": "paragraph",
+              "content": [
+                {
+                  "type": "text",
+                  "text": "Case studies are being prepared with client permission. We would rather publish three real ones than a dozen invented, which is the same reason our metrics carry the measurement method next to them."
+                }
+              ]
+            }
+          ]
+        }
       }
     }
   ]

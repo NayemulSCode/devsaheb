@@ -50,12 +50,25 @@
       }
     },
     {
-      "type": "Prose",
+      "type": "RichText",
       "props": {
         "tone": "ink",
         "heading": "Most agencies say “quality”. Here is ours, as numbers.",
-        "body": "These are contractual, not aspirational. If a build misses one it does not ship, and you do not pay for the sprint that fixes it.",
-        "id": "prose-3"
+        "id": "prose-3",
+        "doc": {
+          "type": "doc",
+          "content": [
+            {
+              "type": "paragraph",
+              "content": [
+                {
+                  "type": "text",
+                  "text": "These are contractual, not aspirational. If a build misses one it does not ship, and you do not pay for the sprint that fixes it."
+                }
+              ]
+            }
+          ]
+        }
       }
     },
     {

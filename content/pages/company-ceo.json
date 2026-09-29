@@ -15,11 +15,24 @@
       }
     },
     {
-      "type": "Prose",
+      "type": "RichText",
       "props": {
         "tone": "ink",
-        "body": "This page is being written. It will carry a named, attributable point of view rather than a biography — including the kinds of project we turn down and why.",
-        "id": "prose-2"
+        "id": "prose-2",
+        "doc": {
+          "type": "doc",
+          "content": [
+            {
+              "type": "paragraph",
+              "content": [
+                {
+                  "type": "text",
+                  "text": "This page is being written. It will carry a named, attributable point of view rather than a biography — including the kinds of project we turn down and why."
+                }
+              ]
+            }
+          ]
+        }
       }
     }
   ]

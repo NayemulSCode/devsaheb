@@ -22,7 +22,12 @@ export const BLOCK_DEFAULTS = {
     secondaryLabel: '',
     secondaryHref: '',
   },
-  Prose: { tone: 'ink', eyebrow: '', heading: '', body: '' },
+  RichText: {
+    tone: 'ink',
+    eyebrow: '',
+    heading: '',
+    doc: { type: 'doc', content: [{ type: 'paragraph' }] },
+  },
   MediaText: {
     tone: 'bone',
     side: 'right',

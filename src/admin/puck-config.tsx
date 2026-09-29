@@ -2,7 +2,8 @@ import type { Config } from '@measured/puck';
 import HeroBlock from '../components/blocks/HeroBlock';
 import SpecTableBlock from '../components/blocks/SpecTableBlock';
 import CardGridBlock from '../components/blocks/CardGridBlock';
-import ProseBlock from '../components/blocks/ProseBlock';
+import RichTextBlock from '../components/blocks/RichTextBlock';
+import RichTextField, { type Doc } from './RichTextField';
 import StatsBlock from '../components/blocks/StatsBlock';
 import StepsBlock from '../components/blocks/StepsBlock';
 import FaqBlock from '../components/blocks/FaqBlock';
@@ -18,7 +19,7 @@ import type {
   HeroProps,
   SpecTableProps,
   CardGridProps,
-  ProseProps,
+  RichTextProps,
   StatsProps,
   StepsProps,
   FaqProps,
@@ -92,7 +93,7 @@ const imageField = (label: string) => ({
 
 export const puckConfig: Config = {
   categories: {
-    layout: { title: 'Page structure', components: ['Hero', 'Prose', 'MediaText', 'Cta'] },
+    layout: { title: 'Page structure', components: ['Hero', 'RichText', 'MediaText', 'Cta'] },
     proof: { title: 'Proof', components: ['Stats', 'SpecTable', 'Quote', 'LogoWall'] },
     detail: {
       title: 'Detail',
@@ -117,16 +118,33 @@ export const puckConfig: Config = {
       render: (props) => <HeroBlock {...(props as unknown as HeroProps)} />,
     },
 
-    Prose: {
-      label: 'Text',
+    RichText: {
+      label: 'Body content',
       fields: {
         tone: toneField,
         eyebrow: { type: 'text', label: 'Eyebrow' },
         heading: { type: 'text', label: 'Heading' },
-        body: { type: 'textarea', label: 'Body (blank line between paragraphs)' },
+        doc: {
+          type: 'custom',
+          label: 'Body content',
+          // The editor works in Tiptap's JSONContent shape and the schema
+          // describes the same tree more strictly. They are converted here,
+          // the one boundary between them; the save is validated regardless.
+          render: ({ value, onChange, readOnly }: {
+            value: RichTextProps['doc'];
+            onChange: (next: RichTextProps['doc']) => void;
+            readOnly?: boolean;
+          }) => (
+            <RichTextField
+              value={value as unknown as Doc}
+              onChange={(next) => onChange(next as unknown as RichTextProps['doc'])}
+              readOnly={readOnly}
+            />
+          ),
+        },
       },
-      defaultProps: BLOCK_DEFAULTS.Prose,
-      render: (props) => <ProseBlock {...(props as unknown as ProseProps)} />,
+      defaultProps: BLOCK_DEFAULTS.RichText,
+      render: (props) => <RichTextBlock {...(props as unknown as RichTextProps)} />,
     },
 
     MediaText: {
