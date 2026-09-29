@@ -1,0 +1,62 @@
+{
+  "slug": "crm",
+  "primaryQuery": "custom crm development",
+  "title": "Custom CRM Development — Built Around Your Process",
+  "description": "Custom CRM systems for businesses whose process does not fit the products: your pipeline, your rules, your integrations, with a data model that survives merges.",
+  "h1": "A CRM shaped around how you actually sell",
+  "intro": "Most companies should buy a CRM rather than build one. The products are mature, cheap relative to development, and improve without you paying for it. Custom work earns its cost in a narrower case: when the process is genuinely unusual, when the licence cost per seat has outgrown the build cost, or when the CRM has to sit inside a system you already operate rather than beside it. We will tell you honestly which situation you are in before quoting.",
+  "sections": [
+    {
+      "heading": "The data model is mostly about duplicates",
+      "body": "Every CRM accumulates the same person three times: once from a web form, once from an imported spreadsheet, once typed in by someone who could not find the first two. If merging is not designed in from the start, the system degrades into a database nobody trusts, and untrusted data is not used.\n\nSo we decide the identity rule early — what makes two records the same person or the same company — and enforce it where records are created rather than cleaning up afterwards. Merging is a first-class operation that keeps the history of both sides, because the activity attached to a duplicate is often the valuable part.\n\nThe second modelling decision is the relationship between people and organisations. One contact at three companies, one company with a parent group, a contact who changes jobs — all of these are ordinary and all of them break a model that treats a contact as belonging to exactly one account forever."
+    },
+    {
+      "heading": "Pipeline rules that reflect reality",
+      "body": "A pipeline is a state machine, and the useful question is not what the stages are called but which transitions are allowed and what each one requires. A deal that can jump from first contact to closed-won without a quote is a pipeline that will produce numbers nobody believes.\n\nWe encode that: required fields per stage, transitions that are permitted or not, and automatic actions on entry such as a task, a notification or a document. Then the forecast is derived from rules rather than from whatever each salesperson felt like recording.\n\nAudit history matters here more than in most systems. Who changed the value, who moved the stage, when — both because commission arguments are real, and because a pipeline with no history cannot be analysed for where deals actually stall."
+    },
+    {
+      "heading": "Integrations are where the maintenance lives",
+      "body": "A CRM is only as useful as what flows into it: email, calendar, website forms, accounting, the support inbox. Each integration is a permanent relationship with someone else's API, and each will change without asking you.\n\nSo sync is built defensively. Webhooks are verified and idempotent, because a provider promising at-least-once delivery will deliver twice. Failures go to a queue with retries and a visible dead-letter list, not a log nobody reads. Every integration gets a reconciliation path, because over months drift is certain.\n\nThe direction of truth is decided per field rather than per system. Accounting owns the invoice total; the CRM owns the relationship. Two systems both believing they own one field is the usual cause of records that flip back and forth."
+    }
+  ],
+  "codeExample": {
+    "language": "TypeScript",
+    "filename": "src/crm/contacts/merge.ts",
+    "caption": "Deduplication written as a rule the system enforces rather than a cleanup someone does later. Identity is matched on a normalised email first, then on a weaker signal that requires confirmation instead of merging silently — the mistake that loses a real contact. The merge keeps both records' activity, since the history attached to a duplicate is usually why anyone noticed it, and leaves a redirect so old links and integrations keep resolving.",
+    "code": "export async function upsertContact(input: IncomingContact, tx: Tx) {\n  // Normalise before comparing, or Ali@Example.COM and ali@example.com become\n  // two people and stay that way.\n  const email = input.email.trim().toLowerCase();\n\n  const exact = await tx.query.contacts.findFirst({\n    where: eq(contacts.emailNormalised, email),\n  });\n  if (exact) return applyUpdate(exact, input, tx);\n\n  // Weaker signal: same name at the same company. Real often enough to flag,\n  // wrong often enough that merging on it silently destroys data.\n  const probable = await tx.query.contacts.findFirst({\n    where: and(\n      eq(contacts.fullNameNormalised, normaliseName(input.fullName)),\n      eq(contacts.accountId, input.accountId),\n    ),\n  });\n  if (probable) {\n    await tx.insert(mergeCandidates).values({\n      existingId: probable.id,\n      incoming: input,\n      reason: 'name_and_account',\n    });\n    // Created separately and queued for a human. Never merged on a guess.\n    return createContact(input, tx);\n  }\n\n  return createContact(input, tx);\n}\n\nexport async function merge(keepId: string, mergeId: string, tx: Tx) {\n  // Activity moves first. It is usually the reason the duplicate mattered.\n  await tx.update(activities).set({ contactId: keepId })\n    .where(eq(activities.contactId, mergeId));\n  await tx.update(deals).set({ contactId: keepId })\n    .where(eq(deals.contactId, mergeId));\n\n  // Tombstone rather than delete: old links, reports and integrations still\n  // reference the merged id and should resolve, not 404.\n  await tx.update(contacts)\n    .set({ mergedIntoId: keepId, mergedAt: new Date() })\n    .where(eq(contacts.id, mergeId));\n}"
+  },
+  "deliverables": [
+    "Identity and merge rules enforced at creation, not cleaned up later",
+    "Contacts and organisations modelled for real relationships over time",
+    "Pipeline as a state machine with permitted transitions and required fields",
+    "Full audit history on values and stage changes",
+    "Idempotent, verified integrations with a visible dead-letter queue",
+    "Per-field ownership between systems, with a reconciliation path"
+  ],
+  "faq": [
+    {
+      "q": "Should we build or buy?",
+      "a": "Buy, in most cases. Salesforce, HubSpot and Zoho cover ordinary sales processes better than a first build will, and they improve without you funding it. Building makes sense when your process genuinely does not fit, when per-seat licensing has overtaken the cost of building, or when the CRM must live inside an existing system rather than alongside it."
+    },
+    {
+      "q": "Can you extend our existing CRM instead?",
+      "a": "Often that is the better answer. Most platforms allow custom objects, workflows and integrations, and extending one keeps the parts that already work. We will look at whether the platform can be made to fit before recommending a replacement, because a rebuild restarts every piece of institutional knowledge your team has."
+    },
+    {
+      "q": "Can you migrate our existing data?",
+      "a": "Yes, and deduplication is the work. Exported CRM data always contains duplicates, inconsistent company names and records missing fields the new model requires. We agree the rules for each of those before migrating, and run the import repeatedly against a copy until the result is something your team accepts."
+    },
+    {
+      "q": "How do you handle permissions?",
+      "a": "Role-based, decided from who should see what rather than from the org chart — those differ more than people expect. Record-level rules matter too, and they belong in the query layer rather than hidden in the interface."
+    }
+  ],
+  "notFor": {
+    "heading": "When buying is plainly the right call",
+    "body": "If your process is a pipeline with stages, contacts, tasks and email tracking, an off-the-shelf CRM will do it better on day one than a custom build will in three months, and keep improving without a budget line. The signal that custom is warranted is when you can name two or three things about how you sell that no product supports and that you will not change — and when licence costs have grown to where building is comparable. Short of that, we would rather help you configure what you have bought."
+  },
+  "related": {
+    "services": ["custom-software", "saas", "database", "back-end"],
+    "technologies": ["typescript", "nodejs", "reactjs", "laravel"]
+  }
+}

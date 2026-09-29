@@ -1,0 +1,62 @@
+{
+  "slug": "cms",
+  "primaryQuery": "cms development services",
+  "title": "CMS Development Services — Content Models That Last",
+  "description": "Content systems modelled as structured data rather than pages of markup, so the same content serves a site, an app and a partner feed without being rewritten.",
+  "h1": "Content modelled as data, not as pages of markup",
+  "intro": "The difference between a content system people use and one they work around is almost always the model. Give an editor a rich text box for the whole page and you have a system that cannot be redesigned, cannot feed an app, and quietly accumulates pasted formatting from Word. Model the content as the things it actually is — a product, an author, a case study with a measured result — and the same records serve a website, a mobile app and a partner feed without anyone retyping them.",
+  "sections": [
+    {
+      "heading": "Model the content, not the page",
+      "body": "The instinct is to mirror the current design: a hero field, a two-column section, a footnote. Then the design changes and every record has to be edited by hand.\n\nWe model what the content is. A case study has a client, a constraint, an approach and a result; how those are laid out is a presentation decision that can change without touching a single record. Where editors genuinely need layout control, a small set of composable blocks with defined fields gives it to them without handing over a blank canvas.\n\nThe test is whether the same record could render sensibly in a completely different design, or as JSON to an app. If it could not, the model has design baked into it and the redesign will be a migration."
+    },
+    {
+      "heading": "Validation is what keeps it usable",
+      "body": "An unvalidated content system degrades. A description field with no limit produces one that is 800 characters and breaks the card it appears in; an optional image that is actually required produces a page with a hole in it.\n\nSo fields carry constraints and the editor sees them: character counts against the limit that actually applies, required fields enforced at save rather than discovered at render, and image dimensions checked on upload. A save that would produce a broken page should fail in the editor, where someone can fix it, rather than in production, where nobody notices for a week.\n\nThe same applies to relationships. Deleting an author who has published articles should be refused or handled, not left to produce a byline pointing at nothing."
+    },
+    {
+      "heading": "Headless, hosted, or something simpler",
+      "body": "A headless CMS separates the content store from the presentation, which is the right shape when several surfaces consume the same content. It costs you the platform's built-in preview and theming, so those have to be built.\n\nA traditional CMS such as WordPress remains an excellent answer for a content site with one surface and editors who already know it. We are not ideological about this — the failure we see most often is a headless setup chosen for a brochure site, where it added a build pipeline and removed the ability for an editor to see their change immediately.\n\nAnd for a small site edited occasionally, a git-backed or file-based approach with a simple editor avoids running a database at all. We size the system to how often content actually changes and how many people change it."
+    }
+  ],
+  "codeExample": {
+    "language": "TypeScript",
+    "filename": "content/schema/case-study.ts",
+    "caption": "The same page modelled as data rather than markup. Nothing here mentions layout, so a redesign changes templates and leaves every record untouched, and the same JSON feeds a website, an app or a partner without rework. The limits are the ones the design actually imposes, enforced in the editor at save time — a 200-character summary fails where someone can fix it rather than silently overflowing a card in production.",
+    "code": "import { z } from 'zod';\n\n// A measured result is the point of a case study, so the model requires one.\n// A field that is optional in the schema is a field that will be left blank.\nconst outcome = z.object({\n  metric: z.string().min(1).max(80),      // 'Checkout completion'\n  before: z.string().min(1).max(40),      // '61%'\n  after: z.string().min(1).max(40),       // '78%'\n  measuredOver: z.string().min(1).max(80),// 'eight weeks after launch'\n});\n\nexport const caseStudy = z.object({\n  slug: z.string().regex(/^[a-z0-9][a-z0-9-]{0,63}$/),\n  client: z.string().min(1).max(80),\n  // 160 because that is what the search result and the card both allow.\n  // The limit belongs next to the field, not in a style guide nobody reads.\n  summary: z.string().trim().max(160),\n  constraint: z.string().trim().max(600),\n  approach: z.string().trim().max(2000),\n  outcomes: z.array(outcome).min(1).max(4),\n  // A relationship, not a typed-in name: deleting an author is then a\n  // decision the system makes rather than a byline pointing at nothing.\n  authorId: z.string().uuid(),\n  publishedAt: z.string().datetime().nullable(),\n});\n\nexport type CaseStudy = z.infer<typeof caseStudy>;"
+  },
+  "deliverables": [
+    "Content modelled as entities, with layout kept out of the records",
+    "Field-level validation surfaced in the editor, enforced on save",
+    "Relationships with defined delete behaviour",
+    "Preview that shows the real rendered page",
+    "Roles and permissions matched to who actually edits what",
+    "Structured output usable by a site, an app or a feed"
+  ],
+  "faq": [
+    {
+      "q": "Should we use WordPress or something headless?",
+      "a": "WordPress if it is a content site with one surface and editors who already know it — the ecosystem and the familiarity are real advantages. Headless when the same content has to feed several places, or when the front end needs to be faster or more bespoke than a theme allows. Choosing headless for a brochure site usually adds a build step and removes instant preview, for no gain."
+    },
+    {
+      "q": "Can editors change layouts themselves?",
+      "a": "To the extent you decide. A defined set of blocks with real fields gives genuine flexibility while keeping pages consistent and the content reusable. A completely free page builder gives editors everything and gives you pages that cannot be redesigned or reused, which is a trade worth making deliberately."
+    },
+    {
+      "q": "How do you handle multiple languages?",
+      "a": "Translation at the field level rather than duplicated records, so structure and relationships stay shared and only the text varies. It matters that this is decided early — retrofitting localisation means migrating every record and revisiting every query."
+    },
+    {
+      "q": "Can you migrate our existing content?",
+      "a": "Yes, and the modelling is the work; moving the rows is the easy part. Content that lived in free-form HTML has to be parsed into structure, and there are always records that do not fit the pattern. We handle those explicitly rather than letting them arrive as broken pages after launch."
+    }
+  ],
+  "notFor": {
+    "heading": "When a CMS is more than you need",
+    "body": "If the content changes a few times a year and one person edits it, a CMS adds a database, a login and a maintenance burden to solve a problem that a developer editing a file solves for free. At the other end, if what you are really describing is an application with records, permissions and workflow — approvals, assignments, audit trails — that is custom software wearing a content system's clothes, and building it as a CMS will fight you the whole way."
+  },
+  "related": {
+    "services": ["web-development", "ecommerce", "custom-software", "front-end"],
+    "technologies": ["nextjs", "reactjs", "typescript", "php"]
+  }
+}

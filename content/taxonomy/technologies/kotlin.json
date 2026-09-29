@@ -1,0 +1,54 @@
+{
+  "slug": "kotlin",
+  "primaryQuery": "kotlin app development",
+  "title": "Kotlin App Development — Null Safety and Coroutines",
+  "description": "Kotlin used for what it actually removes: null-pointer crashes, unhandled states, and callback code. Structured concurrency that cancels properly.",
+  "h1": "Kotlin, used for the mistakes it makes impossible",
+  "intro": "Kotlin is often described as a nicer Java, which undersells it. Two of its features remove entire categories of defect rather than shortening the code that causes them: nullability in the type system, so the most common crash in mobile software becomes a compile error, and structured concurrency, so background work has an owner and cannot be forgotten. Used casually it is Java with less typing. Used deliberately it changes what can go wrong.",
+  "sections": [
+    {
+      "heading": "Null safety only works if you do not opt out",
+      "body": "Kotlin makes nullability explicit, and it provides `!!` for asserting that something is not null. Every `!!` is a potential crash written deliberately, and a codebase sprinkled with them has the syntax of Kotlin and the failure modes of Java.\n\nWe treat it as a smell with a small number of legitimate uses, usually at a platform boundary where the framework genuinely guarantees something the type system cannot see — and those get a comment explaining why. Everywhere else, the nullable value gets handled: a default, an early return, or a type that does not permit the absent case.\n\nThe boundary with Java is where this needs most attention. Platform types come back from Java libraries with unknown nullability and the compiler cannot help, so those get annotated or wrapped at the edge rather than trusted through the codebase."
+    },
+    {
+      "heading": "Sealed types make the impossible unwriteable",
+      "body": "The most valuable modelling tool Kotlin offers is the sealed interface. Four booleans for loading, error, content and empty permit combinations that make no sense, and every consumer checks them in whatever order it happens to.\n\nA sealed hierarchy makes those combinations impossible to construct, and an exhaustive `when` then forces every case to be handled. The payoff comes later: adding a fifth state produces compile errors at exactly the places that must change, instead of a silent fall-through that renders nothing and reports no failure.\n\nThis is the same argument as a discriminated union in TypeScript, and it lands harder in mobile software because the alternative failure is a blank screen on someone's phone with no way to see why."
+    },
+    {
+      "heading": "Structured concurrency, and what cancellation actually requires",
+      "body": "Coroutines are cheap and their real advantage is structure: work is launched in a scope, and when that scope is cancelled the work stops. A screen that goes away takes its in-flight requests with it, without anyone remembering to unsubscribe.\n\nThe part that needs care is that cancellation is cooperative. A coroutine running a tight computational loop never suspends, so it never notices it has been cancelled; it has to check. And a `try`/`finally` that does cleanup must use `NonCancellable` for that block, or the cleanup is itself cancelled and a resource is left open.\n\nExceptions have their own shape. `launch` propagates a failure up the scope and can take siblings down with it; `async` holds it until the result is awaited. Choosing the wrong one produces either a crash from an unrelated coroutine or a failure that is never reported at all."
+    }
+  ],
+  "codeExample": {
+    "language": "Kotlin",
+    "filename": "core/src/main/kotlin/.../SyncEngine.kt",
+    "caption": "Three coroutine details that are easy to get wrong. The computational loop checks for cancellation explicitly, because a coroutine that never suspends never notices it was cancelled. The cleanup runs under NonCancellable, without which the finally block is itself cancelled and the lock is never released. And the sealed result makes an exhaustive `when` at the call site mandatory, so a new outcome added later is a compile error rather than a silently unhandled case.",
+    "code": "sealed interface SyncResult {\n    data class Synced(val records: Int) : SyncResult\n    data class Conflicted(val ids: List<String>) : SyncResult\n    data class Failed(val cause: Throwable, val retryable: Boolean) : SyncResult\n}\n\nclass SyncEngine(private val api: Api, private val db: Db) {\n\n    suspend fun sync(pending: List<Mutation>): SyncResult = withContext(Dispatchers.IO) {\n        val lock = db.acquireSyncLock()\n        try {\n            var applied = 0\n            val conflicts = mutableListOf<String>()\n\n            for (mutation in pending) {\n                // Cancellation is cooperative. A loop that never suspends\n                // never notices it was cancelled, so it has to ask.\n                ensureActive()\n\n                when (val outcome = api.apply(mutation)) {\n                    is Applied -> { db.commit(outcome.record); applied++ }\n                    is Conflict -> conflicts += outcome.id\n                }\n            }\n\n            if (conflicts.isEmpty()) SyncResult.Synced(applied)\n            else SyncResult.Conflicted(conflicts)\n        } catch (e: IOException) {\n            SyncResult.Failed(e, retryable = true)\n        } finally {\n            // Without NonCancellable this cleanup is itself cancelled when the\n            // scope dies, and the lock is never released.\n            withContext(NonCancellable) { db.releaseSyncLock(lock) }\n        }\n    }\n}\n\n// At the call site an exhaustive when is required: add a fourth result and\n// this stops compiling, which is the entire point of the sealed interface.\nwhen (val result = engine.sync(pending)) {\n    is SyncResult.Synced -> showToast(\"${result.records} synced\")\n    is SyncResult.Conflicted -> openConflictScreen(result.ids)\n    is SyncResult.Failed -> if (result.retryable) scheduleRetry() else report(result.cause)\n}"
+  },
+  "faq": [
+    {
+      "q": "Is Kotlin only for Android?",
+      "a": "No, though that is where most of it runs. It is a first-class JVM language for server work, with Ktor and Spring Boot both well supported, and Kotlin Multiplatform lets shared logic run on Android, iOS and the server. Android is simply where Google's tooling has made it the default."
+    },
+    {
+      "q": "Should we migrate our Java codebase?",
+      "a": "Incrementally, if at all. The two interoperate well, so new code can be Kotlin while existing Java stays. Converting working Java for its own sake spends budget without changing behaviour — the gain is in code you are actively changing, where null safety and sealed types start paying immediately."
+    },
+    {
+      "q": "What is Kotlin Multiplatform actually good for?",
+      "a": "Sharing business logic — models, validation, networking, storage — across Android, iOS and sometimes the server, while each platform keeps its own interface. That split is the one that works. Attempting to share UI as well is a much larger commitment and a less settled one."
+    },
+    {
+      "q": "Do coroutines replace RxJava?",
+      "a": "For most work, yes. Coroutines and Flow cover what Rx was used for with less ceremony and better cancellation. An existing Rx codebase does not need converting wholesale — the two interoperate, so new work can be Flow while the rest stays until it is being changed anyway."
+    }
+  ],
+  "notFor": {
+    "heading": "When to choose differently",
+    "body": "If the app is cross-platform and your team writes React or Dart, Kotlin means writing the Android half twice over — our mobile app page covers that decision honestly. On the server, Kotlin is capable and has a smaller hiring pool than Java or TypeScript in most markets, which is a real consideration rather than a technical one. Kotlin is the clear answer for native Android and for teams already on the JVM who want the language to prevent more of their mistakes."
+  },
+  "related": {
+    "services": ["android", "mobile-app", "back-end", "custom-software"],
+    "technologies": ["java", "flutter", "react-native", "spring-boot"]
+  }
+}

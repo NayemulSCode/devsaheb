@@ -1,0 +1,62 @@
+{
+  "slug": "database",
+  "primaryQuery": "database design and development services",
+  "title": "Database Design and Development Services — Modelled Properly",
+  "description": "Schema design, indexing and migrations that run without downtime. Constraints in the database rather than hoped for in application code.",
+  "h1": "Databases where the schema refuses to hold wrong data",
+  "intro": "A data model outlives the application built on it. Frameworks get replaced, interfaces get redesigned, and the tables stay — accumulating rows that were valid under rules nobody enforced. The decisions worth paying for are made early: what a constraint prevents, what an index makes possible, and whether a migration can run while people are using the system. We design for that rather than letting the schema emerge from whatever the ORM generated first.",
+  "sections": [
+    {
+      "heading": "Constraints belong in the database",
+      "body": "Application code is not the last line of defence, because it is not the only writer. A migration script, an admin console, a background job, a support engineer with a client open — all of them bypass whatever the API layer was enforcing.\n\nSo the rules live where every writer meets them. Foreign keys, not just an application that remembers to check. Not-null on anything genuinely required. Unique indexes on natural keys, which also make idempotent writes possible. Check constraints for the invariants that are easy to state — a quantity that cannot be negative, an end date after a start date.\n\nThis is cheap at the start and very expensive later, because by then the table contains rows that violate the rule and someone has to decide what to do with each of them."
+    },
+    {
+      "heading": "Indexes are a design decision with a cost",
+      "body": "An index makes reads faster and every write slower, and occupies memory that the cache would otherwise use for data. Adding one per slow query produces a table that is expensive to write and still slow, because the planner has too many mediocre options.\n\nWe index against the queries the application actually runs, which means reading the plans rather than guessing. Composite indexes get their columns in the order the query filters them. Partial indexes cover the common case — most queries over a status column only ever ask for one or two values, and an index restricted to those is a fraction of the size.\n\nThe measurement that matters is not whether a query is fast on a development machine with ten thousand rows. It is whether the plan is still the same shape at the volume you expect in two years."
+    },
+    {
+      "heading": "Migrations that run while people are using it",
+      "body": "The dangerous migrations are the ones that take a lock. Adding a column with a default, changing a type, or adding a foreign key can each block writes on a large table for long enough to be an outage.\n\nSo schema changes are staged. Add the column nullable, backfill in batches, then add the constraint once the data satisfies it. Create indexes concurrently. Deploy code that tolerates both the old and the new shape, so the migration and the release do not have to land together — that decoupling is also what makes a rollback possible.\n\nEvery migration is written with the reverse in mind, and tested against a copy of production data rather than an empty development database. A migration that takes two seconds on your laptop can take forty minutes on the real table."
+    }
+  ],
+  "codeExample": {
+    "language": "SQL",
+    "filename": "migrations/0042_orders_currency.sql",
+    "caption": "The same schema change, staged so it never blocks writes. Adding a NOT NULL column with a default rewrites the whole table under a lock on older PostgreSQL and on MySQL; splitting it into add, backfill and constrain keeps each step short. NOT VALID lets the constraint apply to new rows immediately and validate the existing ones without an exclusive lock, and CONCURRENTLY builds the index while writes continue.",
+    "code": "-- Step 1: add it nullable. Instant: no table rewrite, no long lock.\nALTER TABLE orders ADD COLUMN currency char(3);\n\n-- Step 2: backfill in batches. One UPDATE over ten million rows holds a\n-- transaction open for minutes and bloats the table; this does not.\n-- Run until zero rows are affected.\nUPDATE orders\nSET currency = 'BDT'\nWHERE currency IS NULL\n  AND id IN (\n    SELECT id FROM orders WHERE currency IS NULL ORDER BY id LIMIT 5000\n  );\n\n-- Step 3: constrain. NOT VALID applies to new rows at once and skips the\n-- full-table scan, so writes keep flowing.\nALTER TABLE orders\n  ADD CONSTRAINT orders_currency_present CHECK (currency IS NOT NULL) NOT VALID;\n\n-- Step 4: validate the backfilled rows. Takes a SHARE UPDATE EXCLUSIVE lock,\n-- which does not block reads or writes.\nALTER TABLE orders VALIDATE CONSTRAINT orders_currency_present;\n\n-- Step 5: the index the reporting query needs. CONCURRENTLY cannot run inside\n-- a transaction block - it is a separate migration for that reason.\nCREATE INDEX CONCURRENTLY IF NOT EXISTS orders_currency_created_idx\n  ON orders (currency, created_at DESC);"
+  },
+  "deliverables": [
+    "Schema modelled from the domain, not generated by the ORM",
+    "Constraints enforced in the database, where every writer meets them",
+    "Indexes chosen from real query plans, not guessed",
+    "Migrations staged to avoid long locks, each with a reverse",
+    "Migrations tested against production-sized data",
+    "Backups with a restore that has actually been performed"
+  ],
+  "faq": [
+    {
+      "q": "PostgreSQL or MySQL?",
+      "a": "PostgreSQL unless something specific points elsewhere. Stricter defaults, better data types, transactional DDL, and capable enough at JSON, full text search and queueing that most products never need a second system. MySQL is a fine database and the deciding factor is usually what your team and your hosting already run."
+    },
+    {
+      "q": "Do we need a NoSQL database?",
+      "a": "Occasionally, and less often than it is chosen. Document stores suit genuinely schemaless data and very high write volumes with simple access patterns. Most applications described as needing one have relational data with a few flexible fields, which PostgreSQL's JSON columns handle while keeping joins and constraints."
+    },
+    {
+      "q": "Our queries have got slow. Where do you start?",
+      "a": "With the plans, not the code. Find the queries actually consuming time, read what the planner is doing, and fix the largest cause first — usually a missing index, an N+1 pattern from the ORM, or a query that was fine at a hundred thousand rows and is not at ten million. Rewriting before measuring is how teams optimise the wrong thing."
+    },
+    {
+      "q": "How do you handle backups?",
+      "a": "Automated, retained to a policy, encrypted, and — the part that gets skipped — restored on a schedule. A backup nobody has restored is a hypothesis. We do the restore, time it, and write down what the recovery actually costs in minutes."
+    }
+  ],
+  "notFor": {
+    "heading": "When this is premature",
+    "body": "If you are pre-launch with an unproven product, elaborate data modelling is optimising something that may not survive contact with customers. Get the obvious constraints in — foreign keys, not-null, unique on natural keys — and move on; those are cheap now and painful to retrofit. Deep indexing and partitioning work belongs after you have real query patterns and real volume, because until then you are tuning against traffic you have imagined."
+  },
+  "related": {
+    "services": ["back-end", "custom-software", "cloud-application", "devops"],
+    "technologies": ["python", "nodejs", "typescript", "aws"]
+  }
+}

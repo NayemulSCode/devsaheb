@@ -1,0 +1,54 @@
+{
+  "slug": "django",
+  "primaryQuery": "django development company",
+  "title": "Django Development Company — Batteries, Used Properly",
+  "description": "Django applications where the ORM is used deliberately: query counts under control, migrations that run online, and the admin treated as a tool not a product.",
+  "h1": "Django applications where the ORM works for you, not against you",
+  "intro": "Django's appeal is how much arrives already built — authentication, migrations, an admin interface, a mature ORM. That head start is real, and it hides the two things that decide whether the application is still fast at scale: how many queries a page actually runs, and whether a migration can be applied while people are using the system. Both are invisible in development and both are difficult to retrofit. We build with them in view from the start.",
+  "sections": [
+    {
+      "heading": "The query count is the number that matters",
+      "body": "Django's ORM is lazy, which is a feature and the source of its most common performance problem. A template that loops over orders and renders each customer's name issues one query per row, and nothing in the code says so.\n\n`select_related` for forward relationships and `prefetch_related` for reverse and many-to-many fix it, and the way to keep it fixed is to measure rather than to remember. We assert query counts in tests for the important views, so a change that introduces an N+1 fails in CI instead of appearing as a slow page next quarter.\n\nThe related habit is fetching more than you need. `only` and `values` matter once rows get wide, and aggregation belongs in the database rather than in a Python loop over a queryset — the difference at a million rows is not marginal."
+    },
+    {
+      "heading": "Transactions, locking and the update that goes missing",
+      "body": "Read a row, decide something, write it back — and two concurrent requests both read the old value and one update is silently lost. It is the classic bug and Django's ORM does nothing to prevent it by default.\n\n`select_for_update` inside a transaction is the fix, and it has to be inside one: outside `atomic()` Django raises rather than locking silently, which is the right behaviour and surprises people.\n\nThe second detail is `transaction.on_commit`. Dispatching a Celery task inside a transaction means the worker can start before the commit lands and find nothing there. Deferring the dispatch until after commit is one line and removes a whole class of unreproducible error."
+    },
+    {
+      "heading": "The admin is a staff tool, not a product",
+      "body": "Django's admin is excellent for internal operations and a poor foundation for a customer-facing interface. Building a product on it means fighting its assumptions about permissions, layout and workflow, and the fight never ends.\n\nWe use it for what it is good at — staff editing records, with the querysets optimised because the admin is as prone to N+1 as any other view — and build customer-facing surfaces properly.\n\nOn migrations, the same care as anywhere else: adding a column with a default, or changing a type, can lock a large table. Django will happily generate a migration that is fine on a development database and an outage on a production one, so schema changes get staged and tested against realistic data volumes."
+    }
+  ],
+  "codeExample": {
+    "language": "Python",
+    "filename": "orders/services.py",
+    "caption": "The two Django-specific races handled in one place. `select_for_update` locks the row so two concurrent reservations cannot both read the same stock level and both succeed — without it, one update is silently lost. `on_commit` defers the Celery dispatch until the transaction has actually landed, which stops the worker starting before the order row exists and failing with a DoesNotExist nobody can reproduce.",
+    "code": "from django.db import transaction\nfrom django.db.models import F\n\n\ndef reserve_stock(sku: str, quantity: int, customer_id: int) -> Order:\n    with transaction.atomic():\n        # select_for_update must be inside atomic(); outside it Django raises\n        # rather than quietly not locking, which is the right call.\n        item = (\n            Stock.objects.select_for_update()\n            .get(sku=sku)\n        )\n        if item.available < quantity:\n            raise InsufficientStock(sku=sku, requested=quantity)\n\n        # F() keeps the arithmetic in the database. Reading into Python and\n        # writing back is the read-decide-write race this lock exists to stop.\n        Stock.objects.filter(pk=item.pk).update(\n            available=F(\"available\") - quantity\n        )\n\n        order = Order.objects.create(\n            customer_id=customer_id, sku=sku, quantity=quantity\n        )\n\n        # Not dispatched here: the worker is quick enough to look for this\n        # order before the transaction commits and not find it.\n        transaction.on_commit(lambda: send_confirmation.delay(order.id))\n\n        return order\n\n\ndef recent_orders():\n    # One query, not one per row. The test for this view asserts the count,\n    # so reintroducing the N+1 fails in CI rather than in production.\n    return (\n        Order.objects.select_related(\"customer\")\n        .prefetch_related(\"lines__product\")\n        .order_by(\"-created_at\")[:50]\n    )"
+  },
+  "faq": [
+    {
+      "q": "Django or FastAPI?",
+      "a": "Django when you want the full framework — ORM, migrations, auth, admin — and are building something application-shaped with server-rendered pages or a staff interface. FastAPI when you are building an API, want async throughout, and would rather assemble the pieces. The admin is usually the deciding factor: if you will use it, Django saves months."
+    },
+    {
+      "q": "Is Django fast enough?",
+      "a": "The framework is rarely the bottleneck; query count and N+1 patterns almost always are. A Django application with disciplined queries and sensible caching serves very substantial traffic. If profiling shows the framework itself is the limit, that is unusual and worth investigating rather than assuming."
+    },
+    {
+      "q": "Can you use Django's async support?",
+      "a": "Yes, with care. Async views work and much of the ORM is still synchronous, so a blocking query inside an async view stalls the event loop — the same trap as anywhere else. We use async where the work is genuinely I/O across external services, and stay synchronous where the work is database-bound."
+    },
+    {
+      "q": "Can you take over an existing Django project?",
+      "a": "Yes. We start with the version, the query counts on the busiest views, and the state of the migrations — those three tell you most of what an inherited Django project will cost. An application several major versions behind is the most common finding and the one with the clearest path forward."
+    }
+  ],
+  "notFor": {
+    "heading": "When something else fits better",
+    "body": "If you are building a pure API consumed by a JavaScript front end and mobile apps, Django's strongest features — templates, admin, forms — go unused, and FastAPI or a Node service will be a lighter fit. If your team writes TypeScript and the product is heavily interactive, sharing one language across both halves is worth more than what Django brings. Django is the right answer for content-and-records applications with real business rules, especially where a staff interface is part of the product rather than an afterthought."
+  },
+  "related": {
+    "services": ["back-end", "web-development", "database", "ai-development"],
+    "technologies": ["python", "aws", "docker", "typescript"]
+  }
+}

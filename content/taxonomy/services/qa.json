@@ -1,0 +1,62 @@
+{
+  "slug": "qa",
+  "primaryQuery": "software testing and qa services",
+  "title": "Software Testing and QA Services — Tests Worth Trusting",
+  "description": "Automated testing that catches real defects: behaviour-based tests, no flaky waits, and a suite fast enough that nobody is tempted to skip it.",
+  "h1": "A test suite people trust enough to act on",
+  "intro": "A failing test that gets re-run until it passes has stopped being a test. Most suites do not fail because the software is broken — they fail because they are slow, brittle, coupled to markup nobody promised to keep, or waiting on a timer that is usually long enough. Once a team learns that red does not necessarily mean broken, the suite has become cost without benefit. We build suites that stay trustworthy, which mostly means deleting the habits that make them otherwise.",
+  "sections": [
+    {
+      "heading": "Test behaviour, not implementation",
+      "body": "A test that reaches for a CSS class or an internal function name fails when the code is refactored and passes when the behaviour breaks. That is exactly backwards, and it is why teams come to resent their own tests.\n\nSo we select elements the way a user finds them — by role, by label, by visible text — and assert on what the user would observe. A rename that does not change behaviour should not produce a single failure. A change that breaks a rule should produce exactly one.\n\nThe same rule governs the unit level. Test the contract a module offers, not the private steps it takes to get there, and mocking stays at genuine boundaries. A test that mocks the thing it is testing verifies only that the mock was configured."
+    },
+    {
+      "heading": "Flakiness is a defect, not a fact of life",
+      "body": "Almost every flaky end-to-end test is a timing assumption: a fixed sleep, a wait for an element that exists before it is interactive, or a shared fixture two tests both mutate.\n\nThe fixes are unglamorous and they work. Wait for a condition rather than a duration. Give each test its own data, created through the API and torn down after, so tests can run in parallel and in any order. Control the clock and the network rather than hoping both behave.\n\nWe treat a flaky test as a bug with a ticket, not something to retry in CI. Automatic retries hide the failure and let the underlying race survive into production, where it becomes an incident nobody can reproduce."
+    },
+    {
+      "heading": "The shape of the suite decides whether it gets run",
+      "body": "A suite that takes forty minutes is a suite people skip. The pyramid exists for that reason: many fast unit tests, fewer integration tests against a real database, a small number of end-to-end tests covering the paths that actually make money.\n\nInverting it — everything through the browser — produces a suite that is slow, flaky and expensive to maintain, and it is the most common mistake we are asked to clean up.\n\nCoverage is a floor enforced in CI rather than a number anyone reports on. It tells you what has never been executed, which is useful; it says nothing about whether the assertions are worth anything, which is why it is a gate and not a goal."
+    }
+  ],
+  "codeExample": {
+    "language": "TypeScript",
+    "filename": "e2e/checkout.spec.ts",
+    "caption": "The same test written to be trustworthy. Elements are found by role and label as a user would, so a class rename cannot break it. There is no fixed sleep — the assertions retry until the condition holds or the test genuinely fails. Each run creates its own account through the API, so tests can run in parallel and in any order without fighting over shared data, and the failure message names the actual condition rather than an element id.",
+    "code": "import { test, expect } from '@playwright/test';\nimport { createAccount, deleteAccount } from './support/api';\n\ntest.describe('checkout', () => {\n  let account: Account;\n\n  // Own data per test. Shared fixtures are why suites cannot run in parallel.\n  test.beforeEach(async () => { account = await createAccount(); });\n  test.afterEach(async () => { await deleteAccount(account.id); });\n\n  test('a guest can buy the last item in stock', async ({ page }) => {\n    await page.goto(`/products/${account.seededSku}`);\n\n    // By role and name, as a user finds it. Not '.btn-primary', which is a\n    // styling decision nobody promised to keep.\n    await page.getByRole('button', { name: 'Add to cart' }).click();\n    await page.getByRole('link', { name: 'Checkout' }).click();\n\n    await page.getByLabel('Email').fill(account.email);\n    await page.getByLabel('Delivery address').fill('Road 6, Dhaka 1207');\n    await page.getByRole('button', { name: 'Pay now' }).click();\n\n    // Web-first assertion: retries until true or fails with what it saw.\n    // No waitForTimeout - a fixed sleep is either flaky or slow, usually both.\n    await expect(\n      page.getByRole('heading', { name: 'Order confirmed' }),\n    ).toBeVisible();\n\n    // The rule that matters, asserted where a user can see it.\n    await expect(page.getByText('Out of stock')).toBeVisible();\n  });\n});"
+  },
+  "deliverables": [
+    "Behaviour-based tests using roles and labels, not internal selectors",
+    "Per-test data created and torn down through the API",
+    "Deterministic waits — no fixed sleeps, no retry-until-green",
+    "A pyramid shaped so the suite runs in minutes",
+    "Coverage floor as a CI gate",
+    "Flaky tests tracked as defects, with the race actually fixed"
+  ],
+  "faq": [
+    {
+      "q": "We have no tests at all. Where do you start?",
+      "a": "With the paths that would cost you money if they broke — signup, checkout, whatever your core transaction is — and with characterisation tests around any area you are about to change. Chasing a coverage number from zero produces a lot of tests of trivial code. Protect the valuable paths first."
+    },
+    {
+      "q": "Should QA be a separate team?",
+      "a": "The automated suite belongs to the engineers who write the code, because tests they do not own are tests they will not maintain. A dedicated tester is genuinely valuable for exploratory work — finding the things nobody thought to automate — which is a different skill from writing the suite."
+    },
+    {
+      "q": "How much coverage is enough?",
+      "a": "We use 80% as a floor because it is high enough to catch untested paths and low enough not to force tests of generated code. Above that the marginal test tends to assert something trivially true. The number is a gate to stop coverage falling, not a target to optimise."
+    },
+    {
+      "q": "Can you fix our existing flaky suite?",
+      "a": "Yes, and it is usually a small number of root causes repeated widely — fixed sleeps, shared fixtures, or selectors bound to markup. We find the recurring patterns, fix those, and leave the team with the rules that stop them returning."
+    }
+  ],
+  "notFor": {
+    "heading": "When to test less, not more",
+    "body": "A prototype meant to answer one question and then be deleted does not need a suite; the test is whether you learned the thing. Equally, exhaustive tests on a feature nobody has validated is effort spent protecting code that may not survive the month. Testing earns its cost in proportion to how long the code lives and how expensive a failure is — and if the honest answer is a throwaway, we will tell you to skip it rather than sell you a suite."
+  },
+  "related": {
+    "services": ["devops", "custom-software", "web-development", "back-end"],
+    "technologies": ["typescript", "nodejs", "python", "javascript"]
+  }
+}

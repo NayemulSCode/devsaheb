@@ -1,0 +1,54 @@
+{
+  "slug": "laravel",
+  "primaryQuery": "laravel development company",
+  "title": "Laravel Development Company — PHP That Scales Sensibly",
+  "description": "Laravel applications built past the tutorial: queries that do not multiply, queued jobs that are safe to retry, and a codebase that survives its third year.",
+  "h1": "Laravel applications that hold up past the first thousand users",
+  "intro": "Laravel is the most productive way to build a conventional web application in PHP, and its productivity is also where the trouble starts. Eloquent makes it effortless to write a query that runs once in development and two hundred times in production. Facades make it easy to put logic anywhere. The framework will not stop you, so the discipline has to come from how the application is structured — which is most of what separates a Laravel codebase that is pleasant in year three from one that is being rewritten.",
+  "sections": [
+    {
+      "heading": "Eloquent's convenience is also its main cost",
+      "body": "The N+1 query is the defining Laravel performance problem, and it is invisible in code that reads perfectly: a loop over orders, each one touching `$order->customer`, each touch a separate query.\n\nThe fix is eager loading, and the way to make it stick is not vigilance. Laravel can be told to throw on a lazy load in development, so the N+1 becomes an exception the developer who wrote it sees immediately rather than a slow page someone profiles months later.\n\nThe second cost is loading whole models to read one column, or hydrating ten thousand rows to sum them. For reporting and bulk work we drop to the query builder or plain SQL — Eloquent is for the domain, not for everything, and pretending otherwise is how a report ends up taking forty seconds."
+    },
+    {
+      "heading": "Queues, and jobs that will run twice",
+      "body": "Anything slow belongs off the request: email, PDF generation, third-party calls, image processing. Laravel's queue system makes that easy and hands you the usual distributed-systems problem — a job that fails partway and retries has already done some of its work.\n\nSo jobs are written to be safe to run twice. Charge once by keying on an idempotency value rather than trusting the retry count. Use `ShouldBeUnique` where two copies must never overlap, and be aware it depends on a cache lock that can expire, so it is a guard rather than a guarantee.\n\nThe detail that catches teams out is dispatching inside a transaction. The worker can pick the job up before the transaction commits and find the row missing — `dispatch()->afterCommit()` exists precisely for that, and it is not the default."
+    },
+    {
+      "heading": "Structure that outlives the tutorial",
+      "body": "A controller that validates, applies business rules, writes to three tables and sends an email is easy to write and impossible to reuse. When the same rule is needed from an Artisan command or a webhook, it gets copied.\n\nWe keep controllers thin — validate, delegate, respond — and put rules in dedicated classes that anything can call. Form requests handle validation, so it is declarative and testable. Model events are used sparingly, because logic that fires invisibly on save is the hardest kind to debug from a stack trace.\n\nThe practical test is whether an action can be invoked from a test without an HTTP request. If it cannot, the logic is in the wrong place."
+    }
+  ],
+  "codeExample": {
+    "language": "PHP",
+    "filename": "app/Jobs/ChargeInvoice.php",
+    "caption": "Three Laravel-specific traps handled together. `afterCommit` stops the worker picking the job up before the transaction that created the invoice has committed — the race that produces \"model not found\" errors nobody can reproduce. The gateway call is keyed on a stable idempotency value, so a retry after a timeout cannot charge twice. And `ShouldBeUnique` is treated as a guard with an expiry rather than a guarantee, which is what it actually is.",
+    "code": "<?php\n\nclass ChargeInvoice implements ShouldQueue, ShouldBeUnique\n{\n    use Dispatchable, InteractsWithQueue, Queueable;\n\n    public int $tries = 5;\n    public array $backoff = [10, 30, 120, 600];\n\n    public function __construct(public readonly string $invoiceId) {}\n\n    // Lock key and expiry. A cache lock can expire, so this reduces overlap;\n    // the idempotency key below is what actually prevents a double charge.\n    public function uniqueId(): string { return $this->invoiceId; }\n    public int $uniqueFor = 900;\n\n    public function handle(PaymentGateway $gateway): void\n    {\n        $invoice = Invoice::query()->findOrFail($this->invoiceId);\n        if ($invoice->status !== InvoiceStatus::Pending) {\n            return; // already settled by an earlier attempt\n        }\n\n        // Stable across retries. A gateway that timed out may still have\n        // charged; sending the same key gets the original result back.\n        $result = $gateway->charge(\n            amountMinor: $invoice->amount_minor,\n            idempotencyKey: \"invoice:{$invoice->id}\",\n        );\n\n        $invoice->update([\n            'status' => InvoiceStatus::Paid,\n            'gateway_reference' => $result->reference,\n        ]);\n    }\n}\n\n// At the call site: the worker is fast enough to beat the commit, and then\n// findOrFail throws on a row that does exist a millisecond later.\nDB::transaction(function () use ($invoice) {\n    $invoice->save();\n    ChargeInvoice::dispatch($invoice->id)->afterCommit();\n});"
+  },
+  "faq": [
+    {
+      "q": "Is PHP still a reasonable choice?",
+      "a": "Yes. Modern PHP has types, proper performance and a mature ecosystem, and Laravel is genuinely productive for conventional web applications. The reasonable objections are about hiring in your market and about sharing a language with your front end, not about the language being incapable."
+    },
+    {
+      "q": "Can you take over an existing Laravel application?",
+      "a": "Yes, and we start by measuring rather than refactoring — the slow queries, the framework version, the state of the test suite. Inherited Laravel codebases usually have a small number of repeated problems rather than many unique ones, and fixing the pattern is cheaper than fixing each instance."
+    },
+    {
+      "q": "Livewire, Inertia, or a separate front end?",
+      "a": "Livewire when the interface is mostly forms and tables and you would rather not run a JavaScript build. Inertia when you want React or Vue components without building a separate API. A fully separate front end when mobile apps or third parties will consume the same API — at which point the API is the product and should be designed as one."
+    },
+    {
+      "q": "How do you handle upgrades?",
+      "a": "Laravel releases yearly with a defined support window, and staying within one major version of current is much cheaper than catching up from three behind. We keep the test suite strong enough that an upgrade is a day's work rather than a project, and treat the upgrade as routine maintenance rather than something to schedule when it becomes urgent."
+    }
+  ],
+  "notFor": {
+    "heading": "When another stack fits better",
+    "body": "If your team already writes TypeScript and the product is heavily interactive, sharing one language across the front end and the API is worth more than Laravel's productivity — one set of types, one hiring pool. If the work is data or machine learning, Python has the libraries. Laravel is the right answer for conventional web applications with substantial server-rendered content, admin interfaces and business rules, particularly where PHP hosting and PHP developers are what you already have."
+  },
+  "related": {
+    "services": ["back-end", "web-development", "cms", "crm"],
+    "technologies": ["php", "javascript", "typescript", "docker"]
+  }
+}

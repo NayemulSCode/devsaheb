@@ -1,0 +1,62 @@
+{
+  "slug": "front-end",
+  "primaryQuery": "front end development services",
+  "title": "Front End Development Services — Interfaces That Hold Up",
+  "description": "Front end engineering measured on what users feel: a budget enforced in CI, WCAG 2.2 AA audited on every build, and state that stays predictable as it grows.",
+  "h1": "Front end engineering judged on what the user actually feels",
+  "intro": "The front end is where every decision made elsewhere finally shows up. A slow query is a spinner; a loose data contract is a blank panel; a thoughtless form is an abandoned signup. This is the half of the stack that users experience directly, and we build it against measurements rather than screenshots. Our back end practice covers the other half, and most engagements want both.",
+  "sections": [
+    {
+      "heading": "Accessibility is structural, not a pass at the end",
+      "body": "Retrofitting accessibility means rebuilding components, because the problems are in the markup: a div acting as a button, a modal that leaves the keyboard behind it, a form whose error is announced to nobody.\n\nSo we build from semantic elements first and reach for ARIA only when the platform genuinely has no equivalent. A native button is focusable, keyboard-operable and announced correctly with no work at all; the div version needs four attributes and a key handler to reach the same place, and usually gets two of them.\n\nEvery build runs an automated audit at WCAG 2.2 AA and fails on a violation. Automation catches perhaps half of what matters, so the rest is checked by hand: tab through the page, use it with the mouse unplugged, and make sure focus is never lost or trapped."
+    },
+    {
+      "heading": "Performance is decided by architecture, then defended in CI",
+      "body": "Most of a page's speed is set before anyone optimises anything — how much JavaScript is shipped, how many round trips the first screen needs, whether images are sized for the space they occupy.\n\nWe set a budget at the start and enforce it on every pull request. A change that pushes the bundle past the limit fails, and the conversation happens while it is still one change rather than a quarter of accumulated weight. Largest Contentful Paint under two seconds and Interaction to Next Paint under 200 ms are gates, not goals.\n\nLayout stability gets the same treatment. Images and embeds reserve their space, so a price or a button never moves under a thumb that is already on the way down."
+    },
+    {
+      "heading": "State that stays predictable as the application grows",
+      "body": "The usual failure is not choosing the wrong library, it is failing to separate two different things. Server data — fetched, cached, refetched, possibly stale — behaves nothing like client state such as which tab is open.\n\nWe keep them apart. Server data lives in a query cache that handles staleness and revalidation; client state stays local until something genuinely shared needs it. Global stores are where state goes when nobody has decided who owns it, and they grow until no one can say what a change will affect.\n\nThe same discipline applies to forms, which is where the most complex client state usually lives: one schema validating on both sides, so the browser and the server cannot disagree about what is acceptable."
+    }
+  ],
+  "codeExample": {
+    "language": "TypeScript",
+    "filename": "src/components/ConfirmDialog.tsx",
+    "caption": "The keyboard details that automated audits do not catch. Focus moves into the dialog on open and returns to the element that opened it on close — without that, a keyboard user is dropped at the top of the page. Escape closes it, the background is inert so tabbing cannot wander behind the overlay, and the browser's own dialog element supplies the role and modal semantics rather than four ARIA attributes that are easy to get wrong.",
+    "code": "import { useEffect, useRef } from 'react';\n\nexport function ConfirmDialog({\n  open,\n  title,\n  onConfirm,\n  onCancel,\n}: {\n  open: boolean;\n  title: string;\n  onConfirm: () => void;\n  onCancel: () => void;\n}) {\n  const ref = useRef<HTMLDialogElement>(null);\n  // Where focus was before we stole it. Returning it is the part that gets\n  // forgotten, and it is what strands a keyboard user at the top of the page.\n  const opener = useRef<HTMLElement | null>(null);\n\n  useEffect(() => {\n    const dialog = ref.current;\n    if (!dialog) return;\n\n    if (open && !dialog.open) {\n      opener.current = document.activeElement as HTMLElement | null;\n      // showModal, not show: it makes the rest of the page inert, so Tab\n      // cannot reach the content behind the overlay.\n      dialog.showModal();\n    } else if (!open && dialog.open) {\n      dialog.close();\n      opener.current?.focus();\n    }\n  }, [open]);\n\n  return (\n    <dialog\n      ref={ref}\n      aria-labelledby=\"confirm-title\"\n      // Escape fires 'cancel' natively; routing it through the same handler\n      // keeps one close path instead of two that can disagree.\n      onCancel={(e) => {\n        e.preventDefault();\n        onCancel();\n      }}\n    >\n      <h2 id=\"confirm-title\">{title}</h2>\n      <button onClick={onCancel}>Cancel</button>\n      <button onClick={onConfirm}>Confirm</button>\n    </dialog>\n  );\n}"
+  },
+  "deliverables": [
+    "Semantic markup, ARIA only where the platform has no equivalent",
+    "WCAG 2.2 AA audited on every build, plus manual keyboard testing",
+    "Performance budget enforced per pull request",
+    "Server data and client state kept separate",
+    "One validation schema shared by browser and server",
+    "Component library documented for the team that inherits it"
+  ],
+  "faq": [
+    {
+      "q": "How is this different from your web development service?",
+      "a": "Web development is the whole application; this is the browser half of it, and back end is the other. If you need the complete build, start at the umbrella page — it is the same team. This page is for when you have a back end already, or an in-house team covering it, and need the interface built to a standard."
+    },
+    {
+      "q": "Can you work to our existing designs?",
+      "a": "Yes. We will raise accessibility and performance issues in a design before building it rather than after — contrast that fails, a tap target too small, a hero image that cannot meet the loading budget. Those are cheaper to change in the file than in the code."
+    },
+    {
+      "q": "Do you build design systems?",
+      "a": "Yes, and we would ask how many products will use it first. A design system for one application is usually just the application's components with extra ceremony. It earns its cost across several products or several teams."
+    },
+    {
+      "q": "What about older browsers?",
+      "a": "We agree the support matrix at the start because it changes what can be used, then test against it rather than assuming. A support claim nobody verifies is one that fails in whichever browser your largest customer standardised on."
+    }
+  ],
+  "notFor": {
+    "heading": "When you need the other half too",
+    "body": "If there is no back end yet, hiring only for the browser produces an interface with nothing behind it and a set of assumptions about an API that does not exist. In that case the umbrella engagement is the right shape, so that the contract between the two is designed once rather than negotiated late. Equally, if what you need is a marketing site built from a design, that is a smaller job than this and a good template plus a CMS will get you there faster."
+  },
+  "related": {
+    "services": ["web-development", "back-end", "custom-software", "ecommerce"],
+    "technologies": ["reactjs", "typescript", "nextjs", "javascript"]
+  }
+}

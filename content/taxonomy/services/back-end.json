@@ -1,0 +1,62 @@
+{
+  "slug": "back-end",
+  "primaryQuery": "backend development services",
+  "title": "Backend Development Services — APIs and Data That Hold",
+  "description": "Server-side engineering where correctness under concurrency is the requirement: idempotent writes, transactional boundaries, and APIs designed to be versioned.",
+  "h1": "Backend systems that stay correct when two things happen at once",
+  "intro": "Most back end bugs that reach production are not logic errors. They are timing: two requests arriving together, a payment webhook delivered twice, a job retried after it had already half-finished. Code that is obviously correct when read line by line is routinely wrong when two copies run at the same moment, and that is the condition every server actually operates in. We build for it deliberately. The browser half is our front end practice, and most engagements want both.",
+  "sections": [
+    {
+      "heading": "Every write assumes it will happen twice",
+      "body": "Networks retry. Users double-click. Queues guarantee at-least-once delivery, which means exactly what it says. Any endpoint that creates or charges something will eventually be called twice with the same intent, and the question is only whether that produces one record or two.\n\nSo write endpoints take an idempotency key, and the first thing they do is claim it. A repeated call returns the original result rather than doing the work again. This is a small amount of code at the start and the only reliable way to avoid duplicate orders, double charges and the manual reconciliation that follows them.\n\nThe same reasoning applies to background jobs. A job that has to be safe to run twice is a job that can be retried freely, which is what makes a queue useful rather than frightening."
+    },
+    {
+      "heading": "Transactions around the right things",
+      "body": "A transaction that is too narrow leaves the database in a state no business rule permits. One that is too wide holds locks across a network call and turns a slow third party into a database outage.\n\nThe rule we follow is that a transaction covers exactly the writes that must succeed or fail together, and nothing that talks to another system. Sending an email, calling a payment provider or publishing to a queue happens after the commit, via an outbox row written inside it. That way the side effect cannot fire for a transaction that rolled back, and it cannot be lost if the process dies immediately after.\n\nWhere two requests can contend for the same row — stock, balance, a booking slot — we lock explicitly rather than reading, deciding and writing, which is the pattern that silently loses one of two concurrent updates."
+    },
+    {
+      "heading": "APIs designed to be changed",
+      "body": "An API is a contract with someone whose release schedule you do not control. Mobile clients are the sharpest case: a version from eighteen months ago is still installed and still calling you.\n\nSo changes are additive by default. New optional fields, never a removed or repurposed one. Where a breaking change is unavoidable it goes behind a version and the old shape keeps working until the traffic to it is genuinely zero — measured, not assumed.\n\nErrors get the same care. A machine-readable code the client can branch on, a human-readable message for a log, and enough detail to act on without leaking internals. A 500 with an empty body converts a five-minute fix into an afternoon of guessing."
+    }
+  ],
+  "codeExample": {
+    "language": "TypeScript",
+    "filename": "src/orders/create.ts",
+    "caption": "Three failure modes handled in one place. The idempotency key is claimed inside the transaction, so two simultaneous requests cannot both pass the check — the second loses on the unique constraint and returns the first one's result rather than creating a second order. Stock is locked rather than read-then-written, which is what silently loses one of two concurrent updates. The confirmation email goes to an outbox row inside the transaction instead of being sent during it, so it cannot fire for an order that rolled back.",
+    "code": "export async function createOrder(input: NewOrder, idempotencyKey: string) {\n  return db.transaction(async (tx) => {\n    // Claim the key first. The unique index is what makes this safe when two\n    // requests arrive in the same millisecond - one of them loses here.\n    try {\n      await tx.insert(idempotencyKeys).values({ key: idempotencyKey });\n    } catch (err) {\n      if (!isUniqueViolation(err)) throw err;\n      const existing = await tx.query.orders.findFirst({\n        where: eq(orders.idempotencyKey, idempotencyKey),\n      });\n      if (existing) return existing; // same request, same answer\n      throw new ConflictError('Request already in progress');\n    }\n\n    // SELECT ... FOR UPDATE. Read-decide-write without this loses one of two\n    // concurrent decrements and oversells the last item.\n    const stock = await tx.query.stock.findFirst({\n      where: eq(stock.sku, input.sku),\n      for: 'update',\n    });\n    if (!stock || stock.available < input.quantity) {\n      throw new UnprocessableError('INSUFFICIENT_STOCK', { sku: input.sku });\n    }\n\n    await tx.update(stock)\n      .set({ available: stock.available - input.quantity })\n      .where(eq(stock.sku, input.sku));\n\n    const [order] = await tx.insert(orders)\n      .values({ ...input, idempotencyKey })\n      .returning();\n\n    // Outbox, not a direct send. A rolled-back transaction must not have\n    // emailed anyone, and a crash here must not lose the message.\n    await tx.insert(outbox).values({\n      topic: 'order.created',\n      payload: { orderId: order.id },\n    });\n\n    return order;\n  });\n}"
+  },
+  "deliverables": [
+    "Idempotent write endpoints with claimed keys",
+    "Transactional boundaries that exclude third-party calls",
+    "Outbox pattern for side effects that must not be lost or duplicated",
+    "Explicit locking wherever two requests can contend",
+    "Additive API changes, versioned only when unavoidable",
+    "Structured errors with machine-readable codes"
+  ],
+  "faq": [
+    {
+      "q": "How is this different from your web development service?",
+      "a": "Web development is the whole application; this is the server half, and front end is the browser half. If you need both, the umbrella page is the right starting point — same team either way. This page is for when the interface exists or is someone else's job."
+    },
+    {
+      "q": "REST or GraphQL?",
+      "a": "REST for most things, because it is cacheable, debuggable with a browser, and understood by everyone who will maintain it. GraphQL earns its complexity when many different clients need different shapes of the same data and you are tired of adding endpoints. It moves the cost rather than removing it — you gain flexibility and take on query depth limits, cost analysis and a harder caching story."
+    },
+    {
+      "q": "Which database should we use?",
+      "a": "PostgreSQL unless there is a specific reason not to. It handles relational work, JSON documents, full text search and queues competently enough that most products never need a second system, and one database you understand deeply beats three you know shallowly."
+    },
+    {
+      "q": "Can you take over an existing backend?",
+      "a": "Yes. We start by writing tests around the behaviour we must not break, before changing anything. An inherited system usually has at least one piece of load-bearing strangeness that someone relies on, and the tests are how you find it before your users do."
+    }
+  ],
+  "notFor": {
+    "heading": "When you do not need a custom backend",
+    "body": "If the application is mostly forms, authentication and stored records, a managed platform such as Supabase or Firebase will get you running in days rather than weeks, and will handle the parts nobody enjoys building. Custom back end work earns its cost when the rules are genuinely yours, the integrations are awkward, the data model is complex, or the compliance position rules out storing records on someone else's terms. We would rather set you up on a platform and revisit it when you have outgrown it."
+  },
+  "related": {
+    "services": ["web-development", "front-end", "database", "cloud-application"],
+    "technologies": ["nodejs", "typescript", "python", "aws"]
+  }
+}

@@ -1,0 +1,62 @@
+{
+  "slug": "android",
+  "primaryQuery": "android app development company",
+  "title": "Android App Development Company — Built for Real Devices",
+  "description": "Native Android in Kotlin, built for the devices people actually own: background limits, aggressive battery management, fragmentation and Play policy.",
+  "h1": "Android apps built for the devices your users actually have",
+  "intro": "Android's difficulty is not the language or the framework, it is the range. Your app runs on a flagship and on a four-year-old handset with 3 GB of RAM, across manufacturers whose battery management kills background work more aggressively than the documentation suggests, on versions spanning several years of API changes. An app tested only on a recent Pixel will behave differently for most of your users. We build for that spread, and it matters more in South Asian markets than almost anywhere.",
+  "sections": [
+    {
+      "heading": "Lifecycle is where the leaks are",
+      "body": "The most common Android defect is work that outlives the screen that started it: a coroutine still collecting after the user navigated away, a listener holding a reference to a destroyed activity, a network callback touching a view that no longer exists.\n\nModern Android has good answers and they have to be used deliberately. Collection tied to the lifecycle so it stops when the app goes to the background and restarts when it returns. Coroutine scopes that cancel with the component that owns them. Nothing holding a context longer than the thing it belongs to.\n\nThe symptom of getting this wrong is not usually a crash. It is battery drain and memory growth that only shows up after a user has kept the app open for a week, which is exactly the user you least want to lose."
+    },
+    {
+      "heading": "Background work fights the operating system",
+      "body": "Android has spent a decade restricting what apps may do when not in the foreground, and manufacturers add their own restrictions on top — some considerably more aggressive than stock Android.\n\nSo background work goes through WorkManager, which survives reboots and respects the constraints the system enforces, rather than a service that will be killed. Anything genuinely time-sensitive uses a notification the user can see, because work the user cannot see is work the system feels free to stop.\n\nThe practical consequence is that sync is designed as eventually-consistent and opportunistic. An app that assumes it will get a reliable background window every fifteen minutes is an app that loses data on the handsets that are most common in your market."
+    },
+    {
+      "heading": "Play policy and the size of the download",
+      "body": "Google Play enforces a target API level that rises annually, so an app left untouched for two years cannot be updated without work. We plan for that rather than treating it as a surprise.\n\nData safety declarations must match what the app actually does, including what its third-party SDKs do, and a mismatch found later is a removal rather than a note. Permissions get the same scrutiny: each one is justified at review, and the sensitive ones need a demonstrably good reason.\n\nDownload size deserves more attention than it usually gets. App bundles with per-device delivery, disciplined assets and removal of unused resources make a real difference to install completion rates on slow or metered connections."
+    }
+  ],
+  "codeExample": {
+    "language": "Kotlin",
+    "filename": "app/src/main/java/.../OrderListFragment.kt",
+    "caption": "The lifecycle detail that automated tools will not flag. Collecting a flow in `lifecycleScope` alone keeps it running while the app is in the background, quietly draining battery and holding memory for a screen nobody is looking at. `repeatOnLifecycle(STARTED)` stops collection when the app backgrounds and restarts it on return, and using `viewLifecycleOwner` rather than the fragment ties it to the view rather than to a fragment that outlives it in the back stack.",
+    "code": "class OrderListFragment : Fragment(R.layout.fragment_order_list) {\n\n    private val viewModel: OrderListViewModel by viewModels()\n\n    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {\n        val binding = FragmentOrderListBinding.bind(view)\n\n        // viewLifecycleOwner, not `this`: a fragment on the back stack outlives\n        // its view, and collecting against the fragment leaks the binding.\n        viewLifecycleOwner.lifecycleScope.launch {\n            // Without repeatOnLifecycle this keeps collecting in the background.\n            // That is the drain users report as \"the app eats my battery\".\n            viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {\n                viewModel.state.collect { state ->\n                    when (state) {\n                        is OrderListState.Loading ->\n                            binding.progress.isVisible = true\n                        is OrderListState.Loaded -> {\n                            binding.progress.isVisible = false\n                            adapter.submitList(state.orders)\n                        }\n                        is OrderListState.Failed -> {\n                            binding.progress.isVisible = false\n                            binding.error.text = state.message\n                        }\n                    }\n                }\n            }\n        }\n    }\n}"
+  },
+  "deliverables": [
+    "Kotlin with lifecycle-aware collection and scoped coroutines",
+    "WorkManager for background work, designed to survive aggressive OEMs",
+    "Tested across a device matrix, not only recent hardware",
+    "App bundle with per-device delivery and unused resources stripped",
+    "Data safety declarations matched to actual SDK behaviour",
+    "Play Console setup, signing, staged rollout and crash reporting"
+  ],
+  "faq": [
+    {
+      "q": "Which Android versions should we support?",
+      "a": "Usually back four or five years, and the honest answer comes from your own analytics rather than a general chart — a business app in Dhaka has a very different install base from a consumer app in Europe. The target API level is separate and is set by Play policy rather than by choice."
+    },
+    {
+      "q": "Why does background sync work in testing and fail for users?",
+      "a": "Because several manufacturers apply battery restrictions well beyond stock Android, and a device left idle stops granting the windows your app expected. The fix is to design sync as opportunistic and eventually-consistent, use WorkManager rather than a bare service, and test on the handsets your users actually own."
+    },
+    {
+      "q": "Jetpack Compose or views?",
+      "a": "Compose for new work — it is where the platform is going and it removes a large amount of boilerplate. For an existing view-based app that works, migrating wholesale is rarely justified on its own; the two interoperate, so new screens can be Compose while the rest stays."
+    },
+    {
+      "q": "How do you handle staged rollouts?",
+      "a": "Release to a small percentage first and watch crash-free rate and ANRs before widening. Android lets you halt a rollout, which is the main advantage over shipping to everyone at once — and it only helps if someone is actually watching the numbers, so alerts are part of the setup."
+    }
+  ],
+  "notFor": {
+    "heading": "When native Android is the wrong first spend",
+    "body": "If you need both platforms and the app is forms, lists, sync and payments, building natively twice costs roughly double for a difference users will not notice — cross-platform first and native later for the parts that need it is a well-trodden path. And if the experience is essentially a website, a responsive site avoids the store, the review and an update cycle you do not control, while reaching the users who will never install anything."
+  },
+  "related": {
+    "services": ["mobile-app", "ios", "custom-software", "cloud-application"],
+    "technologies": ["kotlin", "flutter", "react-native", "aws"]
+  }
+}

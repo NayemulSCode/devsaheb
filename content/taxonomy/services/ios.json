@@ -1,0 +1,62 @@
+{
+  "slug": "ios",
+  "primaryQuery": "ios app development company",
+  "title": "iOS App Development Company — Swift, Built to Review",
+  "description": "Native iOS apps in Swift and SwiftUI, built for App Review, privacy requirements and the device constraints that decide whether an app feels fast.",
+  "h1": "Native iOS apps that pass review and keep passing it",
+  "intro": "iOS rewards apps that follow the platform and punishes those that fight it. The conventions are strict, the review process has opinions, and the privacy requirements have teeth — a missing usage description or an undeclared tracking practice is a rejection, not a warning. We build native iOS in Swift for the cases that genuinely need it. Where one codebase should serve both stores, our mobile app service covers the cross-platform route honestly.",
+  "sections": [
+    {
+      "heading": "Concurrency is where modern Swift bugs live",
+      "body": "Swift's structured concurrency removed a whole category of callback mistakes and introduced a stricter one: the compiler now cares which actor your code runs on. Updating a view from a background task is a data race the language will refuse rather than a crash you find in the field.\n\nThat strictness is worth working with rather than around. The common shortcut — marking types as unchecked and moving on — defers the problem to a crash report nobody can reproduce. We model the boundary properly: work off the main actor, results back onto it, and cancellation handled when a view disappears so a scrolled-past screen is not still loading images.\n\nCancellation is the part most often skipped. Without it, a fast scroll through a list starts fifty requests that nobody is waiting for, and the one the user is actually looking at queues behind them."
+    },
+    {
+      "heading": "Privacy is a build artefact now",
+      "body": "Apple's requirements are no longer a policy document, they are files in the project. A privacy manifest declaring what data you collect and why, declared reasons for certain system APIs, and the same for any third-party SDK you include.\n\nThat makes dependency choice a compliance decision as well as a technical one. An analytics or advertising SDK that has not published its manifest will block your release, and finding that out during submission week is the expensive version.\n\nApp Tracking Transparency sits alongside it. If the app tracks across other companies' apps or sites it must ask, and the wording and timing of that prompt materially affect how many people say yes. We treat it as a product decision rather than a checkbox."
+    },
+    {
+      "heading": "Building for review, not around it",
+      "body": "Rejections cluster in a small number of places: an account you can create in the app but not delete, a subscription that does not use in-app purchase where it must, a permission prompt with no explanation, a login that offers Google but not Sign in with Apple.\n\nWe design for those at the start because each is cheap then and expensive later — account deletion in particular touches the data model. The first build goes through the full submission process early rather than the week before launch, so the pipeline, the signing and the listing are proven while there is still time to fix them."
+    }
+  ],
+  "codeExample": {
+    "language": "Swift",
+    "filename": "Sources/Orders/OrderListModel.swift",
+    "caption": "The two details that separate a smooth list from a stuttering one. The model is isolated to the main actor so published changes are always delivered on the right thread and the compiler enforces it, while the network call is awaited off it. The task is tied to the view's lifetime, so scrolling past a row cancels its work instead of leaving fifty requests competing with the one the user is actually looking at.",
+    "code": "import SwiftUI\n\n@MainActor\nfinal class OrderListModel: ObservableObject {\n    @Published private(set) var state: State = .loading\n\n    enum State {\n        case loading\n        case loaded([Order])\n        case failed(String)\n    }\n\n    private let api: OrdersAPI\n\n    init(api: OrdersAPI) { self.api = api }\n\n    func load() async {\n        state = .loading\n        do {\n            // Suspends here; the actor is released, so the UI keeps drawing.\n            let orders = try await api.fetchOrders()\n            state = .loaded(orders)\n        } catch is CancellationError {\n            // The view went away. Not an error, and not worth showing.\n            return\n        } catch {\n            state = .failed(error.localizedDescription)\n        }\n    }\n}\n\nstruct OrderListView: View {\n    @StateObject private var model: OrderListModel\n\n    var body: some View {\n        content\n            // .task, not .onAppear + Task: this cancels automatically when the\n            // view disappears, which is what stops a fast scroll queueing work.\n            .task { await model.load() }\n    }\n}"
+  },
+  "deliverables": [
+    "Swift and SwiftUI, with concurrency checking left on",
+    "Task cancellation tied to view lifetime",
+    "Privacy manifest, declared API reasons, and SDK manifests verified",
+    "Account deletion, Sign in with Apple and IAP handled where required",
+    "Automated builds, signing and TestFlight distribution",
+    "Crash and performance reporting wired to real alerts"
+  ],
+  "faq": [
+    {
+      "q": "Should we build native or cross-platform?",
+      "a": "Native if the app leans on the device — sustained camera or video work, Bluetooth peripherals, background processing, widgets, watch or CarPlay — or if a dropped frame is the product failing. Cross-platform for most business applications, where one codebase halves the cost and the difference is no longer visible to users. Our mobile app page covers that decision in full."
+    },
+    {
+      "q": "How long does App Review take?",
+      "a": "Usually a day or two, occasionally far longer, and never on a schedule you control. We plan releases assuming it will be slow and put the first build through the full process early, so submission is a routine step rather than a discovery exercise."
+    },
+    {
+      "q": "What iOS versions should we support?",
+      "a": "Usually the current version and the one before, which covers the large majority of active devices and lets you use recent APIs. Supporting further back is a cost that should be justified by your actual install base rather than by caution."
+    },
+    {
+      "q": "Do you handle App Store Connect and the listing?",
+      "a": "Yes — certificates, provisioning, builds, TestFlight, screenshots and the submission itself. It is a meaningful amount of work the first time and it is the part most likely to delay a launch if it is left until the end."
+    }
+  ],
+  "notFor": {
+    "heading": "When native iOS is the wrong first spend",
+    "body": "If you need both platforms and the app is essentially forms, lists, sync and payments, building natively twice costs roughly double for a difference your users will not notice. Start cross-platform and go native later for the parts that need it — that path is common and works. Equally, if the experience is really a website in a shell, a responsive site reaches more people, skips review entirely, and updates whenever you want it to."
+  },
+  "related": {
+    "services": ["mobile-app", "android", "custom-software", "cloud-application"],
+    "technologies": ["flutter", "react-native", "typescript", "aws"]
+  }
+}

@@ -1,0 +1,54 @@
+{
+  "slug": "javascript",
+  "primaryQuery": "javascript development company",
+  "title": "JavaScript Development Company — Modern, Not Legacy",
+  "description": "JavaScript written the way the language works now: native modules, real async handling, cancellation, and dependencies chosen for what they cost to ship.",
+  "h1": "JavaScript written for the language as it is today",
+  "intro": "JavaScript accumulated a decade of workarounds for gaps the language has since filled. Most codebases we inherit still carry them — a utility library for things the standard library now does, a bundler configuration nobody dares touch, callbacks wrapped in promises wrapped in async functions. The work is rarely rewriting; it is removing what is no longer needed and fixing the places where async behaviour was never quite right to begin with.",
+  "sections": [
+    {
+      "heading": "Async correctness, not just async syntax",
+      "body": "`async`/`await` made asynchronous code readable and did nothing to make it correct. The mistakes simply became harder to see.\n\nA loop that awaits each item in turn when the calls are independent turns 50 requests into 50 round trips. `Promise.all` fixed that and introduced its own edge: one rejection discards every other result, which is wrong when partial success is useful — `Promise.allSettled` is usually what was meant. An async function passed to `forEach` returns a promise nobody waits for, so the code after it runs before the work finishes.\n\nThe one that reaches production most often is the unhandled rejection: a promise created and never awaited, failing silently in the browser and taking the process down in Node. We catch these with lint rules rather than review, because they are invisible when reading."
+    },
+    {
+      "heading": "Cancellation is part of the contract",
+      "body": "Work started on behalf of something that has gone away should stop. A user types in a search box and each keystroke starts a request; without cancellation, responses arrive out of order and an older one overwrites a newer one. The user sees results for a query they have already changed.\n\n`AbortController` is the standard answer and it composes: the same signal cancels a fetch, a stream read and your own long-running loop. In a component, the effect's cleanup aborts; in a server handler, the request's signal propagates to everything downstream, so a client that disconnected does not leave a database query running.\n\nThis is not an optimisation. Out-of-order responses are a correctness bug, and they are extremely hard to reproduce on a fast local connection."
+    },
+    {
+      "heading": "Every dependency is code you ship without reading",
+      "body": "npm makes it trivially easy to add a package and very hard to notice what it brought with it. A date library for one format call can add tens of kilobytes to a bundle that a single `Intl` call would have handled.\n\nSo we check what a dependency costs before adding it — size, transitive count, maintenance activity — and prefer the standard library where it now suffices. `structuredClone`, `Array.prototype.at`, `Object.groupBy`, `Intl` and `URL` replaced a great deal of what used to need a package.\n\nLockfiles are committed, an audit runs in CI, and a package abandoned for two years is treated as a liability rather than a stable choice. Supply chain risk in this ecosystem is real, and it enters through convenience."
+    }
+  ],
+  "codeExample": {
+    "language": "JavaScript",
+    "filename": "src/search.js",
+    "caption": "The bug this prevents is invisible on a fast connection and obvious to users on a slow one. Without cancellation, each keystroke starts a request and the responses arrive in whatever order the network delivers them — so results for an earlier query can overwrite a later one and the box shows answers to something the user already changed. One AbortController cancels both the in-flight request and the timeout, and the AbortError is distinguished from a real failure rather than shown as one.",
+    "code": "let controller;\n\nexport async function search(term, onResult, onError) {\n  // Cancel whatever the previous keystroke started. Without this, response\n  // order decides what the user sees, and the network does not guarantee it.\n  controller?.abort();\n  controller = new AbortController();\n  const { signal } = controller;\n\n  // Composes: the same signal aborts the fetch and clears the timeout.\n  const timeout = AbortSignal.timeout(8000);\n  const combined = AbortSignal.any([signal, timeout]);\n\n  try {\n    const res = await fetch(`/api/search?q=${encodeURIComponent(term)}`, {\n      signal: combined,\n    });\n    if (!res.ok) throw new Error(`Search failed: ${res.status}`);\n    onResult(await res.json());\n  } catch (err) {\n    // An abort is the expected path, not a failure to report. Showing it as\n    // an error is why some search boxes flash \"something went wrong\" while\n    // the user is still typing.\n    if (err.name === 'AbortError') return;\n    onError(err);\n  }\n}\n\n// Independent work runs together, and one failure does not discard the rest.\nexport async function loadFacets(ids) {\n  const results = await Promise.allSettled(ids.map((id) => fetchFacet(id)));\n  return results\n    .filter((r) => r.status === 'fulfilled')\n    .map((r) => r.value);\n}"
+  },
+  "faq": [
+    {
+      "q": "Should we be using TypeScript instead?",
+      "a": "For anything that will live more than a few months and be touched by more than one person, yes — the editor support and the refactoring safety pay for themselves quickly. JavaScript remains right for small scripts and quick tooling. Migration can be gradual, file by file, and we have a separate page on how that goes."
+    },
+    {
+      "q": "Can you modernise our old codebase?",
+      "a": "Usually, and incrementally rather than all at once. Native modules replacing a bundler's custom setup, promises replacing callbacks, and the standard library replacing utility packages. We do it behind tests so that each step is verifiable, because a big-bang modernisation is indistinguishable from a rewrite in both risk and cost."
+    },
+    {
+      "q": "Which build tool do you use?",
+      "a": "Vite for applications and esbuild for libraries, in most cases. Both are fast enough that nobody is tempted to skip the build step, and both have a configuration a new developer can read. The tool matters less than whether anyone on the team understands the configuration."
+    },
+    {
+      "q": "How do you decide on a dependency?",
+      "a": "Bundle cost, transitive dependency count, maintenance activity and whether the standard library now covers it. A package that adds 40 kB to save six lines is not a saving. A package abandoned two years ago is a liability regardless of how well it currently works."
+    }
+  ],
+  "notFor": {
+    "heading": "When plain JavaScript is not the right choice",
+    "body": "For a long-lived application with several people working on it, TypeScript is the better default and we would say so — the cost is a few weeks of adjustment and the benefit compounds for years. For heavy data processing or machine learning, Python has the libraries and JavaScript does not, and choosing JavaScript there means rebuilding what already exists elsewhere. JavaScript is the right answer where the browser is involved, where the team already knows it, and where the work is I/O rather than computation."
+  },
+  "related": {
+    "services": ["front-end", "web-development", "back-end", "qa"],
+    "technologies": ["typescript", "reactjs", "nodejs", "nextjs"]
+  }
+}
