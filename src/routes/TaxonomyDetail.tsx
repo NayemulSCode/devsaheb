@@ -162,6 +162,59 @@ export default function TaxonomyDetail() {
         </Container>
       </Section>
 
+      {/* Substance bar item 2. The code is rendered as a text node inside
+          <pre>, never parsed, so stored content cannot introduce markup. */}
+      {data.codeExample ? (
+        <Section tone="ink">
+          <Container>
+            <Reveal className="max-w-[80ch]">
+              <h2 className="font-mono text-[10px] uppercase tracking-[0.14em] text-gold">
+                {data.codeExample.language}
+                {data.codeExample.filename ? (
+                  <span className="text-silver-dim"> · {data.codeExample.filename}</span>
+                ) : null}
+              </h2>
+              <p className="mt-4 max-w-[68ch] text-silver">{data.codeExample.caption}</p>
+              <pre className="mt-6 overflow-x-auto border border-gold/20 bg-ink-2 p-5 text-[12.5px] leading-relaxed">
+                <code className="font-mono text-bone">{data.codeExample.code}</code>
+              </pre>
+            </Reveal>
+          </Container>
+        </Section>
+      ) : null}
+
+      {/* Substance bar item 4. A page claiming expertise should say who has it;
+          an unnamed claim is the thing every competitor's page also says. */}
+      {data.engineers?.length ? (
+        <Section tone="bone">
+          <Container>
+            <Reveal>
+              <h2 className="font-mono text-[10px] uppercase tracking-[0.14em] text-[var(--accent)]">
+                Who works on this
+              </h2>
+              <ul className="mt-6 grid gap-px bg-[var(--accent-line)] sm:grid-cols-2 lg:grid-cols-3">
+                {data.engineers.map((person) => (
+                  <li key={person.name} className="bg-bone-2 p-5">
+                    <h3 className="font-bold">{person.name}</h3>
+                    <p className="mt-1 font-mono text-[10px] uppercase tracking-[0.12em] text-[var(--accent)]">
+                      {person.role}
+                    </p>
+                    {person.focus ? (
+                      <p className="mt-2.5 text-sm text-muted">{person.focus}</p>
+                    ) : null}
+                  </li>
+                ))}
+              </ul>
+              <p className="mt-6 text-sm text-muted">
+                <Link to="/company/team" className="underline hover:text-[var(--accent)]">
+                  The rest of the team
+                </Link>
+              </p>
+            </Reveal>
+          </Container>
+        </Section>
+      ) : null}
+
       {/* The honest counter-case. Hard to template, which is exactly why it is
           worth publishing - and it is the section buyers remember. */}
       <Section tone="ink">

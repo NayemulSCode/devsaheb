@@ -1,0 +1,54 @@
+{
+  "slug": "nextjs",
+  "primaryQuery": "next.js development company",
+  "title": "Next.js Development Company — Rendering On Purpose",
+  "description": "Next.js work where the rendering strategy is a decision, not a default. Server components, caching that can be reasoned about, and a measured bundle.",
+  "h1": "Next.js, with the rendering strategy chosen deliberately",
+  "intro": "Next.js gives you four ways to render the same page and no opinion about which you should use. That flexibility is the reason to choose it and the reason most Next.js codebases end up slow: every page gets whatever rendering mode the person writing it reached for, caching behaviour nobody can explain, and a client bundle that grew a kilobyte at a time. We treat the rendering strategy as an architectural decision with a written reason, per route.",
+  "sections": [
+    {
+      "heading": "Server components are a boundary, not a default",
+      "body": "The App Router makes components server-rendered unless you say otherwise, which is the right default and easy to lose. One `use client` near the top of a tree pulls everything below it into the browser bundle, including the libraries those children import.\n\nSo we push the boundary as far down as it will go. A page stays a server component, fetches its own data, and hands plain props to the small interactive leaves that genuinely need state. Formatting libraries, date handling and markdown rendering stay on the server where they cost nothing to ship.\n\nThe practical check is the bundle analyser in CI rather than judgement. A dependency that appears in the client bundle after a change is either a deliberate decision or a mistake, and the pull request is where that gets settled."
+    },
+    {
+      "heading": "Caching is the part that bites",
+      "body": "Next.js caches in several layers, and its defaults have changed meaningfully between major versions — which is why so much advice about it is wrong for whichever version you are on.\n\nWe make it explicit. Every fetch states its own caching behaviour rather than inheriting one, revalidation is tagged so that a content change invalidates exactly the pages it affects, and anything genuinely dynamic is marked as such rather than accidentally static. The failure we design against is the one where a customer sees another customer's cached page, which is what happens when a personalised route is quietly cached at the edge.\n\nWhere a page has no reason to be dynamic, it is prerendered — a static file is faster than any amount of server tuning."
+    },
+    {
+      "heading": "Where Next.js runs matters as much as how",
+      "body": "Next.js is straightforward on Vercel and requires real decisions anywhere else. Self-hosting means running the Node server, providing your own image optimisation, and understanding that the incremental static regeneration cache is per-instance unless you configure shared storage.\n\nWe decide the target at the architecture stage, because features get chosen based on it. Middleware that assumes an edge runtime behaves differently on a single Node process, and finding that out during deployment week is expensive."
+    }
+  ],
+  "codeExample": {
+    "language": "TypeScript",
+    "filename": "app/products/[slug]/page.tsx",
+    "caption": "The boundary in practice. The page is a server component — it fetches, formats and renders without shipping any of that to the browser. Only the quantity selector is a client component, so `Intl`, the data layer and the product type never reach the bundle. `revalidate` is stated rather than inherited, and the tag lets a single product be invalidated without rebuilding the catalogue.",
+    "code": "import { notFound } from 'next/navigation';\nimport AddToCart from './add-to-cart'; // 'use client' lives in here, not here\n\nexport const revalidate = 3600;\n\nasync function getProduct(slug: string) {\n  const res = await fetch(`${process.env.API_URL}/products/${slug}`, {\n    // Stated per fetch. Inheriting the default is how a personalised page\n    // ends up cached at the edge for everyone.\n    next: { revalidate: 3600, tags: [`product:${slug}`] },\n  });\n  if (res.status === 404) return null;\n  if (!res.ok) throw new Error(`Upstream ${res.status}`);\n  return res.json() as Promise<Product>;\n}\n\nexport default async function Page({ params }: { params: { slug: string } }) {\n  const product = await getProduct(params.slug);\n  if (!product) notFound();\n\n  // Runs on the server. Intl is never sent to the browser.\n  const price = new Intl.NumberFormat('en-BD', {\n    style: 'currency',\n    currency: 'BDT',\n  }).format(product.priceMinor / 100);\n\n  return (\n    <main>\n      <h1>{product.name}</h1>\n      <p>{price}</p>\n      <AddToCart sku={product.sku} max={product.stock} />\n    </main>\n  );\n}"
+  },
+  "faq": [
+    {
+      "q": "Should we use the App Router or the Pages Router?",
+      "a": "App Router for anything new — it is where the framework is going and server components are a genuine reduction in shipped JavaScript. For an existing Pages Router application that works, migrating is rarely worth doing on its own; the two can coexist, so new routes can be written in the App Router while the old ones stay."
+    },
+    {
+      "q": "Do we have to host on Vercel?",
+      "a": "No, and it is the smoothest path. Self-hosting on a container or a Node server works, with the caveats that you provide image optimisation and shared cache storage yourself. We would rather make that choice at the start than discover a middleware assumption during deployment."
+    },
+    {
+      "q": "Is Next.js overkill for a marketing site?",
+      "a": "Often, yes. If the site is content with little interactivity, a static site generator will be simpler and faster to run. Next.js earns its complexity when you need genuinely dynamic pages, authentication, or an application and a marketing site sharing one codebase and one design system."
+    },
+    {
+      "q": "How do you keep the bundle down?",
+      "a": "A budget enforced in CI, the client boundary pushed as far down the tree as it will go, and a bundle analyser diff on every pull request. The discipline is not writing less code, it is noticing the moment a dependency crosses into the browser."
+    }
+  ],
+  "notFor": {
+    "heading": "When plain React or a static generator is better",
+    "body": "If the product lives behind a login and has no SEO surface, server rendering buys you very little and costs you a server to run — a single-page React application on a CDN is simpler and cheaper. At the other end, if the site is essentially content, Astro or a static generator will ship less JavaScript than Next.js will on its best day. Next.js is the right answer in the middle: public pages that must rank, plus application behaviour, in one codebase."
+  },
+  "related": {
+    "services": ["web-development", "ecommerce", "saas", "cloud-application"],
+    "technologies": ["reactjs", "typescript", "nodejs", "aws"]
+  }
+}

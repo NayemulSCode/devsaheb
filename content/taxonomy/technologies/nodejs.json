@@ -1,0 +1,54 @@
+{
+  "slug": "nodejs",
+  "primaryQuery": "node.js development company",
+  "title": "Node.js Development Company — Services That Stay Up",
+  "description": "Node.js services built for the event loop they actually run on: backpressure, graceful shutdown, bounded concurrency and no blocking work on the main thread.",
+  "h1": "Node.js services that behave under load, not just in development",
+  "intro": "Node.js makes it unusually easy to write a service that works perfectly until it does not. One synchronous call in a request handler, one unbounded queue, one connection pool three times larger than the database can take, and a service that was fine at ten requests per second falls over at a hundred. The runtime is excellent at I/O-bound work. Most production problems come from code that forgot it is single-threaded.",
+  "sections": [
+    {
+      "heading": "One thread means one slow function stops everything",
+      "body": "Node runs your JavaScript on a single thread. An asynchronous call releases that thread; a CPU-bound loop does not. So a synchronous JSON parse of a large payload, a password hash with a high cost factor, or image resizing in a request handler does not just slow that request — it stalls every concurrent request on the process, including the health check.\n\nWe keep that work off the main thread: a worker thread for CPU-bound work in-process, or a queue and a separate worker for anything that takes more than a moment. Where a library offers both a synchronous and an asynchronous form, the synchronous one is treated as a bug outside of startup code.\n\nThe symptom to watch for is event loop lag, and it belongs in your metrics next to latency. It is the signal that tells you the problem is the thread rather than the database."
+    },
+    {
+      "heading": "Backpressure, or the queue that eats the memory",
+      "body": "A service that accepts work faster than it can complete it will consume memory until it is killed. The naive version is a handler that pushes to an in-memory array; the subtler version is an unbounded connection pool, or a stream piped without regard for whether the destination is keeping up.\n\nSo concurrency is bounded everywhere it can be. The database pool is sized to what the database can actually serve rather than to what feels generous — a pool of 100 against a database that handles 20 concurrent queries just moves the queue somewhere with no visibility. Outbound calls get a concurrency limit and a timeout. Streams are piped with `pipeline` so that a failure at one end tears down the whole chain instead of leaking a half-open handle.\n\nWhen the system is saturated, rejecting work quickly is kinder than accepting it slowly. A 503 is information; a request that hangs for ninety seconds is not."
+    },
+    {
+      "heading": "Shutting down without dropping requests",
+      "body": "Containers are restarted constantly — deploys, scaling, node rotation. The default behaviour on SIGTERM is to exit immediately, which drops whatever was in flight.\n\nGraceful shutdown means stopping the acceptance of new connections, letting in-flight requests finish within a deadline, closing database and queue connections, then exiting. It also means a readiness probe that starts failing before the server stops accepting, so the load balancer stops routing first. Without that ordering, every deploy produces a small number of errors that nobody can reproduce."
+    }
+  ],
+  "codeExample": {
+    "language": "TypeScript",
+    "filename": "src/server.ts",
+    "caption": "The shutdown sequence most services skip. Readiness flips first so the load balancer stops sending traffic, then the server stops accepting, then in-flight work is given a deadline it cannot exceed. The `unref` on the timer means a clean finish does not hold the process open, and the double-signal guard stops a second SIGTERM restarting the sequence.",
+    "code": "import http from 'node:http';\nimport { app } from './app.js';\nimport { pool } from './db.js';\n\nconst server = http.createServer(app);\nserver.keepAliveTimeout = 65_000; // must exceed the load balancer's idle timeout\n\nlet ready = true;\nlet closing = false;\n\n// Readiness is separate from liveness on purpose: this goes unhealthy while\n// the process is still perfectly alive and finishing work.\napp.get('/ready', (_req, res) => res.status(ready ? 200 : 503).end());\n\nasync function shutdown(signal: string) {\n  if (closing) return; // a second SIGTERM must not restart the sequence\n  closing = true;\n  console.info(`${signal}: draining`);\n\n  ready = false;\n  // Give the load balancer time to notice before refusing connections.\n  await new Promise((r) => setTimeout(r, 5_000).unref());\n\n  const forced = setTimeout(() => {\n    console.error('drain timed out, exiting anyway');\n    process.exit(1);\n  }, 25_000);\n  forced.unref();\n\n  await new Promise<void>((resolve) => server.close(() => resolve()));\n  await pool.end();\n  clearTimeout(forced);\n  process.exit(0);\n}\n\nfor (const signal of ['SIGTERM', 'SIGINT'] as const) {\n  process.on(signal, () => void shutdown(signal));\n}\n\nserver.listen(Number(process.env.PORT ?? 3000));"
+  },
+  "faq": [
+    {
+      "q": "Is Node.js fast enough for our workload?",
+      "a": "For I/O-bound work — APIs, orchestration between services, streaming, real-time connections — comfortably. For sustained CPU-bound work such as heavy data processing or image and video pipelines, it is the wrong shape, and we would suggest moving that part to a worker in a language suited to it rather than fighting the runtime."
+    },
+    {
+      "q": "Which framework do you use?",
+      "a": "Express for most services, Fastify where throughput or schema-driven validation matters. The framework is a small part of the outcome; the pool sizing, the timeouts, the shutdown path and the observability are what determine whether the service holds up."
+    },
+    {
+      "q": "How do you handle long-running jobs?",
+      "a": "Out of the request path, in a queue with a separate worker process. That keeps the API responsive, lets jobs retry without a user waiting, and means the two can scale independently. Every job is written to be safe to run twice, because at-least-once delivery is what queues actually give you."
+    },
+    {
+      "q": "How do you keep dependencies under control?",
+      "a": "Lockfiles committed, automated audit in CI, and a bias toward the standard library or a small well-maintained package over a large convenient one. Node's ecosystem makes it easy to accumulate hundreds of transitive dependencies, and each one is code you ship without reading."
+    }
+  ],
+  "notFor": {
+    "heading": "When another runtime suits the job better",
+    "body": "If the work is genuinely CPU-heavy, or the team's strength is elsewhere, Node is not the automatic answer. Python is better placed for data and machine-learning work because that is where the libraries live; Go is a better fit for high-throughput services where predictable memory and real parallelism matter. Node's advantage is sharing a language and types with the browser, and a mature ecosystem for web-shaped problems. Where neither of those is the deciding factor, we will say so."
+  },
+  "related": {
+    "services": ["back-end", "custom-software", "cloud-application", "saas"],
+    "technologies": ["typescript", "javascript", "aws", "docker"]
+  }
+}

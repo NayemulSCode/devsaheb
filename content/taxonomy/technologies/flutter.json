@@ -1,0 +1,54 @@
+{
+  "slug": "flutter",
+  "primaryQuery": "flutter app development company",
+  "title": "Flutter App Development Company — One Codebase, Both Stores",
+  "description": "Flutter apps built for real devices and real networks: predictable rendering on both platforms, offline-first data, and a release pipeline set up before launch.",
+  "h1": "Flutter apps that feel native on both platforms",
+  "intro": "Flutter draws its own widgets rather than wrapping the platform's, which is the source of both its main advantage and its main risk. The advantage is that a screen looks and behaves identically on every device, with no surprise from a platform component behaving differently than expected. The risk is an app that ignores platform convention entirely and feels subtly wrong to everyone. We build for the first and design against the second.",
+  "sections": [
+    {
+      "heading": "Rendering its own widgets cuts both ways",
+      "body": "Because Flutter paints every pixel, a design system implemented once is genuinely identical across platforms — no chasing a rendering difference in an iOS date picker. For applications with a strong brand, that consistency is worth a great deal.\n\nWhere it needs care is the conventions users do not consciously notice: the back gesture, scroll physics, how a text selection handle looks, where a modal comes from. Flutter provides platform-adaptive widgets for most of these and does not apply them for you. We set that adaptation up as part of the design system rather than leaving each screen to decide.\n\nThe other cost is size. A Flutter app carries its own rendering engine, so the baseline download is larger than a native app. It matters on entry-level Android devices and in markets where data is expensive, which for our clients is often exactly the audience."
+    },
+    {
+      "heading": "State management, chosen once and applied consistently",
+      "body": "Flutter has no official answer for state, and a codebase that uses three approaches across four screens is the most common thing we are asked to rescue.\n\nWe pick one — usually Riverpod or Bloc, depending on the team — and apply it everywhere, including the boring screens. The specific choice matters less than the consistency: a developer joining the project should be able to predict where data comes from without reading the whole tree.\n\nBusiness logic stays out of widgets. A widget that calls an API directly cannot be tested without a rendering harness, and cannot be reused when the design changes. Repositories and services sit behind interfaces, which is also what makes them mockable in tests that run in under a second."
+    },
+    {
+      "heading": "Offline first, because the network is not a given",
+      "body": "A local database as the source of truth, with sync as a background concern, produces an app that opens instantly and works on a bad connection. The alternative — fetching on every screen — produces spinners and empty states that users read as the app being broken.\n\nThat design forces the conflict question early: two devices edit the same record while both are offline, and something has to decide. Last write wins, field-level merge, or asking the user are all legitimate; having no answer is not, and it is what you get if sync is added after the screens are built.\n\nWe pair that with a release setup done at the start — signing, store listings, CI builds, crash reporting and feature flags — so that the first submission is a routine step rather than a week of discovery."
+    }
+  ],
+  "codeExample": {
+    "language": "Dart",
+    "filename": "lib/features/orders/orders_repository.dart",
+    "caption": "Offline-first in the shape that matters: the UI reads from the local store and never waits on the network, while sync runs separately and writes back. A queued mutation is applied locally and replayed later, so the screen updates immediately whether or not there is a connection — and a 409 from the server is resolved by a rule the product chose, not by whichever write landed last.",
+    "code": "class OrdersRepository {\n  OrdersRepository(this._db, this._api);\n\n  final LocalDb _db;\n  final OrdersApi _api;\n\n  /// The UI watches this. It emits immediately from disk and never awaits\n  /// the network, so a cold start on a dead connection still shows orders.\n  Stream<List<Order>> watch() => _db.watchOrders();\n\n  Future<void> setStatus(String id, OrderStatus status) async {\n    // Apply locally first; the screen updates on this frame.\n    await _db.upsert(id, (o) => o.copyWith(status: status, dirty: true));\n    await _db.enqueue(Mutation.status(id, status));\n    unawaited(sync());\n  }\n\n  Future<void> sync() async {\n    for (final mutation in await _db.pendingMutations()) {\n      try {\n        final server = await _api.apply(mutation);\n        await _db.upsert(server.id, (_) => server.copyWith(dirty: false));\n        await _db.dequeue(mutation.id);\n      } on ConflictException catch (e) {\n        // Two devices changed this while both were offline. The rule is a\n        // product decision, written down here rather than left to chance.\n        await _db.upsert(e.serverOrder.id, (_) => e.serverOrder);\n        await _db.dequeue(mutation.id);\n      } on SocketException {\n        return; // still offline; the queue keeps its order for next time\n      }\n    }\n  }\n}"
+  },
+  "faq": [
+    {
+      "q": "Flutter or React Native?",
+      "a": "If your team already writes React and TypeScript, React Native reuses that knowledge and much of the tooling. If the app has a strong custom design or heavy animation, Flutter's own rendering gives more control and more consistency. Both are capable of the same class of application; we would usually let your existing team decide it rather than a technical argument."
+    },
+    {
+      "q": "Can Flutter do everything native can?",
+      "a": "Anything the platform exposes can be reached, through a plugin or a platform channel you write. The question is how much of the app is that work. If a substantial part is camera pipelines, Bluetooth peripherals or background processing, the plugin surface becomes the project and native starts to look simpler."
+    },
+    {
+      "q": "What about Flutter for web or desktop?",
+      "a": "Desktop is solid for internal tools. Web we generally advise against for public-facing sites — the initial download is large, text selection and SEO are weak, and a normal web application will serve you better. Sharing one codebase across mobile and web sounds like a saving and usually is not."
+    },
+    {
+      "q": "How big will the app be?",
+      "a": "Expect a larger baseline than native because the engine ships with the app. It can be reduced with split builds per architecture and by keeping assets disciplined, and it is worth measuring against your actual audience — on entry-level Android in a data-expensive market, download size affects installs measurably."
+    }
+  ],
+  "notFor": {
+    "heading": "When native is the better answer",
+    "body": "If the app depends heavily on the device rather than the network — sustained video or camera processing, tight platform integrations such as widgets and watch apps, or anything where a dropped frame is the product failing — native pays for itself despite the doubled cost. The same is true if your team is already strong in Swift or Kotlin; a familiar stack usually beats a theoretically better one. Flutter earns its place for business applications with substantial shared logic and a design you want identical everywhere."
+  },
+  "related": {
+    "services": ["mobile-app", "ios", "android", "custom-software"],
+    "technologies": ["react-native", "kotlin", "nodejs", "aws"]
+  }
+}

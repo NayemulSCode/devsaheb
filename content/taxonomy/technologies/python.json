@@ -1,0 +1,54 @@
+{
+  "slug": "python",
+  "primaryQuery": "python development company",
+  "title": "Python Development Company — Services, Data and AI",
+  "description": "Python for the work it is genuinely best at: data pipelines, AI integration and internal services. Typed, packaged reproducibly, and deployed like software.",
+  "h1": "Python written to be deployed, not just to run once",
+  "intro": "Python's reach is also its problem: the same language runs a notebook that produced a chart once and a service that has to answer in 200 milliseconds under load. Code written in the first spirit and deployed in the second is where most Python incidents come from. We write Python for the second case — typed, packaged with pinned dependencies, and with the boundary between analysis and production made explicit rather than assumed.",
+  "sections": [
+    {
+      "heading": "Reproducibility before anything else",
+      "body": "A Python project that installs different versions on two machines will eventually fail on exactly one of them, and the debugging goes somewhere unrelated to the actual cause.\n\nSo dependencies are locked with hashes, not stated as ranges in a requirements file. The interpreter version is pinned alongside them. Builds happen in a container so the developer's machine, CI and production resolve the same tree. This is unglamorous and it removes a whole category of incident where the code was never the problem.\n\nThe same discipline applies to configuration. Settings come from the environment, validated at startup, so a missing or malformed value stops the process immediately with a message that names it."
+    },
+    {
+      "heading": "Type hints are only useful if something checks them",
+      "body": "Annotations that no tool verifies are comments with syntax. We run a type checker in CI at a strict setting, and validate data crossing a boundary at runtime — Pydantic for request and response models, so the annotation and the check are the same declaration rather than two that can disagree.\n\nThat pairing is what makes a Python service safe to change. The checker catches the shape mistakes before anything runs; the runtime validation catches the upstream system that changed a field without telling anyone.\n\nWhere a legacy codebase has no annotations, we add them at the boundaries first. Those are where the errors actually originate, and they give the most benefit per file touched."
+    },
+    {
+      "heading": "Async, threads and the GIL",
+      "body": "Python's global interpreter lock means threads do not give you parallel CPU work. For I/O-bound services — waiting on databases, HTTP calls, queues — async gets you high concurrency on one process, and frameworks like FastAPI are built for it.\n\nThe trap is a synchronous call inside an async handler. One blocking database driver or one `requests` call, and the event loop stalls for every concurrent request, which looks identical to the Node failure mode and confuses people equally. Blocking work goes to a thread pool explicitly, or the library gets replaced with an async one.\n\nFor genuine CPU-bound work, that means separate processes, and it is usually the right moment to ask whether that part belongs in Python at all."
+    }
+  ],
+  "codeExample": {
+    "language": "Python",
+    "filename": "app/routers/reports.py",
+    "caption": "The two mistakes this avoids are the common ones. The blocking pandas call is pushed to a thread pool so one report cannot stall every other request on the process, and the response model is the validation — FastAPI enforces it on the way out, so a column rename upstream fails here rather than in someone's browser.",
+    "code": "import asyncio\nfrom datetime import date\nfrom fastapi import APIRouter, Depends, HTTPException\nfrom pydantic import BaseModel, Field\nimport pandas as pd\n\nrouter = APIRouter()\n\n\nclass ReportRow(BaseModel):\n    # The annotation is the validation. One declaration, not two that drift.\n    sku: str\n    units: int = Field(ge=0)\n    revenue_minor: int = Field(ge=0)\n\n\nclass Report(BaseModel):\n    generated_for: date\n    rows: list[ReportRow]\n\n\ndef _build(frame: pd.DataFrame) -> list[ReportRow]:\n    \"\"\"CPU-bound and blocking. Must not run on the event loop.\"\"\"\n    grouped = frame.groupby(\"sku\", as_index=False).agg(\n        units=(\"units\", \"sum\"), revenue_minor=(\"revenue_minor\", \"sum\")\n    )\n    return [ReportRow(**row) for row in grouped.to_dict(\"records\")]\n\n\n@router.get(\"/reports/{day}\", response_model=Report)\nasync def daily_report(day: date, store=Depends(get_store)) -> Report:\n    frame = await store.load_day(day)  # genuinely async I/O\n    if frame.empty:\n        raise HTTPException(status_code=404, detail=f\"No sales for {day}\")\n\n    # to_thread, not a direct call. A direct call blocks every concurrent\n    # request on this process, not just this one.\n    rows = await asyncio.to_thread(_build, frame)\n    return Report(generated_for=day, rows=rows)"
+  },
+  "faq": [
+    {
+      "q": "Django or FastAPI?",
+      "a": "Django when you want the batteries — admin, ORM, auth, migrations — and are building something application-shaped. FastAPI when you are building an API or an AI service and want async and typed request models without the rest. We have a separate Django page; the deciding question is usually whether you will use the admin."
+    },
+    {
+      "q": "Is Python fast enough?",
+      "a": "For I/O-bound services, yes — the wait dominates and the language barely features. For tight numeric loops it is slow, and the answer is almost always to push that work into libraries that are not Python underneath, such as NumPy or Polars, rather than to rewrite the service."
+    },
+    {
+      "q": "Can you productionise our data science notebooks?",
+      "a": "Yes, and that is a rewrite rather than a port. Notebooks depend on execution order, hidden state and whatever was in memory at the time. We extract the logic into tested functions, pin the data contracts, and put the result behind a scheduled job or an API — keeping the notebook as the reference for what it was meant to do."
+    },
+    {
+      "q": "How do you package and deploy it?",
+      "a": "Containers, with a locked dependency tree resolved at build time and a non-root user. The image is built once and promoted through environments unchanged, so what was tested is what runs."
+    }
+  ],
+  "notFor": {
+    "heading": "When we would use something else",
+    "body": "If the work is a web application with a browser front end and no data or AI component, sharing TypeScript across both halves is usually the better call — one language, one set of types, one team. Python earns its place where the libraries live: data processing, machine learning, scientific work, and AI integration. Choosing it for a straightforward CRUD API because it is familiar is a reasonable decision, but it should be made knowingly rather than by default."
+  },
+  "related": {
+    "services": ["ai-development", "machine-learning", "back-end", "database"],
+    "technologies": ["django", "aws", "docker", "ai"]
+  }
+}

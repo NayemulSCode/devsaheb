@@ -1,0 +1,54 @@
+{
+  "slug": "react-native",
+  "primaryQuery": "react native app development",
+  "title": "React Native App Development — Your Web Stack, On Mobile",
+  "description": "React Native apps that share types and logic with your web product. Real platform components, a considered navigation stack, and over-the-air updates.",
+  "h1": "React Native, when the rest of your stack is already React",
+  "intro": "React Native renders real platform components rather than drawing its own, so a list scrolls with the system's physics and a text field behaves the way the operating system says it should. Its strongest argument is rarely that though — it is that the app shares a language, a type system and often a validation layer with the web product your team already maintains. One definition of an order, used in three places, is worth more than any rendering debate.",
+  "sections": [
+    {
+      "heading": "The shared code is the point",
+      "body": "In a monorepo with the web application, the genuinely reusable parts are the ones nobody argues about: types, validation schemas, API clients, formatting, business rules. Those are most of the logic and none of the user interface.\n\nWhat does not transfer is layout. React Native uses flexbox with different defaults and no CSS cascade, so attempting to share components between web and native produces something awkward on both. We share the layer below the screen and write the screens twice, which sounds wasteful and is considerably cheaper than maintaining an abstraction that fits neither platform.\n\nThe payoff is concrete: change a field on the server, and the type error appears in the web app and the mobile app in the same commit."
+    },
+    {
+      "heading": "The new architecture, and what it means for you",
+      "body": "React Native's bridge — the asynchronous boundary between JavaScript and native code — was the source of its historical reputation for janky lists and slow startup. The new architecture replaces it with a synchronous interface and removes most of that class of problem.\n\nFor a new project this is simply the default. For an existing app it matters commercially, because older third-party libraries need updating to work with it, and a dependency that has been abandoned becomes a blocker rather than an inconvenience. When we assess an existing codebase, the state of its dependencies is usually a bigger factor in the estimate than the application code.\n\nWe choose libraries partly on maintenance activity for this reason. In this ecosystem, a package that has not been touched in two years is a liability regardless of how well it works today."
+    },
+    {
+      "heading": "Navigation and updates are architecture, not detail",
+      "body": "Navigation structure is one of the hardest things to change later — it determines how deep linking works, what state survives a screen change, and how push notifications open the right place. We settle it early, with typed routes so that navigating to a screen with the wrong parameters is a compile error.\n\nOver-the-air updates are React Native's practical advantage over native: a JavaScript-only fix can reach users without waiting for store review. The discipline is knowing which changes qualify — anything touching native modules still needs a store release — and keeping a rollback that does not require another update to apply."
+    }
+  ],
+  "codeExample": {
+    "language": "TypeScript",
+    "filename": "apps/mobile/src/navigation/routes.ts",
+    "caption": "Typed navigation, with the shared package doing the work. `@acme/core` is the same module the web app imports, so the order schema is defined once. Navigating with a malformed parameter fails to compile rather than crashing on the device, and the deep link and the push payload are parsed through the same schema — which is where mismatches between the two usually hide.",
+    "code": "import type { NativeStackScreenProps } from '@react-navigation/native-stack';\n// The same package the web app imports. One definition of an order, three uses.\nimport { orderId, type OrderId } from '@acme/core/schemas';\n\nexport type RootStackParamList = {\n  Orders: undefined;\n  OrderDetail: { id: OrderId; from?: 'push' | 'deeplink' };\n};\n\nexport type OrderDetailProps = NativeStackScreenProps<\n  RootStackParamList,\n  'OrderDetail'\n>;\n\n// navigation.navigate('OrderDetail', { id: 42 }) does not compile: id is a\n// branded OrderId, not any string or number that happens to be lying around.\n\nexport const linking = {\n  prefixes: ['acme://', 'https://acme.example'],\n  config: {\n    screens: {\n      Orders: 'orders',\n      OrderDetail: {\n        path: 'orders/:id',\n        // Deep links and push payloads arrive as untrusted strings. Parsing\n        // both through the shared schema is what stops the two drifting.\n        parse: { id: (raw: string) => orderId.parse(raw) },\n        stringify: { id: (value: OrderId) => value },\n      },\n    },\n  },\n} as const;"
+  },
+  "faq": [
+    {
+      "q": "React Native or Flutter?",
+      "a": "React Native if your team writes React and TypeScript already — the shared types and reusable logic are a real, measurable saving, and the hiring pool overlaps with your web team. Flutter if the app is animation-heavy or needs a completely custom design rendered identically everywhere. Neither is meaningfully more capable than the other for typical business applications."
+    },
+    {
+      "q": "Should we use Expo?",
+      "a": "For most projects, yes. Expo handles builds, signing, updates and a large part of the native configuration that otherwise consumes time without producing product. The old objection — that you had to eject to use custom native code — no longer holds, since config plugins let you add native dependencies without leaving the managed workflow."
+    },
+    {
+      "q": "Can we share code with our website?",
+      "a": "Share the layer below the screen: types, validation, API clients, business rules. Do not try to share components — web and native layout are different enough that a shared abstraction serves neither well. In practice the shared layer is a substantial fraction of the logic and almost none of the interface."
+    },
+    {
+      "q": "How do over-the-air updates work?",
+      "a": "JavaScript changes can be pushed directly to installed apps, so a bug fix reaches users in minutes instead of days. Anything involving native modules still requires a store release. Both stores permit this for functional updates; it is not a route around review for new features, and treating it as one puts the listing at risk."
+    }
+  ],
+  "notFor": {
+    "heading": "When to choose something else",
+    "body": "If your team has no React background, React Native's main advantage disappears and the choice should be made on other grounds — Flutter is at least as good and arguably more coherent for a team starting fresh. If the app is device-heavy rather than network-heavy, native remains the right answer, as it is for Flutter. And if what you need is a mobile-friendly version of a website, a responsive site avoids two app stores, two review processes and an update cycle you do not control."
+  },
+  "related": {
+    "services": ["mobile-app", "ios", "android", "web-development"],
+    "technologies": ["reactjs", "typescript", "flutter", "nodejs"]
+  }
+}

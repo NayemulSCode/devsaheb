@@ -1,0 +1,54 @@
+{
+  "slug": "typescript",
+  "primaryQuery": "typescript development services",
+  "title": "TypeScript Development Services — Types That Earn Their Keep",
+  "description": "TypeScript used to make invalid states unrepresentable, not to decorate JavaScript with annotations. Strict settings, typed boundaries, no silent any.",
+  "h1": "TypeScript that makes the wrong thing impossible to write",
+  "intro": "TypeScript is easy to adopt and easy to waste. A codebase can be entirely annotated and still crash on a missing field, because the types were written to describe what the code already does rather than to rule out what it should never do. The value is not in labelling variables — it is in making invalid states unrepresentable, and in catching a change to a shared contract before anyone runs it.",
+  "sections": [
+    {
+      "heading": "The compiler settings decide most of it",
+      "body": "A TypeScript project with `strict` off is a linter with extra steps. We turn on the strict family, plus the ones people leave off: `noUncheckedIndexedAccess`, so reading past the end of an array is `T | undefined` rather than a confident lie, and `exactOptionalPropertyTypes`, so an optional property and one explicitly set to undefined stop being the same thing.\n\nThose two produce a burst of errors in an existing codebase, and each error is a place the code was already wrong. We turn them on early, when the fixing is cheap, rather than leaving them as an upgrade nobody schedules.\n\n`any` is the other one. It is occasionally the right tool, and it should be a deliberate, commented decision — not something a library's untyped export spreads through the call graph unnoticed."
+    },
+    {
+      "heading": "Types stop at the boundary unless you make them not",
+      "body": "The compiler guarantees nothing about data arriving at runtime. An API response cast to an interface is a promise, not a check, and the moment the server changes a field the browser fails somewhere far away from the cause.\n\nSo every boundary — HTTP responses, form input, environment variables, anything parsed from JSON — goes through a runtime validator, and the static type is derived from that validator rather than written alongside it. One definition, two uses, no chance of the two drifting apart.\n\nEnvironment variables are the case people skip and regret. A missing variable should stop the process at boot with a message naming it, not surface as undefined in a database URL an hour later."
+    },
+    {
+      "heading": "Modelling states instead of flags",
+      "body": "The most valuable typing decision in an application is usually how it represents what is happening. Four independent booleans for loading, error, data and empty permit combinations that make no sense, and every consumer has to check them in the right order.\n\nA discriminated union makes those combinations unspeakable, and the compiler then requires each case to be handled. The payoff arrives later: adding a fifth state produces errors at every place that must change, instead of a quiet fall-through that renders nothing."
+    }
+  ],
+  "codeExample": {
+    "language": "TypeScript",
+    "filename": "src/lib/checkout.ts",
+    "caption": "One definition, two uses. The schema validates at the boundary and the static type is inferred from it, so a server-side change cannot pass unnoticed. The union makes the impossible states — paid but no reference, failed but no reason — impossible to construct, and the exhaustiveness check turns a new state into a compile error rather than a blank screen.",
+    "code": "import { z } from 'zod';\n\n// Validator first, type derived from it. Two hand-written declarations drift;\n// this pair cannot.\nconst checkout = z.discriminatedUnion('status', [\n  z.object({ status: z.literal('pending'), expiresAt: z.string().datetime() }),\n  z.object({ status: z.literal('paid'), reference: z.string().min(1) }),\n  z.object({ status: z.literal('failed'), reason: z.string(), retryable: z.boolean() }),\n]);\n\nexport type Checkout = z.infer<typeof checkout>;\n\nexport async function loadCheckout(id: string): Promise<Checkout> {\n  const res = await fetch(`/api/checkout/${id}`);\n  if (!res.ok) throw new Error(`Checkout ${id}: ${res.status}`);\n  // Not `as Checkout`. A cast is a promise; this is a check.\n  return checkout.parse(await res.json());\n}\n\nexport function describe(c: Checkout): string {\n  switch (c.status) {\n    case 'pending':\n      return `Awaiting payment until ${c.expiresAt}`;\n    case 'paid':\n      return `Paid — ${c.reference}`; // reference exists only in this branch\n    case 'failed':\n      return c.retryable ? `Failed: ${c.reason}. Try again.` : `Failed: ${c.reason}`;\n    default: {\n      // Add a fourth status and this line stops compiling, which is the point.\n      const unreachable: never = c;\n      return unreachable;\n    }\n  }\n}"
+  },
+  "faq": [
+    {
+      "q": "Can we migrate an existing JavaScript codebase gradually?",
+      "a": "Yes, and gradually is the right way. Turn on checking file by file, start at the boundaries where data enters, and treat the error count as a backlog rather than a blocker. The usual mistake is enabling strict mode everywhere on day one, generating two thousand errors, and turning it back off."
+    },
+    {
+      "q": "Does TypeScript slow the team down?",
+      "a": "For the first few weeks, a little. After that it is faster, mostly because rename and find-references become reliable and reviews stop spending time on whether a field can be null. The place it genuinely costs time is fighting a badly typed third-party library, which is a reason to choose dependencies partly on the quality of their types."
+    },
+    {
+      "q": "Do types replace tests?",
+      "a": "No. Types rule out whole categories of mistake — wrong shape, missing field, unhandled case — and say nothing about whether the logic is correct. They reduce the number of tests worth writing rather than the need for them."
+    },
+    {
+      "q": "What about the runtime cost?",
+      "a": "None. Types are erased at build time; the JavaScript that ships is the same JavaScript. The only runtime cost is the validation we deliberately add at boundaries, which is the part that was never free in any language."
+    }
+  ],
+  "notFor": {
+    "heading": "When it is not worth it",
+    "body": "A script that runs once, a prototype you intend to throw away, or a build step of forty lines does not need a type system — the ceremony would outweigh the benefit. TypeScript pays off in proportion to how long the code lives and how many people touch it. If the honest answer is that this will be deleted next month, JSDoc annotations on the tricky functions will give you most of the editor support with none of the setup."
+  },
+  "related": {
+    "services": ["web-development", "custom-software", "back-end", "front-end"],
+    "technologies": ["reactjs", "nodejs", "nextjs", "javascript"]
+  }
+}

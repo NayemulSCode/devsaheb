@@ -445,6 +445,39 @@ export const taxonomyPageSchema = z.object({
     .array(z.object({ heading: trimmed(120), body: trimmed(2500) }))
     .max(8),
   deliverables: z.array(trimmed(140)).max(12).optional(),
+  /**
+   * Substance bar item 2: a code example specific to *this* page.
+   *
+   * On a technology page it does more work than any amount of prose - a buyer
+   * searching "hire react developers" is evaluating whether you write code they
+   * would accept in review. Rendered as text, never parsed, so it carries no
+   * more risk than any other stored string.
+   */
+  codeExample: z
+    .object({
+      language: trimmed(20),
+      filename: trimmed(80).optional(),
+      /**
+       * Roughly 90 words. The caption is what makes the snippet evidence
+       * rather than decoration - it has to say what the code demonstrates and
+       * why that matters, which a one-line label cannot do.
+       */
+      caption: trimmed(600),
+      code: trimmed(4000),
+    })
+    .optional(),
+  /**
+   * Substance bar item 4: named engineers who actually work in this.
+   *
+   * The bar has always asked for this and there was nowhere to put it, so no
+   * page could satisfy its own standard. Optional in the schema because a page
+   * can be drafted before the names are decided - but a page without them is
+   * not finished, whatever the renderer does.
+   */
+  engineers: z
+    .array(z.object({ name: trimmed(80), role: trimmed(100), focus: trimmed(200).optional() }))
+    .max(6)
+    .optional(),
   faq: z.array(z.object({ q: trimmed(200), a: trimmed(1200) })).min(3).max(6),
   notFor: z.object({ heading: trimmed(120), body: trimmed(1200) }),
   related: z.object({

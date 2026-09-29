@@ -71,6 +71,59 @@ export default function TaxonomyEditor({
         )}
       />
 
+      <Group
+        title="Code example"
+        hint="Substance bar item 2. Specific to this page — a snippet that could sit in any tutorial proves nothing. Leave blank if there is none."
+      >
+        <Field label="Language" hint="Shown above the block, e.g. TypeScript">
+          <input
+            className={INPUT}
+            value={value.codeExample?.language ?? ''}
+            onChange={(e) => setCode(value, set, { language: e.target.value })}
+          />
+        </Field>
+        <Field label="Filename (optional)">
+          <input
+            className={INPUT}
+            value={value.codeExample?.filename ?? ''}
+            onChange={(e) => setCode(value, set, { filename: e.target.value })}
+          />
+        </Field>
+        <Field label="Caption" hint="What the snippet demonstrates, and why it matters.">
+          <textarea
+            className={INPUT}
+            rows={2}
+            value={value.codeExample?.caption ?? ''}
+            onChange={(e) => setCode(value, set, { caption: e.target.value })}
+          />
+        </Field>
+        <Field label="Code">
+          <textarea
+            className={`${INPUT} font-mono text-[12px]`}
+            rows={12}
+            spellCheck={false}
+            value={value.codeExample?.code ?? ''}
+            onChange={(e) => setCode(value, set, { code: e.target.value })}
+          />
+        </Field>
+      </Group>
+
+      <ListGroup
+        title="Who works on this"
+        hint="Substance bar item 4. Real people who actually work in this area — an unnamed claim of expertise is what every competitor's page also says."
+        items={value.engineers ?? []}
+        onChange={(next) => set('engineers', next)}
+        blank={{ name: '', role: '' }}
+        max={6}
+        render={(item, update) => (
+          <>
+            <input className={INPUT} placeholder="Name" value={item.name} onChange={(e) => update({ ...item, name: e.target.value })} />
+            <input className={INPUT} placeholder="Role" value={item.role} onChange={(e) => update({ ...item, role: e.target.value })} />
+            <textarea className={INPUT} rows={2} placeholder="What they own here (optional)" value={item.focus ?? ''} onChange={(e) => update({ ...item, focus: e.target.value })} />
+          </>
+        )}
+      />
+
       <ListGroup
         title="FAQ"
         hint="3 to 5 real questions. These become FAQPage structured data, so padding here is worse than useless."
@@ -117,6 +170,29 @@ export default function TaxonomyEditor({
 
 const splitSlugs = (raw: string) =>
   raw.split(',').map((s) => s.trim()).filter(Boolean);
+
+/**
+ * Patches one field of codeExample, dropping the whole object once it is empty.
+ *
+ * The schema requires language, caption and code together, so a half-filled
+ * object fails to save while looking like a blank section. Clearing the fields
+ * has to clear the object too.
+ */
+function setCode(
+  value: TaxonomyPage,
+  set: <K extends keyof TaxonomyPage>(key: K, next: TaxonomyPage[K]) => void,
+  patch: Partial<NonNullable<TaxonomyPage['codeExample']>>,
+) {
+  const next = {
+    language: '',
+    caption: '',
+    code: '',
+    ...value.codeExample,
+    ...patch,
+  };
+  const empty = !next.language.trim() && !next.caption.trim() && !next.code.trim();
+  set('codeExample', empty ? undefined : next);
+}
 
 const INPUT =
   'w-full border border-black/15 bg-white px-3 py-2 text-[13.5px] outline-none focus-visible:border-black/50';
