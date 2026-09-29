@@ -48,10 +48,22 @@
           "content": [
             {
               "type": "paragraph",
+              "attrs": {
+                "textAlign": null
+              },
               "content": [
                 {
                   "type": "text",
-                  "text": "More profiles are being added. Each names the person, what they work on, and which of our services and technologies they actually own — so the specialism pages can point at a real engineer rather than a claim."
+                  "text": "More profiles are being added. Each names the person, what they work on, and which of our services and technologies they actually own — "
+                },
+                {
+                  "type": "text",
+                  "text": "so the specialism pages can point at a real engineer rather than a claim.",
+                  "marks": [
+                    {
+                      "type": "bold"
+                    }
+                  ]
                 }
               ]
             }
