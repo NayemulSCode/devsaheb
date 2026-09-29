@@ -1,12 +1,17 @@
 {
-  "root": { "props": { "title": "Work" } },
+  "root": {
+    "props": {
+      "title": "Work"
+    }
+  },
   "content": [
     {
       "type": "Hero",
       "props": {
         "eyebrow": "selected work",
         "title": "Every case study ends in a number.",
-        "lede": "Problem, constraints, approach, architecture, result. The same structure every time, because consistency is the point."
+        "lede": "Problem, constraints, approach, architecture, result. The same structure every time, because consistency is the point.",
+        "id": "hero-1"
       }
     },
     {
@@ -30,14 +35,16 @@
             "title": "Result",
             "body": "A number. Measured before and after, not estimated."
           }
-        ]
+        ],
+        "id": "cardgrid-2"
       }
     },
     {
       "type": "Prose",
       "props": {
         "tone": "bone",
-        "body": "Case studies are being prepared with client permission. We would rather publish three real ones than a dozen invented, which is the same reason our metrics carry the measurement method next to them."
+        "body": "Case studies are being prepared with client permission. We would rather publish three real ones than a dozen invented, which is the same reason our metrics carry the measurement method next to them.",
+        "id": "prose-3"
       }
     }
   ]

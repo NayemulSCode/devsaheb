@@ -1,12 +1,17 @@
 {
-  "root": { "props": { "title": "About us" } },
+  "root": {
+    "props": {
+      "title": "About us"
+    }
+  },
   "content": [
     {
       "type": "Hero",
       "props": {
         "eyebrow": "about us",
         "title": "We treat engineering standards as the product.",
-        "lede": "Most software fails slowly: it ships, it works, and eighteen months later nobody can change it safely. We build so that the second year is cheaper than the first."
+        "lede": "Most software fails slowly: it ships, it works, and eighteen months later nobody can change it safely. We build so that the second year is cheaper than the first.",
+        "id": "hero-1"
       }
     },
     {
@@ -40,7 +45,8 @@
             "title": "Ship & support",
             "body": "Monitoring, an on-call rotation, and a documented handover your own team can act on."
           }
-        ]
+        ],
+        "id": "cardgrid-2"
       }
     },
     {
@@ -48,7 +54,8 @@
       "props": {
         "tone": "ink",
         "heading": "Most agencies say “quality”. Here is ours, as numbers.",
-        "body": "These are contractual, not aspirational. If a build misses one it does not ship, and you do not pay for the sprint that fixes it."
+        "body": "These are contractual, not aspirational. If a build misses one it does not ship, and you do not pay for the sprint that fixes it.",
+        "id": "prose-3"
       }
     },
     {
@@ -56,14 +63,43 @@
       "props": {
         "caption": "Definition of done",
         "rows": [
-          { "label": "Largest Contentful Paint", "value": "< 2.0 s", "tag": "Enforced" },
-          { "label": "Interaction to Next Paint", "value": "< 200 ms", "tag": "Enforced" },
-          { "label": "Cumulative Layout Shift", "value": "< 0.05", "tag": "Enforced" },
-          { "label": "Accessibility", "value": "WCAG 2.2 AA", "tag": "Audited" },
-          { "label": "Test coverage floor", "value": "80%", "tag": "CI gate" },
-          { "label": "Critical vulnerabilities", "value": "0", "tag": "CI gate" },
-          { "label": "Handover documentation", "value": "Included", "tag": "Always" }
-        ]
+          {
+            "label": "Largest Contentful Paint",
+            "value": "< 2.0 s",
+            "tag": "Enforced"
+          },
+          {
+            "label": "Interaction to Next Paint",
+            "value": "< 200 ms",
+            "tag": "Enforced"
+          },
+          {
+            "label": "Cumulative Layout Shift",
+            "value": "< 0.05",
+            "tag": "Enforced"
+          },
+          {
+            "label": "Accessibility",
+            "value": "WCAG 2.2 AA",
+            "tag": "Audited"
+          },
+          {
+            "label": "Test coverage floor",
+            "value": "80%",
+            "tag": "CI gate"
+          },
+          {
+            "label": "Critical vulnerabilities",
+            "value": "0",
+            "tag": "CI gate"
+          },
+          {
+            "label": "Handover documentation",
+            "value": "Included",
+            "tag": "Always"
+          }
+        ],
+        "id": "spectable-4"
       }
     }
   ]

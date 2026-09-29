@@ -39,6 +39,33 @@ if (!pageSchema?.parse || !taxonomyPageSchema?.parse) {
   process.exit(1);
 }
 
+/**
+ * Every block the schema allows must be editable in the admin.
+ *
+ * The two halves are declared separately - zod in src/content/schema.ts, Puck
+ * fields in src/admin/puck-config.tsx - so one can gain a block the other has
+ * never heard of. The failure is quiet: the block renders correctly on the
+ * public site and simply cannot be added or edited, which is how a CMS ends up
+ * with content nobody can change.
+ *
+ * Read as source rather than imported, because importing the config would pull
+ * @measured/puck and the whole React tree into a build script.
+ */
+const puckSource = await readFile(join(ROOT, 'src/admin/puck-config.tsx'), 'utf8');
+const componentsBlock = puckSource.slice(puckSource.indexOf('components: {'));
+const editable = new Set(
+  [...componentsBlock.matchAll(/^\s{4}([A-Z][A-Za-z]*): \{$/gm)].map((m) => m[1]),
+);
+
+const missingEditors = (bundle.BLOCK_TYPES ?? []).filter((t) => !editable.has(t));
+if (missingEditors.length > 0) {
+  console.error(
+    `\nBlock types with no editor in src/admin/puck-config.tsx: ${missingEditors.join(', ')}\n` +
+      'Add them there, or remove them from BLOCK_TYPES in src/content/schema.ts.\n',
+  );
+  process.exit(1);
+}
+
 const targets = [
   ...jsonFiles(join(CONTENT_DIR, 'pages')).map((f) => ({ file: f, schema: pageSchema, kind: 'blocks' })),
   ...jsonFiles(join(CONTENT_DIR, 'taxonomy')).map((f) => ({ file: f, schema: taxonomyPageSchema, kind: 'taxonomy' })),

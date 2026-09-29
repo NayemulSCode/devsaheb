@@ -1,5 +1,9 @@
 {
-  "root": { "props": { "title": "Partnership" } },
+  "root": {
+    "props": {
+      "title": "Partnership"
+    }
+  },
   "content": [
     {
       "type": "Hero",
@@ -8,7 +12,8 @@
         "title": "For agencies and studios that need engineering they can vouch for.",
         "lede": "Our standards are published, so you can hold us to them in front of your own client. That is the point of partnering with us rather than subcontracting blind.",
         "primaryLabel": "Talk about a partnership",
-        "primaryHref": "/contact"
+        "primaryHref": "/contact",
+        "id": "hero-1"
       }
     },
     {
@@ -32,7 +37,8 @@
             "title": "Referral",
             "body": "You send work that is outside your scope; we do the same in return."
           }
-        ]
+        ],
+        "id": "cardgrid-2"
       }
     }
   ]

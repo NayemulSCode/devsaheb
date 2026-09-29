@@ -12,6 +12,9 @@ import type { PageContent } from '../content/schema';
  * to parse, the page still renders rather than going blank. Content this
  * important should degrade, not disappear.
  */
+/** Card list entries are { text } objects, matching what the editor writes. */
+const list = (...items: string[]) => items.map((text) => ({ text }));
+
 export default function Home() {
   const data = useRouteData<PageContent>();
 
@@ -26,6 +29,7 @@ export default function Home() {
   return (
     <main>
       <HeroBlock
+        id="hero"
         eyebrow="software engineering"
         title="Built to a standard, not to a"
         highlight="deadline."
@@ -36,6 +40,7 @@ export default function Home() {
         secondaryHref="/company/about"
       />
       <SpecTableBlock
+        id="standards"
         caption="Definition of done"
         rows={[
           { label: 'Largest Contentful Paint', value: '< 2.0 s', tag: 'Enforced' },
@@ -46,6 +51,7 @@ export default function Home() {
         ]}
       />
       <CardGridBlock
+        id="disciplines"
         tone="bone"
         eyebrow="what we do"
         heading="Four disciplines, twenty specialisms, one standard across all of them."
@@ -54,18 +60,18 @@ export default function Home() {
           {
             index: '01',
             title: 'Build',
-            items: ['Custom Software', 'Web Development', 'Mobile App', 'iOS & Android'],
+            items: list('Custom Software', 'Web Development', 'Mobile App', 'iOS & Android'),
           },
-          { index: '02', title: 'Platforms', items: ['SaaS', 'Ecommerce', 'CMS', 'CRM', 'ERP'] },
+          { index: '02', title: 'Platforms', items: list('SaaS', 'Ecommerce', 'CMS', 'CRM', 'ERP') },
           {
             index: '03',
             title: 'Data & AI',
-            items: ['AI Development', 'Machine Learning', 'Database'],
+            items: list('AI Development', 'Machine Learning', 'Database'),
           },
           {
             index: '04',
             title: 'Cloud & Operations',
-            items: ['Cloud Application', 'DevOps', 'QA', 'Legacy Modernization'],
+            items: list('Cloud Application', 'DevOps', 'QA', 'Legacy Modernization'),
           },
         ]}
       />

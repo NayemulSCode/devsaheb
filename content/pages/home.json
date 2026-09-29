@@ -66,40 +66,72 @@
             "index": "01",
             "title": "Build",
             "items": [
-              "Custom Software",
-              "Web Development",
-              "Mobile App",
-              "iOS & Android"
+              {
+                "text": "Custom Software"
+              },
+              {
+                "text": "Web Development"
+              },
+              {
+                "text": "Mobile App"
+              },
+              {
+                "text": "iOS & Android"
+              }
             ]
           },
           {
             "index": "02",
             "title": "Platforms",
             "items": [
-              "SaaS",
-              "Ecommerce",
-              "CMS",
-              "CRM",
-              "ERP"
+              {
+                "text": "SaaS"
+              },
+              {
+                "text": "Ecommerce"
+              },
+              {
+                "text": "CMS"
+              },
+              {
+                "text": "CRM"
+              },
+              {
+                "text": "ERP"
+              }
             ]
           },
           {
             "index": "03",
             "title": "Data & AI",
             "items": [
-              "AI Development",
-              "Machine Learning",
-              "Database"
+              {
+                "text": "AI Development"
+              },
+              {
+                "text": "Machine Learning"
+              },
+              {
+                "text": "Database"
+              }
             ]
           },
           {
             "index": "04",
             "title": "Cloud & Operations",
             "items": [
-              "Cloud Application",
-              "DevOps",
-              "QA",
-              "Legacy Modernization"
+              {
+                "text": "Cloud Application"
+              },
+              {
+                "text": "DevOps"
+              },
+              {
+                "text": "QA"
+              },
+              {
+                "text": "Legacy Modernization"
+              }
             ]
           }
         ]

@@ -26,10 +26,40 @@ const href = z
 
 const tone = z.enum(['ink', 'bone']);
 
+/**
+ * Every block carries a stable id.
+ *
+ * Puck uses props.id as the dnd-kit draggable identifier. A block without one
+ * cannot be picked up at all - the editor throws "Cannot start a drag operation
+ * without a drag source" and the inspector renders no fields. Required rather
+ * than optional, because an optional id produces a page that looks correct on
+ * the public site and is silently uneditable, which is the worst of both.
+ */
+const blockId = z.string().trim().min(1).max(64);
+
+/** Image source. Root-relative (/media/...) or https - never data: or javascript:. */
+const imageSrc = z
+  .string()
+  .trim()
+  .max(500)
+  .refine((v) => /^\/(?!\/)/.test(v) || /^https:\/\//i.test(v), {
+    message: 'Must be a root-relative path such as /media/photo.jpg, or an https URL',
+  });
+
+/**
+ * List entries are objects, not bare strings.
+ *
+ * Puck's array field always writes objects, so a string[] here round-tripped as
+ * [{ item: '...' }] and failed validation on save - the field looked editable
+ * and silently could not be saved. Objects also leave room for a per-entry
+ * field later without a second migration.
+ */
+const textItem = z.object({ text: trimmed(120) });
+
 const heroBlock = z.object({
   type: z.literal('Hero'),
   props: z.object({
-    id: trimmed(64).optional(),
+    id: blockId,
     eyebrow: trimmed(60),
     title: trimmed(200),
     /** Rendered in the accent colour inside the title. */
@@ -45,7 +75,7 @@ const heroBlock = z.object({
 const specTableBlock = z.object({
   type: z.literal('SpecTable'),
   props: z.object({
-    id: trimmed(64).optional(),
+    id: blockId,
     caption: trimmed(80),
     rows: z
       .array(
@@ -62,7 +92,7 @@ const specTableBlock = z.object({
 const cardGridBlock = z.object({
   type: z.literal('CardGrid'),
   props: z.object({
-    id: trimmed(64).optional(),
+    id: blockId,
     tone,
     eyebrow: trimmed(60).optional(),
     heading: trimmed(200).optional(),
@@ -72,7 +102,7 @@ const cardGridBlock = z.object({
         z.object({
           index: trimmed(8).optional(),
           title: trimmed(80),
-          items: z.array(trimmed(80)).max(12).optional(),
+          items: z.array(textItem).max(12).optional(),
           body: trimmed(400).optional(),
         }),
       )
@@ -83,7 +113,7 @@ const cardGridBlock = z.object({
 const proseBlock = z.object({
   type: z.literal('Prose'),
   props: z.object({
-    id: trimmed(64).optional(),
+    id: blockId,
     tone,
     eyebrow: trimmed(60).optional(),
     heading: trimmed(200).optional(),
@@ -92,27 +122,211 @@ const proseBlock = z.object({
   }),
 });
 
+/** Headline figures. Six is the most that stays readable in one band. */
+const statsBlock = z.object({
+  type: z.literal('Stats'),
+  props: z.object({
+    id: blockId,
+    tone,
+    eyebrow: trimmed(60).optional(),
+    heading: trimmed(200).optional(),
+    stats: z
+      .array(
+        z.object({
+          value: trimmed(20),
+          label: trimmed(80),
+          /** How it was measured. A number without one is a claim, not a fact. */
+          note: trimmed(120).optional(),
+        }),
+      )
+      .max(6),
+  }),
+});
+
+/** An ordered process. Renders <ol>, because here the order carries meaning. */
+const stepsBlock = z.object({
+  type: z.literal('Steps'),
+  props: z.object({
+    id: blockId,
+    tone,
+    eyebrow: trimmed(60).optional(),
+    heading: trimmed(200).optional(),
+    lede: trimmed(400).optional(),
+    steps: z.array(z.object({ title: trimmed(80), body: trimmed(400).optional() })).max(8),
+  }),
+});
+
+/** Q&A. Also the source for FAQPage structured data on block pages. */
+const faqBlock = z.object({
+  type: z.literal('Faq'),
+  props: z.object({
+    id: blockId,
+    tone,
+    eyebrow: trimmed(60).optional(),
+    heading: trimmed(200).optional(),
+    items: z.array(z.object({ q: trimmed(200), a: trimmed(1200) })).max(20),
+  }),
+});
+
+const quoteBlock = z.object({
+  type: z.literal('Quote'),
+  props: z.object({
+    id: blockId,
+    tone,
+    quote: trimmed(600),
+    attribution: trimmed(80).optional(),
+    role: trimmed(120).optional(),
+  }),
+});
+
+/** Closing call to action. Separate from Hero so it can sit as its own band. */
+const ctaBlock = z.object({
+  type: z.literal('Cta'),
+  props: z.object({
+    id: blockId,
+    tone,
+    heading: trimmed(200),
+    lede: trimmed(400).optional(),
+    primaryLabel: trimmed(40).optional(),
+    primaryHref: href.optional(),
+    secondaryLabel: trimmed(40).optional(),
+    secondaryHref: href.optional(),
+  }),
+});
+
+const teamGridBlock = z.object({
+  type: z.literal('TeamGrid'),
+  props: z.object({
+    id: blockId,
+    tone,
+    eyebrow: trimmed(60).optional(),
+    heading: trimmed(200).optional(),
+    lede: trimmed(400).optional(),
+    people: z
+      .array(
+        z.object({
+          name: trimmed(80),
+          role: trimmed(100),
+          focus: trimmed(200).optional(),
+          image: imageSrc.optional(),
+        }),
+      )
+      .max(24),
+  }),
+});
+
+/** Image beside text. `side` is which side the image takes at desktop width. */
+const mediaTextBlock = z.object({
+  type: z.literal('MediaText'),
+  props: z.object({
+    id: blockId,
+    tone,
+    side: z.enum(['left', 'right']),
+    image: imageSrc,
+    /** Empty means decorative, and the image is hidden from assistive tech. */
+    imageAlt: trimmed(200),
+    eyebrow: trimmed(60).optional(),
+    heading: trimmed(200).optional(),
+    body: trimmed(2000),
+    primaryLabel: trimmed(40).optional(),
+    primaryHref: href.optional(),
+  }),
+});
+
+const logoWallBlock = z.object({
+  type: z.literal('LogoWall'),
+  props: z.object({
+    id: blockId,
+    tone,
+    eyebrow: trimmed(60).optional(),
+    heading: trimmed(200).optional(),
+    logos: z
+      .array(z.object({ name: trimmed(80), image: imageSrc.optional(), href: href.optional() }))
+      .max(24),
+  }),
+});
+
+/** What a package includes and, just as usefully, what it does not. */
+const checklistBlock = z.object({
+  type: z.literal('Checklist'),
+  props: z.object({
+    id: blockId,
+    tone,
+    eyebrow: trimmed(60).optional(),
+    heading: trimmed(200).optional(),
+    includedTitle: trimmed(80),
+    included: z.array(textItem).max(16),
+    excludedTitle: trimmed(80).optional(),
+    excluded: z.array(textItem).max(16).optional(),
+  }),
+});
+
 export const blockSchema = z.discriminatedUnion('type', [
   heroBlock,
   specTableBlock,
   cardGridBlock,
   proseBlock,
+  statsBlock,
+  stepsBlock,
+  faqBlock,
+  quoteBlock,
+  ctaBlock,
+  teamGridBlock,
+  mediaTextBlock,
+  logoWallBlock,
+  checklistBlock,
 ]);
 
-export const pageSchema = z.object({
-  root: z
-    .object({
-      props: z.object({ title: trimmed(120).optional() }).optional(),
-    })
-    .optional(),
-  content: z.array(blockSchema).max(40),
-});
+/**
+ * Ids must also be unique within a page.
+ *
+ * Two blocks sharing one id makes the editor move or delete the wrong one,
+ * because dnd-kit keys by that value. Caught here so a hand-edited file fails
+ * the build rather than corrupting a page on the first drag.
+ */
+export const pageSchema = z
+  .object({
+    root: z
+      .object({
+        props: z.object({ title: trimmed(120).optional() }).optional(),
+      })
+      .optional(),
+    content: z.array(blockSchema).max(40),
+  })
+  .superRefine((page, ctx) => {
+    const seen = new Set<string>();
+    page.content.forEach((block, i) => {
+      const value = block.props.id;
+      if (seen.has(value)) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          path: ['content', i, 'props', 'id'],
+          message: `Duplicate block id "${value}" - ids must be unique within a page`,
+        });
+      }
+      seen.add(value);
+    });
+  });
 
 export type Block = z.infer<typeof blockSchema>;
 export type BlockType = Block['type'];
 export type PageContent = z.infer<typeof pageSchema>;
 
-export const BLOCK_TYPES = ['Hero', 'SpecTable', 'CardGrid', 'Prose'] as const;
+export const BLOCK_TYPES = [
+  'Hero',
+  'SpecTable',
+  'CardGrid',
+  'Prose',
+  'Stats',
+  'Steps',
+  'Faq',
+  'Quote',
+  'Cta',
+  'TeamGrid',
+  'MediaText',
+  'LogoWall',
+  'Checklist',
+] as const;
 
 /**
  * Service and technology detail pages.

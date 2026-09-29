@@ -43,12 +43,12 @@ export default function CardGridBlock({
                 {card.body ? <p className={`text-sm ${bodyText}`}>{card.body}</p> : null}
                 {card.items?.length ? (
                   <ul className="grid gap-2">
-                    {card.items.map((item) => (
-                      <li key={item} className={`text-sm ${bodyText}`}>
+                    {card.items.map((item, n) => (
+                      <li key={`${item.text}-${n}`} className={`text-sm ${bodyText}`}>
                         <span aria-hidden="true" className="mr-2 font-bold text-[var(--accent)]">
                           ·
                         </span>
-                        {item}
+                        {item.text}
                       </li>
                     ))}
                   </ul>

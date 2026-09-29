@@ -3,6 +3,15 @@ import HeroBlock from './HeroBlock';
 import SpecTableBlock from './SpecTableBlock';
 import CardGridBlock from './CardGridBlock';
 import ProseBlock from './ProseBlock';
+import StatsBlock from './StatsBlock';
+import StepsBlock from './StepsBlock';
+import FaqBlock from './FaqBlock';
+import QuoteBlock from './QuoteBlock';
+import CtaBlock from './CtaBlock';
+import TeamGridBlock from './TeamGridBlock';
+import MediaTextBlock from './MediaTextBlock';
+import LogoWallBlock from './LogoWallBlock';
+import ChecklistBlock from './ChecklistBlock';
 
 /**
  * Renders stored page content.
@@ -17,13 +26,22 @@ const REGISTRY = {
   SpecTable: SpecTableBlock,
   CardGrid: CardGridBlock,
   Prose: ProseBlock,
+  Stats: StatsBlock,
+  Steps: StepsBlock,
+  Faq: FaqBlock,
+  Quote: QuoteBlock,
+  Cta: CtaBlock,
+  TeamGrid: TeamGridBlock,
+  MediaText: MediaTextBlock,
+  LogoWall: LogoWallBlock,
+  Checklist: ChecklistBlock,
 } as const;
 
 export default function Blocks({ data }: { data: PageContent }) {
   return (
     <>
       {data.content.map((block, i) => (
-        <BlockRenderer key={block.props.id ?? `${block.type}-${i}`} block={block} />
+        <BlockRenderer key={block.props.id || `${block.type}-${i}`} block={block} />
       ))}
     </>
   );
@@ -39,6 +57,24 @@ function BlockRenderer({ block }: { block: Block }) {
       return <CardGridBlock {...block.props} />;
     case 'Prose':
       return <ProseBlock {...block.props} />;
+    case 'Stats':
+      return <StatsBlock {...block.props} />;
+    case 'Steps':
+      return <StepsBlock {...block.props} />;
+    case 'Faq':
+      return <FaqBlock {...block.props} />;
+    case 'Quote':
+      return <QuoteBlock {...block.props} />;
+    case 'Cta':
+      return <CtaBlock {...block.props} />;
+    case 'TeamGrid':
+      return <TeamGridBlock {...block.props} />;
+    case 'MediaText':
+      return <MediaTextBlock {...block.props} />;
+    case 'LogoWall':
+      return <LogoWallBlock {...block.props} />;
+    case 'Checklist':
+      return <ChecklistBlock {...block.props} />;
     default:
       // Unknown block types are skipped rather than thrown on: a page saved by
       // a newer build should degrade, not take the whole route down.

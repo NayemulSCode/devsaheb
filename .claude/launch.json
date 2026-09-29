@@ -2,7 +2,13 @@
   "version": "0.0.1",
   "configurations": [
     {
-      "name": "devsaheb-preview",
+      "name": "devsaheb-dev",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": ["run", "dev"],
+      "port": 5173
+    },
+    {
+      "name": "devsaheb-prod",
       "runtimeExecutable": "npm",
       "runtimeArgs": ["start"],
       "port": 3000
