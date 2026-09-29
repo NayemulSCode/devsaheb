@@ -19,8 +19,8 @@
       "props": {
         "id": "TeamGrid-f7d377ba-959c-4492-9729-72f277f1311c",
         "tone": "bone",
-        "eyebrow": "",
-        "heading": "",
+        "eyebrow": "leadership",
+        "heading": "The people accountable for the work.",
         "lede": "",
         "people": [
           {
@@ -37,7 +37,7 @@
       "props": {
         "id": "prose-2",
         "tone": "bone",
-        "body": "Team profiles are being prepared. Each will name the person, what they work on, and which of our services and technologies they actually own — so the specialism pages can point at a real engineer rather than a claim."
+        "body": "More profiles are being added. Each names the person, what they work on, and which of our services and technologies they actually own — so the specialism pages can point at a real engineer rather than a claim."
       }
     }
   ]
