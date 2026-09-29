@@ -56,6 +56,20 @@ const imageSrc = z
  */
 const textItem = z.object({ text: trimmed(120) });
 
+/**
+ * An emptied field means "not set", not "invalid".
+ *
+ * Clearing a link in the editor leaves '', and Puck's defaults start there.
+ * .optional() permits undefined and nothing else, so a Hero dragged in with its
+ * two link fields untouched was rejected the instant it was published - with an
+ * error naming a field the editor never asked anyone to fill in.
+ *
+ * Normalising here rather than in the save path means the rule holds for
+ * hand-edited files and the admin alike.
+ */
+const optional = <T extends z.ZodTypeAny>(schema: T) =>
+  z.preprocess((v) => (typeof v === 'string' && v.trim() === '' ? undefined : v), schema.optional());
+
 const heroBlock = z.object({
   type: z.literal('Hero'),
   props: z.object({
@@ -66,9 +80,9 @@ const heroBlock = z.object({
     highlight: trimmed(60).optional(),
     lede: trimmed(600).optional(),
     primaryLabel: trimmed(40).optional(),
-    primaryHref: href.optional(),
+    primaryHref: optional(href),
     secondaryLabel: trimmed(40).optional(),
-    secondaryHref: href.optional(),
+    secondaryHref: optional(href),
   }),
 });
 
@@ -188,9 +202,9 @@ const ctaBlock = z.object({
     heading: trimmed(200),
     lede: trimmed(400).optional(),
     primaryLabel: trimmed(40).optional(),
-    primaryHref: href.optional(),
+    primaryHref: optional(href),
     secondaryLabel: trimmed(40).optional(),
-    secondaryHref: href.optional(),
+    secondaryHref: optional(href),
   }),
 });
 
@@ -208,7 +222,7 @@ const teamGridBlock = z.object({
           name: trimmed(80),
           role: trimmed(100),
           focus: trimmed(200).optional(),
-          image: imageSrc.optional(),
+          image: optional(imageSrc),
         }),
       )
       .max(24),
@@ -229,7 +243,7 @@ const mediaTextBlock = z.object({
     heading: trimmed(200).optional(),
     body: trimmed(2000),
     primaryLabel: trimmed(40).optional(),
-    primaryHref: href.optional(),
+    primaryHref: optional(href),
   }),
 });
 
@@ -241,7 +255,7 @@ const logoWallBlock = z.object({
     eyebrow: trimmed(60).optional(),
     heading: trimmed(200).optional(),
     logos: z
-      .array(z.object({ name: trimmed(80), image: imageSrc.optional(), href: href.optional() }))
+      .array(z.object({ name: trimmed(80), image: optional(imageSrc), href: optional(href) }))
       .max(24),
   }),
 });

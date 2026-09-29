@@ -13,6 +13,7 @@ import MediaTextBlock from '../components/blocks/MediaTextBlock';
 import LogoWallBlock from '../components/blocks/LogoWallBlock';
 import ChecklistBlock from '../components/blocks/ChecklistBlock';
 import MediaField from './MediaField';
+import { BLOCK_DEFAULTS, ARRAY_ITEM_DEFAULTS } from '../content/block-defaults';
 import type {
   HeroProps,
   SpecTableProps,
@@ -64,6 +65,7 @@ const textItems = (label: string) => ({
   type: 'array' as const,
   label,
   arrayFields: { text: { type: 'text' as const, label: 'Text' } },
+  defaultItemProps: { text: '' },
   getItemSummary: (item: { text?: string }) => item?.text || 'Item',
 });
 
@@ -111,16 +113,7 @@ export const puckConfig: Config = {
         secondaryLabel: { type: 'text', label: 'Secondary button' },
         secondaryHref: { type: 'text', label: 'Secondary link' },
       },
-      defaultProps: {
-        eyebrow: 'software engineering',
-        title: 'A headline written for a human',
-        highlight: '',
-        lede: '',
-        primaryLabel: '',
-        primaryHref: '',
-        secondaryLabel: '',
-        secondaryHref: '',
-      },
+      defaultProps: BLOCK_DEFAULTS.Hero,
       render: (props) => <HeroBlock {...(props as unknown as HeroProps)} />,
     },
 
@@ -132,7 +125,7 @@ export const puckConfig: Config = {
         heading: { type: 'text', label: 'Heading' },
         body: { type: 'textarea', label: 'Body (blank line between paragraphs)' },
       },
-      defaultProps: { tone: 'ink', eyebrow: '', heading: '', body: '' },
+      defaultProps: BLOCK_DEFAULTS.Prose,
       render: (props) => <ProseBlock {...(props as unknown as ProseProps)} />,
     },
 
@@ -156,17 +149,7 @@ export const puckConfig: Config = {
         primaryLabel: { type: 'text', label: 'Button label' },
         primaryHref: { type: 'text', label: 'Button link' },
       },
-      defaultProps: {
-        tone: 'bone',
-        side: 'right',
-        image: '/og-default.png',
-        imageAlt: '',
-        eyebrow: '',
-        heading: '',
-        body: '',
-        primaryLabel: '',
-        primaryHref: '',
-      },
+      defaultProps: BLOCK_DEFAULTS.MediaText,
       render: (props) => <MediaTextBlock {...(props as unknown as MediaTextProps)} />,
     },
 
@@ -181,15 +164,7 @@ export const puckConfig: Config = {
         secondaryLabel: { type: 'text', label: 'Secondary button' },
         secondaryHref: { type: 'text', label: 'Secondary link' },
       },
-      defaultProps: {
-        tone: 'ink',
-        heading: 'Start a conversation.',
-        lede: '',
-        primaryLabel: 'Contact us',
-        primaryHref: '/contact',
-        secondaryLabel: '',
-        secondaryHref: '',
-      },
+      defaultProps: BLOCK_DEFAULTS.Cta,
       render: (props) => <CtaBlock {...(props as unknown as CtaProps)} />,
     },
 
@@ -207,15 +182,11 @@ export const puckConfig: Config = {
             label: { type: 'text', label: 'Label' },
             note: { type: 'text', label: 'How it was measured' },
           },
+          defaultItemProps: ARRAY_ITEM_DEFAULTS['Stats.stats'],
           getItemSummary: (item: { value?: string }) => item?.value || 'Figure',
         },
       },
-      defaultProps: {
-        tone: 'ink',
-        eyebrow: '',
-        heading: '',
-        stats: [{ value: '0', label: 'Label', note: '' }],
-      },
+      defaultProps: BLOCK_DEFAULTS.Stats,
       render: (props) => <StatsBlock {...(props as unknown as StatsProps)} />,
     },
 
@@ -231,13 +202,11 @@ export const puckConfig: Config = {
             value: { type: 'text', label: 'Value' },
             tag: { type: 'text', label: 'Tag' },
           },
+          defaultItemProps: ARRAY_ITEM_DEFAULTS['SpecTable.rows'],
           getItemSummary: (item: { label?: string }) => item?.label || 'Row',
         },
       },
-      defaultProps: {
-        caption: 'Definition of done',
-        rows: [{ label: 'Largest Contentful Paint', value: '< 2.0 s', tag: 'Enforced' }],
-      },
+      defaultProps: BLOCK_DEFAULTS.SpecTable,
       render: (props) => <SpecTableBlock {...(props as unknown as SpecTableProps)} />,
     },
 
@@ -249,7 +218,7 @@ export const puckConfig: Config = {
         attribution: { type: 'text', label: 'Who said it' },
         role: { type: 'text', label: 'Role and company' },
       },
-      defaultProps: { tone: 'ink', quote: '', attribution: '', role: '' },
+      defaultProps: BLOCK_DEFAULTS.Quote,
       render: (props) => <QuoteBlock {...(props as unknown as QuoteProps)} />,
     },
 
@@ -267,10 +236,11 @@ export const puckConfig: Config = {
             image: imageField('Logo (blank shows the name)'),
             href: { type: 'text', label: 'Link' },
           },
+          defaultItemProps: ARRAY_ITEM_DEFAULTS['LogoWall.logos'],
           getItemSummary: (item: { name?: string }) => item?.name || 'Logo',
         },
       },
-      defaultProps: { tone: 'bone', eyebrow: '', heading: '', logos: [] },
+      defaultProps: BLOCK_DEFAULTS.LogoWall,
       render: (props) => <LogoWallBlock {...(props as unknown as LogoWallProps)} />,
     },
 
@@ -290,10 +260,11 @@ export const puckConfig: Config = {
             body: { type: 'textarea', label: 'Body' },
             items: textItems('List items'),
           },
+          defaultItemProps: ARRAY_ITEM_DEFAULTS['CardGrid.cards'],
           getItemSummary: (item: { title?: string }) => item?.title || 'Card',
         },
       },
-      defaultProps: { tone: 'bone', eyebrow: '', heading: '', lede: '', cards: [] },
+      defaultProps: BLOCK_DEFAULTS.CardGrid,
       render: (props) => <CardGridBlock {...(props as unknown as CardGridProps)} />,
     },
 
@@ -311,10 +282,11 @@ export const puckConfig: Config = {
             title: { type: 'text', label: 'Title' },
             body: { type: 'textarea', label: 'Body' },
           },
+          defaultItemProps: ARRAY_ITEM_DEFAULTS['Steps.steps'],
           getItemSummary: (item: { title?: string }) => item?.title || 'Step',
         },
       },
-      defaultProps: { tone: 'bone', eyebrow: '', heading: '', lede: '', steps: [] },
+      defaultProps: BLOCK_DEFAULTS.Steps,
       render: (props) => <StepsBlock {...(props as unknown as StepsProps)} />,
     },
 
@@ -329,15 +301,7 @@ export const puckConfig: Config = {
         excludedTitle: { type: 'text', label: 'Not included heading' },
         excluded: textItems('Not included'),
       },
-      defaultProps: {
-        tone: 'bone',
-        eyebrow: '',
-        heading: '',
-        includedTitle: 'What you get',
-        included: [],
-        excludedTitle: '',
-        excluded: [],
-      },
+      defaultProps: BLOCK_DEFAULTS.Checklist,
       render: (props) => <ChecklistBlock {...(props as unknown as ChecklistProps)} />,
     },
 
@@ -354,10 +318,11 @@ export const puckConfig: Config = {
             q: { type: 'text', label: 'Question' },
             a: { type: 'textarea', label: 'Answer' },
           },
+          defaultItemProps: ARRAY_ITEM_DEFAULTS['Faq.items'],
           getItemSummary: (item: { q?: string }) => item?.q || 'Question',
         },
       },
-      defaultProps: { tone: 'ink', eyebrow: '', heading: '', items: [] },
+      defaultProps: BLOCK_DEFAULTS.Faq,
       render: (props) => <FaqBlock {...(props as unknown as FaqProps)} />,
     },
 
@@ -377,10 +342,11 @@ export const puckConfig: Config = {
             focus: { type: 'textarea', label: 'What they own' },
             image: imageField('Photo'),
           },
+          defaultItemProps: ARRAY_ITEM_DEFAULTS['TeamGrid.people'],
           getItemSummary: (item: { name?: string }) => item?.name || 'Person',
         },
       },
-      defaultProps: { tone: 'bone', eyebrow: '', heading: '', lede: '', people: [] },
+      defaultProps: BLOCK_DEFAULTS.TeamGrid,
       render: (props) => <TeamGridBlock {...(props as unknown as TeamGridProps)} />,
     },
   },

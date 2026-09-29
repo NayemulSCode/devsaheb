@@ -66,6 +66,56 @@ if (missingEditors.length > 0) {
   process.exit(1);
 }
 
+/**
+ * A freshly dragged-in block must be publishable.
+ *
+ * Puck inserts defaultProps verbatim, so if one of them fails the schema, the
+ * first thing anyone does with a new block - add it, press Publish - is
+ * rejected, naming a field they never touched. That is exactly what happened
+ * with Hero: its two link fields defaulted to '', and '' is not a valid href.
+ *
+ * Every default is now validated here, plus one of every array entry, so the
+ * editor cannot offer a block that cannot be saved.
+ */
+{
+  const defaults = bundle.BLOCK_DEFAULTS ?? {};
+  const itemDefaults = bundle.ARRAY_ITEM_DEFAULTS ?? {};
+  const bad = [];
+
+  for (const [type, props] of Object.entries(defaults)) {
+    const probe = { type, props: { id: 'probe', ...props } };
+    const result = pageSchema.safeParse({ content: [probe] });
+    if (!result.success) {
+      for (const issue of result.error.issues) {
+        bad.push(`${type} default → ${issue.path.slice(3).join('.') || 'value'}: ${issue.message}`);
+      }
+    }
+  }
+
+  // An array entry is validated inside its own block, since the schema only
+  // describes it in that position.
+  for (const [key, item] of Object.entries(itemDefaults)) {
+    const [type, field] = key.split('.');
+    const probe = {
+      type,
+      props: { id: 'probe', ...defaults[type], [field]: [item] },
+    };
+    const result = pageSchema.safeParse({ content: [probe] });
+    if (!result.success) {
+      for (const issue of result.error.issues) {
+        bad.push(`${key} new entry → ${issue.path.slice(3).join('.') || 'value'}: ${issue.message}`);
+      }
+    }
+  }
+
+  if (bad.length > 0) {
+    console.error('\nEditor defaults that cannot be published:\n');
+    for (const line of bad) console.error(`  ${line}`);
+    console.error('\nFix them in src/content/block-defaults.ts.\n');
+    process.exit(1);
+  }
+}
+
 const targets = [
   ...jsonFiles(join(CONTENT_DIR, 'pages')).map((f) => ({ file: f, schema: pageSchema, kind: 'blocks' })),
   ...jsonFiles(join(CONTENT_DIR, 'taxonomy')).map((f) => ({ file: f, schema: taxonomyPageSchema, kind: 'taxonomy' })),
