@@ -136,6 +136,123 @@
           }
         ]
       }
+    },
+    {
+      "type": "Steps",
+      "props": {
+        "id": "process",
+        "tone": "ink",
+        "eyebrow": "how we work",
+        "heading": "Five stages. Nothing is dropped when the schedule tightens.",
+        "lede": "The same sequence on every engagement, whatever the size. The stage that gets cut under pressure elsewhere is the one that costs you in year two.",
+        "steps": [
+          {
+            "title": "Discover",
+            "body": "We find the real constraint before proposing anything. It is rarely the one in the brief."
+          },
+          {
+            "title": "Architect",
+            "body": "Schema, boundaries and failure modes on paper, agreed with you before code exists."
+          },
+          {
+            "title": "Build",
+            "body": "Two-week increments. Every change reviewed by a second engineer, CI green before merge."
+          },
+          {
+            "title": "Harden",
+            "body": "Load tests, accessibility audit, performance budget enforced, dependency and secrets review."
+          },
+          {
+            "title": "Ship & support",
+            "body": "Monitoring, an on-call rotation, and a handover your own team can act on."
+          }
+        ]
+      }
+    },
+    {
+      "type": "LogoWall",
+      "props": {
+        "id": "stack",
+        "tone": "bone",
+        "eyebrow": "the stack",
+        "heading": "What we build with, and maintain in production.",
+        "logos": [
+          {
+            "name": "TypeScript"
+          },
+          {
+            "name": "React",
+            "href": "/technologies/reactjs"
+          },
+          {
+            "name": "Next.js"
+          },
+          {
+            "name": "Node.js"
+          },
+          {
+            "name": "Python"
+          },
+          {
+            "name": "Flutter"
+          },
+          {
+            "name": "React Native"
+          },
+          {
+            "name": "AWS",
+            "href": "/technologies/aws"
+          }
+        ]
+      }
+    },
+    {
+      "type": "Faq",
+      "props": {
+        "id": "faq",
+        "tone": "ink",
+        "eyebrow": "before you ask",
+        "heading": "The questions that actually decide it.",
+        "items": [
+          {
+            "q": "How do you price a project?",
+            "a": "We do not quote from a brief. Discovery and architecture come first, because a number produced before the constraints are understood is a guess that someone pays for later. Once the architecture is agreed you get a scope and a figure against it, and changes after that are priced as changes rather than absorbed silently."
+          },
+          {
+            "q": "How long before we see something working?",
+            "a": "We build in two-week increments, so you see working software at the end of the second one and every two weeks after. Not a demo environment or a slide - the actual build, deployed somewhere you can use it."
+          },
+          {
+            "q": "We already have a half-finished project. Will you take it on?",
+            "a": "Often, yes. We read the codebase before proposing anything, and a rewrite is the last recommendation rather than the first - it is usually the expensive answer to a problem that has a cheaper one. If we do think it should be rebuilt, we will show you what we found rather than assert it."
+          },
+          {
+            "q": "Can you work alongside our own developers?",
+            "a": "Yes. We work in your repository, to your review process, and the standards on this page apply to what we contribute whether or not they apply to the rest. Handover is continuous rather than an event at the end."
+          },
+          {
+            "q": "What happens after launch?",
+            "a": "Monitoring and an on-call rotation, plus documentation written for your team rather than for us. The test of a handover is whether someone who has never met us can change the system safely, and that is what we write for."
+          },
+          {
+            "q": "What do the numbers in the definition of done actually mean?",
+            "a": "They are measured, not estimated, and they gate the build - a release that misses one does not ship. Largest Contentful Paint and Interaction to Next Paint are what a user feels as speed and responsiveness. WCAG 2.2 AA is the accessibility level most procurement and public-sector contracts require. The coverage floor is a CI gate, not a target anyone reports on."
+          }
+        ]
+      }
+    },
+    {
+      "type": "Cta",
+      "props": {
+        "id": "cta",
+        "tone": "bone",
+        "heading": "Tell us what you are building.",
+        "lede": "A short call, no deck. If your problem is outside what we do well, we will say so and point you somewhere better.",
+        "primaryLabel": "Start a conversation",
+        "primaryHref": "/contact",
+        "secondaryLabel": "Read our standards",
+        "secondaryHref": "/company/about"
+      }
     }
   ]
 }

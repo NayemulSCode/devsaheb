@@ -35,6 +35,34 @@ function asTaxonomy(data: unknown): TaxonomyPage | null {
 }
 
 /**
+ * FAQ entries from a block page's Faq blocks.
+ *
+ * Taxonomy pages have always driven FAQPage schema from their own faq field. A
+ * block page can now carry the same questions in a Faq block, and there is no
+ * reason for the markup to depend on which editor the page happens to use.
+ *
+ * Every Faq block on the page contributes, in document order.
+ */
+function blockFaq(data: unknown): { q: string; a: string }[] | null {
+  if (!data || typeof data !== 'object' || !('content' in data)) return null;
+  const content = (data as { content?: unknown }).content;
+  if (!Array.isArray(content)) return null;
+
+  const entries = content
+    .filter((b): b is { props?: { items?: unknown } } => {
+      return Boolean(b) && typeof b === 'object' && (b as { type?: string }).type === 'Faq';
+    })
+    .flatMap((b) => (Array.isArray(b.props?.items) ? b.props.items : []))
+    .filter(
+      (i): i is { q: string; a: string } =>
+        Boolean(i) && typeof i === 'object' && typeof i.q === 'string' && typeof i.a === 'string',
+    )
+    .filter((i) => i.q.trim() && i.a.trim());
+
+  return entries.length > 0 ? entries : null;
+}
+
+/**
  * Renders one route to markup, its resolved metadata, and the content it was
  * rendered from.
  *
@@ -67,5 +95,5 @@ export function render(url: string): RenderResult {
     ? ([...SERVICES, ...TECHNOLOGIES].find((i) => i.slug === taxonomy.slug)?.name ?? taxonomy.slug)
     : null;
 
-  return { html, meta, data, faq: taxonomy?.faq ?? null, breadcrumb };
+  return { html, meta, data, faq: taxonomy?.faq ?? blockFaq(data), breadcrumb };
 }

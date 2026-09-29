@@ -34,6 +34,18 @@ const escape = (s) =>
  * BreadcrumbList mirrors the on-page trail - Google cross-checks the two, so
  * they must agree.
  */
+/** One shape for FAQPage, wherever the questions came from. */
+function faqPage(entries) {
+  return {
+    '@type': 'FAQPage',
+    mainEntity: entries.map((item) => ({
+      '@type': 'Question',
+      name: item.q,
+      acceptedAnswer: { '@type': 'Answer', text: item.a },
+    })),
+  };
+}
+
 function taxonomyJsonLd(site, routePath, faq) {
   const base = site.url.replace(/\/+$/, '');
   const isService = routePath.startsWith('/services/');
@@ -51,16 +63,7 @@ function taxonomyJsonLd(site, routePath, faq) {
     },
   ];
 
-  if (faq.entries.length) {
-    graph.push({
-      '@type': 'FAQPage',
-      mainEntity: faq.entries.map((item) => ({
-        '@type': 'Question',
-        name: item.q,
-        acceptedAnswer: { '@type': 'Answer', text: item.a },
-      })),
-    });
-  }
+  if (faq.entries.length) graph.push(faqPage(faq.entries));
 
   if (isService) {
     graph.push({
@@ -257,6 +260,10 @@ export async function renderPage(routePath, bundle, assets) {
   let jsonLd = null;
   if (routePath === '/') {
     jsonLd = homeJsonLd(siteConfig);
+    // A Faq block on the home page describes the same thing a taxonomy page's
+    // faq field does, so it earns the same markup rather than being dropped
+    // because of which branch the route took.
+    if (faq?.length) jsonLd['@graph'].push(faqPage(faq));
   } else if (faq) {
     jsonLd = taxonomyJsonLd(siteConfig, routePath, {
       title: breadcrumb ?? meta.title,
