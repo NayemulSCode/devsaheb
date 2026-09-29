@@ -1,0 +1,56 @@
+{
+  "slug": "saas",
+  "primaryQuery": "saas development company",
+  "title": "SaaS Development Company — Multi-Tenant From Day One",
+  "description": "We build multi-tenant SaaS products: tenant isolation, billing, onboarding and the operational work that starts the day you have two customers.",
+  "h1": "SaaS products built for the second customer, not the first",
+  "intro": "A SaaS product is one codebase serving many customers, each convinced the software is theirs. That single sentence drives almost every early decision — how data is separated, how a release reaches everyone at once, how someone signs up and pays without you being involved. It is a different job from a bespoke build for one client, which is our custom software service. If you are going to sell the same product repeatedly, this is the page you want.",
+  "sections": [
+    {
+      "heading": "Tenant isolation is chosen once",
+      "body": "Every tenant's data can live in a shared set of tables with a tenant column, in a schema per tenant, or in a database per tenant. The three differ in cost, in how hard a noisy customer is to contain, and in what you can promise a buyer's security reviewer.\n\nShared tables are cheapest to run and the easiest to leak from — one query missing its tenant filter is a breach, so the filter cannot be left to discipline. We enforce it in one place that every query goes through, and test it by trying to read across tenants rather than by assuming.\n\nDatabase per tenant sells well to enterprise buyers and makes per-customer restore trivial, and it turns every schema migration into an orchestration problem. Choosing without knowing who you are selling to is the most expensive mistake available at this stage, because changing it later means migrating live customers."
+    },
+    {
+      "heading": "Billing is product logic, not a plugin",
+      "body": "Taking a card is the easy part. The work is what happens around it: a trial that ends, a plan that changes mid-cycle and needs prorating, a payment that fails and a dunning sequence that recovers it, tax that depends on where the customer is, and an invoice their finance team accepts.\n\nMore subtly, entitlements — what a plan actually unlocks — belong in your product rather than in the payment provider, because you will want to grant an exception for one customer without inventing a hidden plan. We keep the provider as the source of truth for money and the product as the source of truth for access, with webhooks reconciled rather than trusted blindly.\n\nInvoluntary churn from failed cards is usually larger than churn from customers who chose to leave, and it is an engineering problem."
+    },
+    {
+      "heading": "Everything ships to everyone at once",
+      "body": "One deployment serves every customer, which is the efficiency of the model and its risk. A bad release is a bad release for all of them simultaneously.\n\nThat makes feature flags infrastructure rather than a nicety: ship dark, enable for one tenant, widen when it holds. It makes backwards-compatible migrations mandatory, because a release that requires a schema change and a code change to land together has no rollback. And it makes per-tenant metrics necessary, since an aggregate that looks fine routinely hides one customer having a terrible time."
+    }
+  ],
+  "deliverables": [
+    "Tenant isolation strategy chosen against your buyers, enforced centrally",
+    "Cross-tenant access tested, not assumed",
+    "Subscriptions, trials, proration, dunning and tax",
+    "Entitlements owned by the product, reconciled with the provider",
+    "Self-serve signup, onboarding and admin impersonation for support",
+    "Feature flags, backwards-compatible migrations and per-tenant metrics"
+  ],
+  "faq": [
+    {
+      "q": "How is this different from your custom software service?",
+      "a": "Custom software is one build for one client who owns it. SaaS is one product you sell repeatedly, so it carries multi-tenancy, self-serve signup, billing and the operational weight of upgrading everyone at once. Building the first as though it were the second wastes money; building the second as though it were the first is the more common and more expensive error."
+    },
+    {
+      "q": "What should the MVP actually include?",
+      "a": "The narrowest slice that someone will pay for, plus the things that are painful to add later: tenant isolation, authentication, and a billing model you can change. Reporting, integrations, an admin console and most settings can wait. The isolation decision cannot, because retrofitting it means migrating customers who are already live."
+    },
+    {
+      "q": "Can we start single-tenant and convert later?",
+      "a": "You can, and it is one of the more expensive paths. The conversion touches every query, every background job and the entire data model, while customers are using the system. If there is any chance of selling the product twice, we build it multi-tenant from the start — the extra cost at the beginning is small compared with the migration."
+    },
+    {
+      "q": "Do you handle SOC 2 or enterprise security reviews?",
+      "a": "We build to what those reviews ask for — audit logging, access control, encryption, tested backups, documented incident response — and we will fill in the technical sections of a questionnaire. The certification itself is an audit engagement with a third party, not something an engineering firm can issue."
+    }
+  ],
+  "notFor": {
+    "heading": "When not to build the platform yet",
+    "body": "If you have not yet sold the thing to anyone, the platform is not the risk — demand is. A manual service behind a simple form will teach you more in a month than a quarter of engineering will, and it costs almost nothing to abandon. We would rather build you the smallest thing that proves someone will pay, and build the real product once you know which parts of your idea survived contact with customers."
+  },
+  "related": {
+    "services": ["custom-software", "cloud-application", "devops", "ecommerce"],
+    "technologies": ["typescript", "nodejs", "reactjs", "aws"]
+  }
+}

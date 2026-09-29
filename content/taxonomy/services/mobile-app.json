@@ -1,0 +1,56 @@
+{
+  "slug": "mobile-app",
+  "primaryQuery": "mobile app development company",
+  "title": "Mobile App Development Company — iOS and Android",
+  "description": "We build mobile apps that survive a bad network, a locked-down device and an app store review. Cross-platform where it fits, native where it does not.",
+  "h1": "Mobile apps built for the conditions they actually run in",
+  "intro": "A mobile app is judged on a train, on 3G, on a four-year-old handset with the battery saver on. Most of the engineering that separates a good app from a frustrating one goes into those conditions rather than into features. We build for them first, and we are candid about which platform strategy suits the job rather than defaulting to whichever we prefer.",
+  "sections": [
+    {
+      "heading": "Cross-platform or native is the only decision that matters early",
+      "body": "The iOS-versus-Android question answers itself from your audience. The decision that genuinely changes cost and capability is whether one codebase serves both.\n\nCross-platform is the right default for most business applications: forms, lists, sync, payments, messaging. One team, one set of rules, one place a bug gets fixed. The gap in polish that used to argue against it has largely closed for this class of app.\n\nNative earns its double cost when the app leans on the device rather than the network — sustained camera or video processing, Bluetooth peripherals, background location, tight platform integrations, or anything where a dropped frame is the product failing. We will tell you which side of that line we think you are on, and why, before anyone commits.\n\nWe work in both Flutter and React Native, and the choice usually follows your existing team rather than a technical verdict."
+    },
+    {
+      "heading": "Offline is a design problem, not a feature",
+      "body": "The network will be gone at the moment a user most wants the app to work. An app that only shows a spinner in that moment has pushed its hardest problem onto the person holding the phone.\n\nSo we decide early what the app can do without a connection, and what happens when two devices change the same record while both were offline. That conflict rule is a product decision — last write wins, merge, or ask the user — and it belongs in the specification rather than being discovered during testing.\n\nThe corollary is that local state is treated as a real store with migrations, not a cache that can be cleared when it misbehaves."
+    },
+    {
+      "heading": "Release is part of the build",
+      "body": "App stores add a step that web deployment does not have: someone else approving your release, on their schedule. Building for that means feature flags, so a half-finished feature can ship dark and be switched on without another review, and a forced-update path for the day a release has to be recalled.\n\nWe set up the signing, the store listings and the automated build before the first feature is finished, because a release process discovered at the end is a release process that slips."
+    }
+  ],
+  "deliverables": [
+    "A written platform recommendation with the reasoning, not just a choice",
+    "Offline behaviour and conflict rules specified before build",
+    "Automated builds and signing for both stores",
+    "Feature flags and a forced-update path",
+    "Crash and performance reporting wired to real alerts",
+    "Store listings, assets and submission handled"
+  ],
+  "faq": [
+    {
+      "q": "Should we launch on one platform first?",
+      "a": "If the app is cross-platform, launching on one first saves less than people expect — the shared work is already done. If it is native, launching on one is often sensible, and the platform should follow where your users are rather than where your developers are."
+    },
+    {
+      "q": "How long does app store review take?",
+      "a": "Usually a day or two, occasionally much longer, and never on a schedule you control. We plan releases assuming it will be slow, which is why the first build goes through the full submission process early rather than the week before launch."
+    },
+    {
+      "q": "Do we need a backend as well?",
+      "a": "Almost always, unless the app is genuinely standalone. Accounts, sync, payments and push notifications all need a server. We build both, and we keep the shared rules on the server so the app cannot be the only thing enforcing them — a determined user has full control of their own device."
+    },
+    {
+      "q": "What happens when the platform ships a breaking change?",
+      "a": "Both platforms deprecate APIs and raise minimum requirements on an annual cycle, and an app left alone for two years usually cannot be rebuilt without work. We plan for a maintenance window each year rather than treating it as an unexpected cost."
+    }
+  ],
+  "notFor": {
+    "heading": "When you probably do not need an app",
+    "body": "If the experience is essentially a website in a shell, a well-built responsive site will reach more people for less money and skip store review entirely. The honest test for an app is whether it needs the device — notifications people act on, offline use, camera, location, background work — or whether it needs to be on the home screen for reasons that are really about marketing. The second case is usually better served by a progressive web app, and we will say so."
+  },
+  "related": {
+    "services": ["custom-software", "ios", "android", "cloud-application"],
+    "technologies": ["flutter", "react-native", "typescript", "nodejs"]
+  }
+}

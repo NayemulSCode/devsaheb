@@ -1,0 +1,56 @@
+{
+  "slug": "ecommerce",
+  "primaryQuery": "ecommerce development company",
+  "title": "Ecommerce Development Company — Storefronts That Convert",
+  "description": "Storefronts and checkouts engineered for conversion: speed as a budget, fewer steps to pay, and inventory that stays true under concurrent orders.",
+  "h1": "Storefronts where the engineering shows up in the conversion rate",
+  "intro": "An online store is one of the few applications where engineering quality is directly measurable in revenue. A slower page sells less. An extra checkout step sells less. A stock figure that lies costs you an order and a customer. We build storefronts and checkouts against those numbers rather than against a design brief alone, and we are straightforward about when a hosted platform will serve you better than anything custom.",
+  "sections": [
+    {
+      "heading": "Speed is a commercial number here",
+      "body": "On a product listing page, the cost of slowness is not abstract — a visitor who waits leaves, and mobile shoppers on ordinary connections are the majority of the traffic for most stores.\n\nSo the performance budget is set against the templates that matter: home, category, product, cart, checkout. Images are sized and served in modern formats rather than uploaded at whatever dimensions the photographer supplied. Third-party scripts — analytics, chat, reviews, pixels — are loaded so that none of them can block the page, and we measure the cost of each one before agreeing to it. Marketing tags are usually the single largest source of slowness in a store, and they arrive after launch, so the build has to be resilient to them.\n\nThe layout also has to settle. A price or an Add to cart button that moves as the page loads produces mis-taps and abandoned sessions."
+    },
+    {
+      "heading": "Checkout is where the money leaks",
+      "body": "Most abandoned carts are abandoned at checkout, and most of the reasons are fixable engineering rather than pricing: forced account creation, shipping cost revealed late, a form that rejects a valid postcode, a payment method the customer expected and did not find.\n\nWe support guest checkout by default, show the full cost as early as the data allows, and keep the number of fields to what is genuinely needed to fulfil the order. Address entry gets autocomplete, and validation is forgiving about formatting rather than strict about it.\n\nPayment methods follow the market you sell into. For Bangladesh that usually means local mobile wallets alongside cards; for cross-border it means the wallets your customers already have set up. Each one is tested against a real failed payment as well as a successful one, because the recovery path is what determines whether a declined card becomes a lost sale."
+    },
+    {
+      "heading": "Inventory has to be true under pressure",
+      "body": "Stock is the state most likely to be wrong and most expensive to get wrong. Two customers buying the last item within the same second is not an edge case during a promotion; it is the expected condition.\n\nThat means reserving stock at the point of intent with a timeout rather than decrementing optimistically, and making the order pipeline idempotent so that a retried payment webhook cannot create a second order. Where stock lives in an ERP or point-of-sale system as well, we define which system is authoritative and how quickly the other converges, rather than leaving two sources to disagree silently."
+    }
+  ],
+  "deliverables": [
+    "Performance budget per template, enforced in CI",
+    "Third-party script loading audited and cost-measured",
+    "Guest checkout with minimal fields and forgiving validation",
+    "Local and international payment methods, failure paths tested",
+    "Stock reservation and idempotent order processing",
+    "Structured data for products, so listings are eligible for rich results"
+  ],
+  "faq": [
+    {
+      "q": "Should we use Shopify or build custom?",
+      "a": "Start with a hosted platform unless you have a specific reason not to. It will handle payments, tax, fraud and PCI scope for a fee that is almost always less than building the same. Custom earns its cost when your catalogue, pricing or fulfilment does something the platform fights you on — complex configurable products, B2B pricing tiers, or an unusual fulfilment model."
+    },
+    {
+      "q": "What does headless commerce actually give us?",
+      "a": "It separates the storefront from the commerce engine, so the front end can be as fast and as bespoke as you like while orders, stock and payments stay in a proven system. It buys presentation freedom and costs you the platform's built-in themes and some of its integrations. Worth it for a large catalogue or a distinctive brand experience; overkill for a store with forty products."
+    },
+    {
+      "q": "Can you migrate our existing store?",
+      "a": "Yes, and the risky part is rarely the products — it is URLs, order history and customer accounts. We map every old URL to a new one with permanent redirects before launch, because losing the search rankings an established store has built is usually a bigger loss than anything the redesign gains."
+    },
+    {
+      "q": "Do you handle PCI compliance?",
+      "a": "We design so that card data never reaches your servers, using the payment provider's hosted fields or redirect. That keeps you in the smallest possible compliance scope, which is the right goal — handling card numbers yourself is an obligation almost no store benefits from taking on."
+    }
+  ],
+  "notFor": {
+    "heading": "When a platform beats a build",
+    "body": "If you sell a manageable catalogue of ordinary products, a hosted platform with a well-implemented theme will get you trading sooner and cheaper, and it will keep pace with payment and tax changes without you paying for that work. Custom development is the right call when the platform is actively obstructing how you sell, when the catalogue is large enough that performance becomes an engineering problem, or when you need to integrate with systems the platform has no answer for. We would rather set you up properly on a platform than build you something you will maintain for no advantage."
+  },
+  "related": {
+    "services": ["web-development", "custom-software", "cms", "cloud-application"],
+    "technologies": ["nextjs", "reactjs", "typescript", "nodejs"]
+  }
+}

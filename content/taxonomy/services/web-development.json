@@ -1,43 +1,56 @@
 {
   "slug": "web-development",
-  "primaryQuery": "TODO — the one query this page owns, from docs/keyword-map.md",
-  "title": "TODO — web development (max 70 chars, shown in search results)",
-  "description": "TODO — max 180 characters. Written for someone deciding whether to click.",
-  "h1": "TODO — the headline, written for a human rather than the search result",
-  "intro": "TODO — open with the thing a buyer actually needs to hear first.",
+  "primaryQuery": "web development services",
+  "title": "Web Development Services — Applications, Not Brochures",
+  "description": "We build web applications that hold state, handle load, and stay changeable. Typed end to end, reviewed line by line, measured against a performance budget.",
+  "h1": "Web applications that are still changeable in year three",
+  "intro": "Most web work sold as development is publishing: pages, a form, a content editor. That is a real need and a smaller job than this one. We build the other kind — applications that hold state, enforce rules, integrate with systems that were not designed to be integrated with, and are expected to still be maintainable when the people who wrote them have moved on.",
   "sections": [
     {
-      "heading": "TODO — first section",
-      "body": "TODO.\n\nBlank line between paragraphs."
+      "heading": "The decision that costs the most later",
+      "body": "Almost every expensive web rebuild traces back to the same early choice: where the truth lives. When business rules end up spread across the browser, the API and a handful of database triggers, every subsequent change requires understanding all three, and no single test can prove the rule holds.\n\nWe put rules in one place and make the other layers ask. That sounds obvious and is routinely abandoned under deadline pressure, because duplicating a validation in the browser is faster this week. It is also why the same feature takes four days in year one and three weeks in year three.\n\nThe practical version: a typed contract between client and server, generated rather than hand-written, so a field that changes shape on the server becomes a compile error in the browser rather than a runtime surprise for a user."
     },
     {
-      "heading": "TODO — second section",
-      "body": "TODO."
+      "heading": "Performance is a budget, not an optimisation phase",
+      "body": "Speed is not something added before launch. By then the architecture has already decided most of it — how much JavaScript ships, how many round trips the first screen needs, whether the layout settles or jumps.\n\nSo we set a budget at the start and enforce it in CI. If a pull request pushes the bundle past the limit, it fails, and the discussion happens while the change is small. Largest Contentful Paint under two seconds and Interaction to Next Paint under 200 ms are not aspirations on our projects; they are gates a release has to pass.\n\nThe same applies to accessibility. WCAG 2.2 AA is audited automatically on every build, which is the only way it survives contact with a schedule."
+    },
+    {
+      "heading": "Built to be handed over",
+      "body": "A web application you cannot staff is a liability regardless of how well it runs. We write for the team that inherits it: conventional structure over clever abstraction, dependencies chosen for how well maintained they are rather than how new, and documentation aimed at someone who has never spoken to us.\n\nThat also shapes the stack. We use widely known tools deliberately, because the pool of people who can pick the project up is part of its architecture."
     }
   ],
   "deliverables": [
-    "TODO — what the client actually receives"
+    "A typed contract shared by browser and server",
+    "Performance budget enforced in CI, not measured at the end",
+    "WCAG 2.2 AA audited on every build",
+    "Automated test suite with a coverage floor as a merge gate",
+    "Deployment pipeline with a tested rollback",
+    "Documentation written for the team that inherits it"
   ],
   "faq": [
     {
-      "q": "TODO — a real question you get asked?",
-      "a": "TODO."
+      "q": "Is this different from building a website?",
+      "a": "Yes, and the difference is worth naming before anyone quotes. A website presents content; an application holds state and enforces rules. If what you need is pages, a content editor and a contact form, this is more engineering than the problem deserves and we will say so."
     },
     {
-      "q": "TODO — another?",
-      "a": "TODO."
+      "q": "Do you work with our existing codebase?",
+      "a": "Usually. We read it before proposing anything, and a rewrite is the recommendation of last resort — it restarts the clock on every bug that was already found and fixed. If we do recommend rebuilding, we will show you what we found rather than assert it."
     },
     {
-      "q": "TODO — a third? Three is the minimum.",
-      "a": "TODO."
+      "q": "Which framework will you use?",
+      "a": "React with TypeScript for most applications, and Next.js where server rendering earns its complexity. The framework matters less than the boundaries around it; we keep business rules out of framework-specific code so that the framework is replaceable and the rules are not."
+    },
+    {
+      "q": "How do you handle browser support?",
+      "a": "We agree the matrix at the architecture stage, because it changes what can be used and is expensive to retrofit. Then it is tested, not assumed — a support claim nobody verifies is a support claim that fails in the one browser your largest customer uses."
     }
   ],
   "notFor": {
-    "heading": "When we would recommend something else",
-    "body": "TODO — the honest counter-case. Hard to template, and the section buyers remember."
+    "heading": "When we would point you elsewhere",
+    "body": "If you need a marketing site with a blog and a few landing pages, a well-chosen CMS or a site builder will serve you better and cost a fraction of this. Custom development earns its keep when the rules are yours, the integrations are awkward, or the thing has to scale in a way an off-the-shelf product cannot. If you are unsure which you have, the tell is usually whether you can describe the job in terms of pages or in terms of what the software must not allow to happen."
   },
   "related": {
-    "services": [],
-    "technologies": []
+    "services": ["custom-software", "front-end", "back-end", "cloud-application"],
+    "technologies": ["reactjs", "nextjs", "typescript", "nodejs"]
   }
 }

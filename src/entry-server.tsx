@@ -16,6 +16,8 @@ export const siteConfig = site as SiteConfig;
 // bundle's renderer was compiled against - no drift between the two.
 export { pageSchema, slugSchema, taxonomyPageSchema, BLOCK_TYPES } from './content/schema';
 export { BLOCK_DEFAULTS, ARRAY_ITEM_DEFAULTS } from './content/block-defaults';
+// So check-content can confirm every `related` slug resolves to a real entry.
+export { SERVICES, TECHNOLOGIES } from './content/taxonomy';
 
 export type RenderResult = {
   html: string;

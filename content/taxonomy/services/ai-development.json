@@ -1,0 +1,56 @@
+{
+  "slug": "ai-development",
+  "primaryQuery": "ai development company",
+  "title": "AI Development Company — LLM Integration That Ships",
+  "description": "We integrate language models into products that people rely on: retrieval, evaluation, guardrails and cost control. Applied AI, measured before it ships.",
+  "h1": "AI features that survive contact with real users",
+  "intro": "Demonstrating a language model doing something impressive takes an afternoon. Shipping it as a feature people depend on is a different discipline: the interesting work is in what happens when the model is wrong, slow, expensive, or confidently inventing an answer. We build applied AI — models integrated into products — and we measure the result before it reaches anyone. Training models from scratch is a different job, and mostly not the one you need.",
+  "sections": [
+    {
+      "heading": "Retrieval before fine-tuning, almost always",
+      "body": "The usual request is a model that knows your business. The usual correct answer is not to train one but to give a good general model access to your material at the moment it answers.\n\nRetrieval is cheaper, updates the instant your documents change, and can cite what it used — which is often the difference between a feature people trust and one they quietly stop using. Fine-tuning changes how a model behaves rather than what it knows; it is the right tool for tone, format and structured output, and the wrong one for facts that change on Tuesday.\n\nMost of the quality in a retrieval system comes from unglamorous work: how documents are split, what metadata rides along with each chunk, and whether the retrieved passages are re-ranked before the model sees them. That is where we spend the time."
+    },
+    {
+      "heading": "If you cannot measure it, you cannot ship it",
+      "body": "The reason AI features stall in pilot is almost never the model. It is that nobody agreed what correct looks like, so no one can say whether a change made it better.\n\nSo we build an evaluation set early — real questions, with answers your experts accept — and run it on every change. Then a prompt tweak, a model upgrade or a new retrieval strategy produces a number rather than an argument. Without that, teams change three things at once and judge the result on the last demo they remember.\n\nWe also evaluate in production, sampling real traffic, because the questions users actually ask are never the ones anyone wrote down in advance."
+    },
+    {
+      "heading": "Guardrails, cost and the day the API is down",
+      "body": "A model call is a network call to someone else's service, priced per token, with latency you do not control and rate limits you will meet. That has design consequences: streaming so the wait is tolerable, caching so the same question is not paid for twice, a cheaper model for the easy majority of requests, and a defined behaviour when the provider is unavailable.\n\nGuardrails matter in both directions. What the model is allowed to see — so a customer's question cannot pull another customer's document into the context — and what it is allowed to say, with a path for a person to intervene where the answer carries real consequences.\n\nWe set a cost ceiling per user and per feature, alarmed, before launch. Usage-based pricing punishes the products that succeed."
+    }
+  ],
+  "deliverables": [
+    "Retrieval pipeline with chunking, metadata and re-ranking",
+    "Evaluation set agreed with your experts, run on every change",
+    "Production sampling and quality monitoring",
+    "Tenant isolation in retrieval, so context cannot cross customers",
+    "Cost ceiling per feature with alarms, plus caching and model tiering",
+    "Defined behaviour when the provider is slow or unavailable"
+  ],
+  "faq": [
+    {
+      "q": "Do we need to train our own model?",
+      "a": "Very rarely. Training earns its cost when you have a large amount of proprietary data in a domain general models handle badly, and the economics only work at real scale. For nearly every business feature, a good general model with retrieval over your own content will be better, cheaper and easier to keep current."
+    },
+    {
+      "q": "How do you stop it making things up?",
+      "a": "You reduce it rather than eliminate it. Ground answers in retrieved passages, require citations, have the system say it does not know when retrieval returns nothing relevant, and keep a person in the loop wherever a wrong answer has consequences. Any supplier who tells you they have eliminated it is describing a demo, not a deployment."
+    },
+    {
+      "q": "Where does our data go?",
+      "a": "Wherever you decide, and it should be an explicit decision written into the design. Major providers offer no-training-on-your-data terms and regional processing; open models can run in your own infrastructure at a higher operational cost. We will lay out the options against your regulatory position rather than defaulting to whichever is easiest to build."
+    },
+    {
+      "q": "What does it cost to run?",
+      "a": "It is usage-based, so the answer is a rate rather than a total. We model it per user action during design, and build in caching and cheaper models for easy requests. The failure we design against is a feature whose cost scales faster than the revenue it brings in."
+    }
+  ],
+  "notFor": {
+    "heading": "When AI is the wrong tool",
+    "body": "If the rule can be written down, write it down. A deterministic rule is cheaper, faster, testable, explainable to a regulator and does not fail in novel ways. AI earns its place where the input is genuinely unstructured or ambiguous — free text, images, messy documents — and where a good-enough answer with a human check beats no answer at all. We would rather talk you out of an AI feature that a database query would do better than build it and watch you maintain it."
+  },
+  "related": {
+    "services": ["machine-learning", "custom-software", "cloud-application", "database"],
+    "technologies": ["python", "typescript", "nodejs", "aws"]
+  }
+}

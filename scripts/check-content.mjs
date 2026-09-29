@@ -165,6 +165,11 @@ function strayContacts(raw) {
     });
 }
 
+/** Every service and technology slug the taxonomy defines, hidden ones included. */
+const knownSlugs = new Set(
+  [...(bundle.SERVICES ?? []), ...(bundle.TECHNOLOGIES ?? [])].map((i) => i.slug),
+);
+
 const failures = [];
 
 /**
@@ -202,6 +207,31 @@ for (const { file, schema, kind } of targets) {
         issues: parsed.error.issues.map((i) => `${i.path.join('.') || 'value'}: ${i.message}`),
       });
       continue;
+    }
+
+    /**
+     * `related` slugs must name a real taxonomy entry.
+     *
+     * The renderer looks each one up to get its display name, and silently
+     * skips what it cannot find - so a typo does not break the page, it just
+     * removes a link nobody notices is gone. custom-software shipped with
+     * "awsd" for its AWS link and rendered fine the whole time.
+     */
+    if (kind === 'taxonomy' && parsed.success) {
+      const related = parsed.data.related ?? {};
+      const unknown = [...(related.services ?? []), ...(related.technologies ?? [])].filter(
+        (slug) => !knownSlugs.has(slug),
+      );
+      if (unknown.length > 0) {
+        failures.push({
+          rel,
+          kind,
+          issues: [
+            `related names slugs that do not exist: ${unknown.join(', ')}`,
+            'The link is dropped silently at render time. Fix the slug, or remove it.',
+          ],
+        });
+      }
     }
 
     const stray = strayContacts(raw);

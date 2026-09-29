@@ -1,0 +1,56 @@
+{
+  "slug": "cloud-application",
+  "primaryQuery": "cloud application development",
+  "title": "Cloud Application Development — Built to Fail Safely",
+  "description": "Cloud-native applications that assume failure, scale horizontally and cost what you expect. We build for the cloud; our DevOps practice runs it.",
+  "h1": "Cloud applications that assume things will break",
+  "intro": "Moving an application onto cloud infrastructure is not the same as building one for it. The first gives you someone else's servers and the same failure modes; the second changes how the software is written — no state on the machine, every dependency assumed to be temporarily unavailable, and capacity that follows demand instead of a purchase order. This page is about building that kind of application. Running it afterwards is DevOps, and we treat them as different jobs because they are.",
+  "sections": [
+    {
+      "heading": "Statelessness is the whole trick",
+      "body": "Almost every cloud-native property people want — horizontal scaling, zero-downtime deploys, surviving an instance disappearing — follows from one constraint: the application keeps nothing important in its own memory or on its own disk.\n\nThat sounds simple and has sharp edges. Sessions move to a shared store. Uploaded files go to object storage, not the local filesystem. Background jobs become a queue that any instance can pick up, and because any instance can pick one up twice, every job has to be safe to run twice. Scheduled tasks need a lock, or three instances will all run the nightly invoice job.\n\nWe design for that at the start. Retrofitting it is possible and is most of the cost of a later migration."
+    },
+    {
+      "heading": "Failure is a normal condition",
+      "body": "In a data centre a dependency being down is an incident. In the cloud it is Tuesday: a managed database fails over, a region degrades, an API rate-limits you for ninety seconds.\n\nSo calls across a boundary get timeouts, bounded retries with backoff and jitter, and a circuit breaker that stops hammering something already struggling. Retrying without jitter converts one slow dependency into a synchronised stampede, which is a self-inflicted outage.\n\nMore importantly, we decide per feature what happens when a dependency is gone. Degrading to read-only, serving a slightly stale cache, or queueing the write for later are all acceptable answers. A 500 is not, when one of the others was available."
+    },
+    {
+      "heading": "The bill is an architectural output",
+      "body": "Cloud cost is not an operations concern discovered later; it is decided by design choices. Chatty service-to-service calls, cross-zone data transfer, an over-provisioned managed database and logs retained forever are the usual four.\n\nWe model the cost of a design before building it, and we put a budget alarm in place on day one rather than after the first surprising invoice. Where a managed service costs more than self-hosting, we will say so and also say what the operational saving is worth, because the cheaper line item is frequently the more expensive decision."
+    }
+  ],
+  "deliverables": [
+    "Stateless application services, safe to scale and restart",
+    "Idempotent background jobs and a locked scheduler",
+    "Timeouts, bounded retries and circuit breakers on every boundary",
+    "A defined degraded mode per feature, not a blanket error",
+    "Cost model produced before build, with budget alarms from day one",
+    "Infrastructure as code, so environments are reproducible"
+  ],
+  "faq": [
+    {
+      "q": "What is the difference between this and your DevOps service?",
+      "a": "This is how the application is written; DevOps is how it is deployed, watched and recovered. They meet in the middle and most projects want both, but they are separable — we regularly build cloud-native applications that a client's own platform team then runs."
+    },
+    {
+      "q": "Do we need microservices?",
+      "a": "Probably not. Microservices solve an organisational problem — several teams needing to deploy without coordinating — and they buy that by converting function calls into network calls that can fail. A well-structured single deployable is the right answer for most teams, and it can be split later along boundaries you will understand better by then."
+    },
+    {
+      "q": "Can you avoid locking us into one provider?",
+      "a": "Partly, and it is a trade rather than a free choice. Keeping to portable primitives costs you the managed services that make cloud worth using. We usually recommend using the good managed services and isolating them behind your own interfaces, so a move is a known piece of work rather than a rewrite."
+    },
+    {
+      "q": "Is serverless cheaper?",
+      "a": "For spiky or low-volume workloads, often substantially. For sustained high throughput it is usually more expensive than instances that stay warm. The deciding factor is more often cold starts and execution limits than price, so we size it against your actual traffic shape rather than a general claim."
+    }
+  ],
+  "notFor": {
+    "heading": "When a simpler deployment is the right answer",
+    "body": "A single application with predictable traffic, one region of users and no scaling pressure does not need any of this. A well-configured server with backups and a deployment script will run it for years at a fraction of the complexity, and complexity is paid for in the ability to change the system later. We would rather build you the simple thing and revisit it when there is evidence you have outgrown it, than sell an architecture that solves problems you may never have."
+  },
+  "related": {
+    "services": ["devops", "custom-software", "saas", "back-end"],
+    "technologies": ["aws", "docker", "nodejs", "typescript"]
+  }
+}
