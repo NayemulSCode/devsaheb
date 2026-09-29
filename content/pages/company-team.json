@@ -8,18 +8,36 @@
     {
       "type": "Hero",
       "props": {
+        "id": "hero-1",
         "eyebrow": "our team",
         "title": "The people who will actually be on your project.",
-        "lede": "You will meet the engineers doing the work, not an account manager who hands you over after signing.",
-        "id": "hero-1"
+        "lede": "You will meet the engineers doing the work, not an account manager who hands you over after signing."
+      }
+    },
+    {
+      "type": "TeamGrid",
+      "props": {
+        "id": "TeamGrid-f7d377ba-959c-4492-9729-72f277f1311c",
+        "tone": "bone",
+        "eyebrow": "",
+        "heading": "",
+        "lede": "",
+        "people": [
+          {
+            "name": "Nayemul Saheb",
+            "role": "CEO",
+            "focus": "Main Course",
+            "image": "/media/1790662882385-4ecc86cf1d54.png"
+          }
+        ]
       }
     },
     {
       "type": "Prose",
       "props": {
+        "id": "prose-2",
         "tone": "bone",
-        "body": "Team profiles are being prepared. Each will name the person, what they work on, and which of our services and technologies they actually own — so the specialism pages can point at a real engineer rather than a claim.",
-        "id": "prose-2"
+        "body": "Team profiles are being prepared. Each will name the person, what they work on, and which of our services and technologies they actually own — so the specialism pages can point at a real engineer rather than a claim."
       }
     }
   ]
