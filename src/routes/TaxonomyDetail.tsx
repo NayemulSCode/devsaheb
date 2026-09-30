@@ -82,8 +82,21 @@ export default function TaxonomyDetail() {
   const hubPath = isService ? '/services' : '/technologies';
   const hubLabel = isService ? 'Services' : 'Technologies';
 
+  // A draft is reachable at its own URL, so it has to say so on the page.
+  // Without this, a link shared for review is indistinguishable from the
+  // live site, and the substance bar becomes something only the repo knows.
+  const entry = [...SERVICES, ...TECHNOLOGIES].find((i) => i.slug === data.slug);
+  const isDraft = Boolean(entry?.draft && !entry?.published);
+
   return (
     <main>
+      {isDraft ? (
+        <div className="border-b border-gold/30 bg-gold/10 px-4 py-2.5 text-center">
+          <p className="font-mono text-[10.5px] uppercase tracking-[0.12em] text-gold">
+            Draft — not published, not indexed, not linked from the menus
+          </p>
+        </div>
+      ) : null}
       <PageHero
         eyebrow={isService ? 'service' : 'technology'}
         title={data.h1}

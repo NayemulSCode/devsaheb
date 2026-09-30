@@ -17,8 +17,11 @@ import TaxonomyDetail from './routes/TaxonomyDetail';
 import {
   PUBLISHED_SERVICES,
   PUBLISHED_TECHNOLOGIES,
+  DRAFT_SERVICES,
+  DRAFT_TECHNOLOGIES,
   servicePath,
   technologyPath,
+  type TaxonomyItem,
 } from './content/taxonomy';
 
 export type AppRoute = {
@@ -167,14 +170,18 @@ export const routes: AppRoute[] = [
 ];
 
 /**
- * Detail routes for published taxonomy items only.
+ * Detail routes for taxonomy items that have content: published and draft.
  *
- * Unpublished slugs get no route at all, so they cannot 404 from the nav - the
- * menus render them as plain text. Publishing is therefore a single flag flip
- * once a page clears the substance bar in docs/keyword-map.md.
+ * A slug with neither flag gets no route at all, so it cannot 404 from the nav
+ * - the menus render it as plain text either way, since drafts are not linked.
+ *
+ * Drafts exist because written content with no route is invisible: not on the
+ * site, and not in the admin's document picker, which derives from this table.
+ * Forty pages sat in that state. A draft is routed and editable but carries
+ * noindex, which also keeps it out of the sitemap and skips its OG card.
  */
 function taxonomyRoutes(): AppRoute[] {
-  const services: AppRoute[] = PUBLISHED_SERVICES.map((item) => ({
+  const service = (item: TaxonomyItem, draft: boolean): AppRoute => ({
     path: servicePath(item.slug),
     Component: TaxonomyDetail,
     contentPath: `taxonomy/services/${item.slug}`,
@@ -183,20 +190,27 @@ function taxonomyRoutes(): AppRoute[] {
       // which the prerender prefers. These are the fallback.
       title: item.name,
       description: `${item.name} services from DevSaheb.`,
+      ...(draft ? { noindex: true } : {}),
     },
-  }));
+  });
 
-  const technologies: AppRoute[] = PUBLISHED_TECHNOLOGIES.map((item) => ({
+  const technology = (item: TaxonomyItem, draft: boolean): AppRoute => ({
     path: technologyPath(item.slug),
     Component: TaxonomyDetail,
     contentPath: `taxonomy/technologies/${item.slug}`,
     meta: {
       title: item.name,
       description: `${item.name} development from DevSaheb.`,
+      ...(draft ? { noindex: true } : {}),
     },
-  }));
+  });
 
-  return [...services, ...technologies];
+  return [
+    ...PUBLISHED_SERVICES.map((i) => service(i, false)),
+    ...PUBLISHED_TECHNOLOGIES.map((i) => technology(i, false)),
+    ...DRAFT_SERVICES.map((i) => service(i, true)),
+    ...DRAFT_TECHNOLOGIES.map((i) => technology(i, true)),
+  ];
 }
 
 routes.push(...taxonomyRoutes());
