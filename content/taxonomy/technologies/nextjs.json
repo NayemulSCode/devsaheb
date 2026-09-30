@@ -48,7 +48,17 @@
     "body": "If the product lives behind a login and has no SEO surface, server rendering buys you very little and costs you a server to run — a single-page React application on a CDN is simpler and cheaper. At the other end, if the site is essentially content, Astro or a static generator will ship less JavaScript than Next.js will on its best day. Next.js is the right answer in the middle: public pages that must rank, plus application behaviour, in one codebase."
   },
   "related": {
-    "services": ["web-development", "ecommerce", "saas", "cloud-application"],
-    "technologies": ["reactjs", "typescript", "nodejs", "aws"]
+    "services": [
+      "web-development",
+      "ecommerce",
+      "saas",
+      "cloud-application"
+    ],
+    "technologies": [
+      "reactjs",
+      "typescript",
+      "nodejs",
+      "aws"
+    ]
   }
 }

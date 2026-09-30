@@ -16,12 +16,15 @@ type DocumentRef = {
   route: string;
   title: string;
   kind: DocKind;
+  /** Not linked from the nav or listed in the sitemap. Saving does not change it. */
+  draft: boolean;
 };
 
 type Loaded = {
   contentPath: string;
   route: string;
   kind: DocKind;
+  draft: boolean;
   data: unknown;
   versions: string[];
 };
@@ -80,7 +83,7 @@ export default function AdminApp({ onSignOut }: { onSignOut: () => void }) {
       });
       const json = await res.json();
       if (!res.ok || !json.ok) throw new Error(json.error ?? 'Save failed.');
-      setStatus(`Published — ${json.saved}. ${current.route} regenerated.`);
+      setStatus(`Saved — ${json.saved}. ${current.route} regenerated.`);
     } catch (e) {
       setStatus(null);
       setError(e instanceof Error ? e.message : 'Save failed.');
@@ -131,6 +134,18 @@ export default function AdminApp({ onSignOut }: { onSignOut: () => void }) {
           </a>
         ) : null}
 
+        {/* Saving regenerates the page; it does not put it in the navigation.
+            Those are separate on purpose - one is content, the other is the
+            substance bar - and without saying so, Publish reads as both. */}
+        {current?.draft ? (
+          <span
+            title="Set published: true for this slug in src/content/taxonomy.ts to link it from the menus and add it to the sitemap."
+            className="border border-amber-500/40 bg-amber-50 px-2 py-1 font-mono text-[10px] uppercase tracking-[0.1em] text-amber-800"
+          >
+            Draft — not in the nav or sitemap
+          </span>
+        ) : null}
+
         <button
           type="button"
           onClick={signOut}
@@ -159,6 +174,13 @@ export default function AdminApp({ onSignOut }: { onSignOut: () => void }) {
                   <span className="text-[14px] font-semibold">{d.title}</span>
                   <span className="ml-auto font-mono text-[10px] uppercase tracking-[0.1em] text-black/40">
                     {d.kind}
+                  </span>
+                  <span
+                    className={`font-mono text-[10px] uppercase tracking-[0.1em] ${
+                      d.draft ? 'text-amber-700' : 'text-green-700'
+                    }`}
+                  >
+                    {d.draft ? 'draft' : 'live'}
                   </span>
                 </button>
               </li>
@@ -212,7 +234,7 @@ export default function AdminApp({ onSignOut }: { onSignOut: () => void }) {
             disabled={saving}
             className="border border-black bg-black px-6 py-2.5 font-mono text-[11px] uppercase tracking-[0.12em] text-white disabled:opacity-50"
           >
-            {saving ? 'Publishing…' : 'Publish'}
+            {saving ? 'Saving…' : 'Save & regenerate'}
           </button>
 
           <button

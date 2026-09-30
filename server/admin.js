@@ -117,6 +117,11 @@ export function createAdminRouter({ auth, getBundle, regenerate }) {
           route: r.path,
           title: r.meta.title,
           kind: kindOf(r.contentPath),
+          // Whether the page is linked from the navigation and listed in the
+          // sitemap. Saving here never changes it - that is `published` in
+          // src/content/taxonomy.ts, which is code rather than content - so
+          // the admin has to show the state rather than let Publish imply it.
+          draft: Boolean(r.meta.noindex),
         }));
       res.json({ ok: true, documents });
     } catch (err) {
