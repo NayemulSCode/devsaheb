@@ -1,0 +1,54 @@
+{
+  "slug": "dotnet",
+  "primaryQuery": ".net development company",
+  "title": ".NET Development Company — Modern .NET on Linux",
+  "description": ".NET applications built on the current runtime: service lifetimes that do not trap each other, EF Core queries that do not multiply, and containers that start fast.",
+  "h1": ".NET services where the framework's defaults are understood",
+  "intro": ".NET is fast, cross-platform and comfortable in a Linux container — a long way from the Windows-only framework its reputation was built on. Two of its conveniences cause most of the trouble we are asked to fix: a dependency injection container that will happily let a singleton capture a scoped service, and an ORM that makes it effortless to issue a hundred queries where one would do. Neither shows up until traffic does. The language itself is on our C# page.",
+  "sections": [
+    {
+      "heading": "Service lifetimes, and the captive dependency",
+      "body": "The container offers singleton, scoped and transient, and it will not stop you injecting a scoped service into a singleton. The singleton is created once and holds the first scope's instance forever — so a database context intended to live for one request lives for the lifetime of the application.\n\nThe symptoms are strange: stale data, tracked entities accumulating, occasional threading errors from a class never designed for concurrent use. The cause is a line that looks entirely ordinary.\n\n.NET has a validation switch for exactly this, and it is off outside development by default. We turn it on so that an invalid graph fails at startup — loudly, in CI — rather than behaving oddly under load six weeks later."
+    },
+    {
+      "heading": "EF Core is convenient in the expensive direction",
+      "body": "The N+1 query is as easy to write in EF Core as in any ORM: a loop over orders touching `order.Customer`, one query per iteration, no indication in the code.\n\n`Include` fixes it, and then introduces its own problem — several collection includes in one query produce a cartesian product, returning far more rows than anyone intended. `AsSplitQuery` is usually what was meant.\n\nThe other default worth knowing is change tracking. Every entity returned by a query is tracked so it can be saved later, which costs memory and time. For anything read-only — which is most reads — `AsNoTracking` is materially faster and is not the default."
+    },
+    {
+      "heading": "Configuration, hosting and cold start",
+      "body": "Configuration layers by convention: appsettings, then environment-specific files, then environment variables, then user secrets in development. That layering is genuinely good and the useful discipline is binding it to typed options objects validated at startup, so a missing or malformed value stops the process with a message naming it rather than surfacing as a null somewhere unrelated.\n\nFor hosting, minimal APIs suit small services and controllers still suit larger ones — the choice is about how much structure the team wants, not about capability.\n\nCold start matters in containers that scale from zero. ReadyToRun compilation and trimming cut startup meaningfully, and Native AOT cuts it further at the cost of losing runtime reflection, which some libraries depend on. That constraint is worth checking before committing to it."
+    }
+  ],
+  "codeExample": {
+    "language": "C#",
+    "filename": "src/Program.cs",
+    "caption": "Two defaults corrected at startup. `ValidateScopes` and `ValidateOnBuild` turn the captive-dependency bug — a singleton holding a scoped DbContext forever — into a failure at boot rather than stale data and intermittent threading errors weeks later; both are off outside development unless you ask. The options object is validated at startup too, so a missing connection string stops the process with a message naming it instead of surfacing as a null in the first request.",
+    "code": "var builder = WebApplication.CreateBuilder(args);\n\n// Off by default outside Development. With it on, injecting a scoped\n// DbContext into a singleton fails at startup instead of quietly living\n// for the lifetime of the process.\nbuilder.Host.UseDefaultServiceProvider((context, options) =>\n{\n    options.ValidateScopes = true;\n    options.ValidateOnBuild = true;\n});\n\n// Bound and validated at startup. A missing connection string should stop\n// the process here, not appear as a null in the first request.\nbuilder.Services\n    .AddOptions<BillingOptions>()\n    .Bind(builder.Configuration.GetSection(\"Billing\"))\n    .ValidateDataAnnotations()\n    .ValidateOnStart();\n\nbuilder.Services.AddDbContext<AppDbContext>(options =>\n    options.UseNpgsql(builder.Configuration.GetConnectionString(\"Primary\")));\n\nvar app = builder.Build();\n\napp.MapGet(\"/orders\", async (AppDbContext db, CancellationToken ct) =>\n    await db.Orders\n        // Not tracked: this is read-only, and tracking every entity costs\n        // memory and time for a change that will never be saved.\n        .AsNoTracking()\n        .Include(o => o.Customer)\n        .Include(o => o.Lines)\n        // Two collection Includes in one query produce a cartesian product.\n        // Split sends one query per collection instead.\n        .AsSplitQuery()\n        .OrderByDescending(o => o.CreatedAt)\n        .Take(50)\n        .ToListAsync(ct));\n\napp.Run();"
+  },
+  "faq": [
+    {
+      "q": "We are on .NET Framework. What does migrating involve?",
+      "a": "It is a port rather than an upgrade — .NET Framework and modern .NET are different runtimes. The .NET Upgrade Assistant handles a good share of the mechanical work, and the real obstacles are Windows-specific dependencies, WCF and anything touching the old configuration system. It is worth doing: .NET Framework gets security fixes only, and everything since is faster and cross-platform."
+    },
+    {
+      "q": "Minimal APIs or controllers?",
+      "a": "Minimal APIs for small services and straightforward endpoints; controllers when you want filters, model binding conventions and a structure several developers will follow consistently. They can coexist in one application, so it is not a decision that has to be made once for everything."
+    },
+    {
+      "q": "Does .NET run well in containers?",
+      "a": "Yes. The runtime is container-aware, the images are reasonable, and Linux is the normal target. Where cold start matters, ReadyToRun and trimming help and Native AOT helps more — with the caveat that AOT removes runtime reflection, which some libraries need, so it is worth verifying against your dependencies first."
+    },
+    {
+      "q": "Blazor or a JavaScript front end?",
+      "a": "Blazor Server suits internal applications where latency to the server is low and a persistent connection is acceptable. Blazor WebAssembly has a substantial initial download. For a public-facing product, a normal JavaScript front end is still the safer choice — the ecosystem and the performance characteristics are better understood."
+    }
+  ],
+  "notFor": {
+    "heading": "When .NET is not the natural choice",
+    "body": "If your team writes TypeScript across the stack, adding .NET means a second toolchain and a second hiring pool. For data and machine learning, Python has the libraries. And .NET Framework specifically — as opposed to modern .NET — is a legacy runtime, so new work should not start there regardless of what the rest of the estate runs. .NET is the right answer for substantial business systems, particularly where Azure and Microsoft infrastructure are already in use."
+  },
+  "related": {
+    "services": ["back-end", "custom-software", "cloud-application", "erp"],
+    "technologies": ["csharp", "azure", "docker", "typescript"]
+  }
+}

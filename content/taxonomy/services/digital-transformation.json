@@ -1,0 +1,62 @@
+{
+  "slug": "digital-transformation",
+  "primaryQuery": "digital transformation consulting",
+  "title": "Digital Transformation Consulting — Measured, Not Announced",
+  "description": "Transformation delivered as a sequence of changes that each pay for themselves, with a number attached, rather than a programme that reports progress for a year.",
+  "h1": "Transformation as a sequence of changes that each pay for themselves",
+  "intro": "Digital transformation has a poor reputation because of how it is usually run: a large programme, a long planning phase, a platform decision made before anyone has measured anything, and value promised at the end. We do not work that way. The unit of work is a single process that costs you time or money now, changed so that the difference is measurable within weeks. If a change cannot be described in terms of a number that will move, it is not ready to start.",
+  "sections": [
+    {
+      "heading": "Start where the cost actually is",
+      "body": "The process that most needs attention is rarely the one that gets nominated. It is usually something unglamorous that several people spend part of every day on — rekeying data between two systems, chasing approvals by email, producing a report by hand each Monday.\n\nSo we start by measuring rather than workshopping: how long a process takes end to end, where it waits, how often it is reworked. Waiting is almost always the largest component and almost never what people name when asked.\n\nThat measurement is also the baseline. Without one, a change is judged on how it felt, and everybody involved is motivated to feel positive about work they just did."
+    },
+    {
+      "heading": "Integrate before you replace",
+      "body": "The instinct in a transformation programme is to consolidate onto one system. It is the most expensive available option and it puts the payoff at the end.\n\nUsually the faster win is to connect what exists. Two systems that each work, with data rekeyed between them, do not need replacing — they need an integration with clear ownership of each field, idempotent handling and a reconciliation job that proves they still agree. That is weeks of work rather than quarters, and it removes the daily cost immediately.\n\nReplacement becomes the right call when a system is genuinely blocking something, not because having fewer systems is tidier. Consolidation for its own sake is how a programme spends a year delivering an equivalent of what it started with."
+    },
+    {
+      "heading": "Adoption is the part that fails",
+      "body": "Most of these projects do not fail technically. They fail because the new process is slower for the person doing it, so they keep the spreadsheet, and within a month the system holds a version of the truth that nobody uses.\n\nSo the people doing the work are involved before anything is built, and the first version is judged on whether it is faster for them, not on whether it captures more data for management. A form with fourteen fields because reporting wants them is a form that gets filled in with nonsense.\n\nWe also plan the retirement of what it replaces. A new system running alongside the old process is not a transformation; it is two processes, and the old one usually wins."
+    }
+  ],
+  "codeExample": {
+    "language": "TypeScript",
+    "filename": "src/integration/reconcile.ts",
+    "caption": "The unglamorous job that decides whether an integration is trusted a year from now. Two systems connected by events drift — a webhook missed, a manual edit on one side, a failed retry — and without reconciliation the drift is discovered by a customer. This runs on a schedule, compares only the fields each system actually owns, repairs what it safely can and escalates what it cannot, so disagreement is visible rather than silent.",
+    "code": "/**\n * Ownership is per field, not per system: the ERP owns price and stock,\n * the storefront owns description and images. Comparing everything produces\n * noise; comparing what each side owns produces signal.\n */\nconst OWNED_BY_ERP = ['priceMinor', 'stockOnHand', 'taxClass'] as const;\n\nexport async function reconcileProducts(): Promise<ReconcileReport> {\n  const report: ReconcileReport = { checked: 0, repaired: [], escalated: [] };\n\n  for await (const batch of erp.streamProducts({ pageSize: 500 })) {\n    const storefront = await store.getProducts(batch.map((p) => p.sku));\n\n    for (const product of batch) {\n      report.checked++;\n      const mirror = storefront.get(product.sku);\n\n      if (!mirror) {\n        report.escalated.push({ sku: product.sku, reason: 'missing_in_store' });\n        continue;\n      }\n\n      const drifted = OWNED_BY_ERP.filter((f) => product[f] !== mirror[f]);\n      if (drifted.length === 0) continue;\n\n      // Safe to repair: the ERP owns these fields, so it wins by definition.\n      await store.updateProduct(product.sku, pick(product, drifted));\n      report.repaired.push({ sku: product.sku, fields: drifted });\n    }\n  }\n\n  // A silent reconciliation job is one nobody notices has stopped running.\n  await metrics.gauge('reconcile.drift', report.repaired.length);\n  return report;\n}"
+  },
+  "deliverables": [
+    "Baseline measurement of the processes in scope, before any change",
+    "A sequence of changes each with a number it is expected to move",
+    "Integration between existing systems with per-field ownership",
+    "Reconciliation proving connected systems still agree",
+    "The people doing the work involved before build, not at training",
+    "A plan to retire what each change replaces"
+  ],
+  "faq": [
+    {
+      "q": "Where should we start?",
+      "a": "With whichever process costs the most time now and can be changed without a dependency on three other decisions. Early wins matter disproportionately, not for morale but because they generate the evidence that makes the next decision better than a guess."
+    },
+    {
+      "q": "Do we need to replace our existing systems?",
+      "a": "Usually not, or not yet. Connecting systems that work is faster and cheaper than consolidating them, and it removes the daily cost immediately. Replacement is justified when a system blocks something specific — not because fewer systems would be neater."
+    },
+    {
+      "q": "How do you measure whether it worked?",
+      "a": "Against the baseline taken before we started: time through the process, rework rate, how long work sits waiting. We agree which number should move before building, because a metric chosen afterwards is chosen to flatter."
+    },
+    {
+      "q": "What if our staff resist the change?",
+      "a": "Usually it is not resistance, it is that the new way is slower for them. If the people doing the work were involved early and the first version is genuinely faster for them, adoption mostly takes care of itself. If it is slower and only better for reporting, no amount of training will fix that."
+    }
+  ],
+  "notFor": {
+    "heading": "When not to hire anyone for this",
+    "body": "If you already know which process is broken and roughly what to do about it, you do not need consulting — you need the thing built, and one of our other services is a cheaper route to it. Consulting earns its cost when the problem is genuinely unclear, when several systems and teams are involved, or when previous attempts have stalled. Be wary of anyone, including us, proposing a discovery phase for a problem you can already state in one sentence."
+  },
+  "related": {
+    "services": ["legacy-application-modernization", "custom-software", "crm", "erp"],
+    "technologies": ["typescript", "nodejs", "aws", "docker"]
+  }
+}

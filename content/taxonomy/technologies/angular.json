@@ -1,0 +1,54 @@
+{
+  "slug": "angular",
+  "primaryQuery": "angular development company",
+  "title": "Angular Development Company — Modern Angular, Not AngularJS",
+  "description": "Angular applications on standalone components and signals, with change detection that does not run constantly and subscriptions that actually get cleaned up.",
+  "h1": "Angular built the way the framework works now",
+  "intro": "Angular has changed more in the last three years than in the previous six, and most advice online predates it. Standalone components removed the module ceremony, signals replaced the need for Zone.js to guess when to re-render, and the control flow syntax removed the structural directives. A codebase written to the old patterns still works, which is why so many teams are running a framework whose current version solves the problems they are still working around.",
+  "sections": [
+    {
+      "heading": "Change detection is the performance story",
+      "body": "Angular's default change detection checks the whole component tree whenever anything might have changed — a click, a timer, an HTTP response. On a small application nobody notices. On a large one with a table of a thousand rows, it is why scrolling stutters.\n\n`OnPush` narrows that to components whose inputs actually changed, and signals narrow it further still: a signal tells the framework precisely what depends on it, so only those views update. For new work we use signals throughout and treat zone-based detection as the thing being replaced.\n\nThe measurable version of this matters more than the theory. Angular DevTools shows which components are being checked and how often, and the answer on an unoptimised application is usually surprising."
+    },
+    {
+      "heading": "Every subscription is a leak until it is not",
+      "body": "RxJS is genuinely powerful and it is where Angular applications leak. A subscription created in a component and never unsubscribed keeps running after the component is destroyed, holding references and firing handlers against a view that no longer exists.\n\nThe `async` pipe handles it automatically and should be the default — it subscribes and unsubscribes with the template. Where a manual subscription is genuinely needed, `takeUntilDestroyed` ties it to the component's lifecycle in one operator rather than a destroy subject and boilerplate in every class.\n\nThe symptom is not usually a crash. It is memory growth and duplicated handlers — navigate between two screens twenty times and the request fires twenty times."
+    },
+    {
+      "heading": "Structure that survives the framework's own churn",
+      "body": "Angular's strength for larger teams is that it is opinionated: dependency injection, typed forms, a router and an HTTP client all arrive together, so there are fewer decisions to make badly.\n\nThe discipline is keeping business logic out of components. Services hold the rules, components render and delegate, and a rule can then be tested without `TestBed` or a rendered view. This is what makes the framework's own upgrades tolerable — when the component API shifts, the logic does not have to move with it.\n\nWe also keep to the standalone, signal-based patterns rather than mixing eras. A codebase that uses modules in half its features and standalone components in the other half has two sets of conventions and twice the onboarding cost."
+    }
+  ],
+  "codeExample": {
+    "language": "TypeScript",
+    "filename": "src/app/orders/order-list.component.ts",
+    "caption": "Modern Angular in the two places it matters most. The component is standalone with `OnPush`, and state is held in signals so only the views that depend on a changed value re-render — rather than the framework checking the whole tree on every click and timer. `takeUntilDestroyed` ties the one manual subscription to the component's lifetime, which is the leak that makes a screen fire its request once more each time you navigate back to it.",
+    "code": "import { Component, ChangeDetectionStrategy, signal, computed, inject } from '@angular/core';\nimport { takeUntilDestroyed } from '@angular/core/rxjs-interop';\n\n@Component({\n  selector: 'app-order-list',\n  standalone: true,\n  // Without OnPush this component is checked on every event anywhere in the\n  // application, which is what makes a long list stutter while scrolling.\n  changeDetection: ChangeDetectionStrategy.OnPush,\n  template: `\n    @if (loading()) {\n      <app-spinner />\n    } @else {\n      <ul>\n        @for (order of visible(); track order.id) {\n          <li>{{ order.reference }} — {{ order.totalMinor / 100 | currency }}</li>\n        } @empty {\n          <li>No orders match this filter.</li>\n        }\n      </ul>\n    }\n  `,\n})\nexport class OrderListComponent {\n  private readonly orders = inject(OrdersService);\n\n  readonly all = signal<Order[]>([]);\n  readonly filter = signal<OrderStatus | 'all'>('all');\n  readonly loading = signal(true);\n\n  // Recomputed only when one of its signals changes - not on every tick.\n  readonly visible = computed(() => {\n    const f = this.filter();\n    return f === 'all' ? this.all() : this.all().filter((o) => o.status === f);\n  });\n\n  constructor() {\n    this.orders.stream()\n      // Unsubscribes when the component is destroyed. Without it, navigating\n      // away and back subscribes again, and the handlers accumulate.\n      .pipe(takeUntilDestroyed())\n      .subscribe((orders) => {\n        this.all.set(orders);\n        this.loading.set(false);\n      });\n  }\n}"
+  },
+  "faq": [
+    {
+      "q": "Is this the same as AngularJS?",
+      "a": "No, and the confusion is worth clearing up. AngularJS is the 1.x line, which reached end of life in January 2022. Angular from version 2 onward is a different framework with a different architecture. If you are running AngularJS, that is a migration project rather than an upgrade — and it is overdue, since it receives no security fixes."
+    },
+    {
+      "q": "Should we migrate to standalone components and signals?",
+      "a": "For new features, write them that way now. For existing code, migrate what you are already touching rather than converting wholesale — the old and new styles interoperate. Angular ships schematics that automate much of the standalone migration, which makes it considerably less painful than it sounds."
+    },
+    {
+      "q": "Angular or React?",
+      "a": "Angular suits larger teams and longer-lived applications: strong conventions, dependency injection and typed forms mean fewer decisions made inconsistently. React gives more freedom and a larger hiring pool. For an enterprise application with several teams, Angular's opinions are an asset; for a small product team they can feel like weight."
+    },
+    {
+      "q": "How hard are Angular's upgrades?",
+      "a": "Much easier than the reputation suggests, provided you do not fall behind. Angular releases twice a year with automated migration schematics, and staying within a version or two is routine maintenance. Catching up from five versions behind is a project, which is the argument for treating upgrades as ongoing work."
+    }
+  ],
+  "notFor": {
+    "heading": "When Angular is more than you need",
+    "body": "For a small application or a marketing site with some interactivity, Angular brings structure you will not use and a bundle you will pay for — Vue, React or a static site with islands will be lighter. It also has a steeper learning curve than the alternatives, so for a team with no Angular experience and no plans to grow into one, the conventions that help large organisations mostly register as friction. Angular earns its place on long-lived applications with several developers, where consistency matters more than flexibility."
+  },
+  "related": {
+    "services": ["front-end", "web-development", "custom-software", "saas"],
+    "technologies": ["typescript", "javascript", "nodejs", "reactjs"]
+  }
+}

@@ -1,0 +1,54 @@
+{
+  "slug": "csharp",
+  "primaryQuery": "c# development company",
+  "title": "C# Development Company — Nullable, Typed, Modern",
+  "description": "C# written with nullable reference types enabled and warnings as errors, records for value types, and async that does not deadlock or swallow failures.",
+  "h1": "C# where the compiler catches the null before your users do",
+  "intro": "C# has quietly become one of the better-designed mainstream languages, and most codebases do not use the parts that matter. Nullable reference types turn the most common runtime exception in the language into a compiler warning — and they are opt-in, so a great deal of C# still runs without them. This page is about the language; the platform, its hosting model and Entity Framework are on our .NET page.",
+  "sections": [
+    {
+      "heading": "Nullable reference types, with warnings as errors",
+      "body": "Enable nullable and the compiler starts telling you where a reference might be null. Leave the warnings as warnings and the list grows until nobody reads it; promote them to errors and the problem gets fixed while it is one file rather than four hundred.\n\nOn an existing codebase that is a project, so it is done per file or per assembly with the rest suppressed, and the suppression list shrinks over time. Each warning resolved is a `NullReferenceException` that will now never happen.\n\nThe operator to watch is the null-forgiving `!`. It tells the compiler to stop worrying and is occasionally correct — usually at a boundary where a framework guarantees something the analysis cannot see. Everywhere else it is a runtime crash written deliberately, and it deserves a comment explaining why it is safe."
+    },
+    {
+      "heading": "Model states, do not flag them",
+      "body": "Records give you immutable value types in one line, with correct equality and a `with` expression for derived copies. That removes the friction that used to push people toward mutable classes with six properties.\n\nThe bigger gain is modelling outcomes as a closed set rather than as a nullable result plus an error string plus a success boolean — three fields whose invalid combinations are all representable. A sealed hierarchy or a result type makes those combinations impossible, and switch expressions with pattern matching then force each case to be handled.\n\nThe practical payoff is the same as in any language with this feature: adding a case produces errors exactly where the code must change, instead of falling through a default branch that renders nothing."
+    },
+    {
+      "heading": "Async that does not deadlock or lose exceptions",
+      "body": "Three async mistakes account for most of the trouble. Calling `.Result` or `.Wait()` on a task blocks the thread and, in any context with a synchronization context, deadlocks — the classic hang with no error at all.\n\n`async void` is the second. It cannot be awaited, so an exception inside it is not caught by the caller; it reaches the top and takes the process down. Event handlers are the one legitimate use, and even they should catch internally.\n\nThe third is forgetting cancellation. A `CancellationToken` threaded through means a cancelled request stops its database query and its outbound calls rather than running on for a result nobody will read. In ASP.NET Core the token arrives on the action for free, and it is dropped more often than it is used."
+    }
+  ],
+  "codeExample": {
+    "language": "C#",
+    "filename": "src/Billing/RefundResult.cs",
+    "caption": "The closed result type replacing a nullable value plus an error string plus a success flag — three fields whose invalid combinations are all representable and one of which will eventually be wrong. The sealed hierarchy makes them unrepresentable, and the switch expression has no default arm, so adding a fourth outcome is a compile error at every call site. The cancellation token is threaded to the HTTP call rather than accepted and ignored, which is the difference between a cancelled request stopping and one that runs on regardless.",
+    "code": "// Nullable enabled, warnings as errors. A string? here is a decision, not\n// an accident, and the compiler enforces every check.\n#nullable enable\n\npublic abstract record RefundResult\n{\n    public sealed record Refunded(string Reference, long AmountMinor) : RefundResult;\n    public sealed record Rejected(string Code, bool Retryable) : RefundResult;\n    public sealed record AlreadyRefunded(string Reference) : RefundResult;\n\n    private RefundResult() { }   // closed: no outside implementations\n}\n\npublic sealed class RefundService(HttpClient http, ILogger<RefundService> log)\n{\n    public async Task<RefundResult> RefundAsync(\n        string paymentId,\n        long amountMinor,\n        CancellationToken ct)      // threaded, not accepted and ignored\n    {\n        using var response = await http.PostAsJsonAsync(\n            $\"payments/{paymentId}/refunds\",\n            new { amountMinor },\n            ct);\n\n        if (response.StatusCode == HttpStatusCode.Conflict)\n        {\n            var existing = await response.Content.ReadFromJsonAsync<ExistingRefund>(ct);\n            // existing may be null; the compiler insists we say what happens.\n            return existing is null\n                ? new RefundResult.Rejected(\"MALFORMED_CONFLICT\", Retryable: false)\n                : new RefundResult.AlreadyRefunded(existing.Reference);\n        }\n\n        var body = await response.Content.ReadFromJsonAsync<RefundBody>(ct)\n            ?? throw new InvalidOperationException(\"Empty refund response\");\n\n        return new RefundResult.Refunded(body.Reference, body.AmountMinor);\n    }\n}\n\n// No default arm. A fourth outcome breaks this build rather than silently\n// falling through to a message nobody wrote.\npublic static string Describe(RefundResult result) => result switch\n{\n    RefundResult.Refunded(var reference, var amount) => $\"Refunded {amount} ({reference})\",\n    RefundResult.Rejected(var code, true)            => $\"Rejected ({code}) - will retry\",\n    RefundResult.Rejected(var code, false)           => $\"Rejected ({code}) - manual review\",\n    RefundResult.AlreadyRefunded(var reference)      => $\"Already refunded ({reference})\",\n};"
+  },
+  "faq": [
+    {
+      "q": "Should we enable nullable reference types on an existing codebase?",
+      "a": "Yes, incrementally. Turn it on per project or per file with the rest suppressed, fix what surfaces, and shrink the suppression list over time. Enabling it everywhere at once produces thousands of warnings and gets switched back off, which is how most attempts end."
+    },
+    {
+      "q": "C# or Java for a new service?",
+      "a": "Both are mature and either is defensible. C# has moved faster on language features — nullable references, records and pattern matching arrived earlier and are more thoroughly integrated. Java has a deeper hiring pool in most markets. If your organisation already runs one, that is usually the stronger argument."
+    },
+    {
+      "q": "Is C# only for Windows?",
+      "a": "No, and it has not been for years. Modern .NET runs on Linux and macOS, and Linux containers are the normal deployment target. The Windows association is a leftover from .NET Framework, which is a different and now legacy runtime."
+    },
+    {
+      "q": "What about F#?",
+      "a": "It is an excellent language and the hiring pool is very small. Where a functional approach fits the domain — pricing, rules engines, anything with complex state transitions — F# can be worth it for a team that wants it. For most teams, modern C# gets much of the benefit with no hiring problem."
+    }
+  ],
+  "notFor": {
+    "heading": "When another language fits better",
+    "body": "If your team writes TypeScript across the stack, adding C# means a second toolchain and a second hiring pool for benefits that may not show at your scale. For data and machine learning, Python has the libraries. And if you are on .NET Framework rather than modern .NET, the first conversation is about that migration rather than about language features you cannot yet use. C# is the right answer for substantial business systems, particularly in organisations already running Microsoft infrastructure."
+  },
+  "related": {
+    "services": ["back-end", "custom-software", "cloud-application", "erp"],
+    "technologies": ["dotnet", "azure", "docker", "typescript"]
+  }
+}

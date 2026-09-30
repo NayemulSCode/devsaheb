@@ -1,0 +1,54 @@
+{
+  "slug": "spring-boot",
+  "primaryQuery": "spring boot development services",
+  "title": "Spring Boot Development Services — Configured Deliberately",
+  "description": "Spring Boot services where the auto-configuration is understood, transactions are actually applied, and the container does not hide what the application is doing.",
+  "h1": "Spring Boot with the magic accounted for",
+  "intro": "Spring Boot's auto-configuration is why a service can be running in ten minutes, and why a subtle problem can take a week. The framework makes reasonable decisions on your behalf, and when one of them is wrong for your case, the symptom appears a long way from the cause. Our approach is to use the conventions and know what they chose — which turns the framework from something that occasionally surprises you into something that reliably saves time.",
+  "sections": [
+    {
+      "heading": "The transaction that silently does not apply",
+      "body": "`@Transactional` works through a proxy. The container wraps your bean, and the annotation takes effect when a call arrives from outside. A method calling another method on the same class bypasses the proxy entirely — so the annotation is there, the code reads correctly, and there is no transaction at all.\n\nIt is the single most common Spring defect we find, and it is invisible until something needs to roll back and does not. The fix is to move the transactional method to a different bean, or to make the boundary explicit with a `TransactionTemplate`.\n\nThe related one is rollback behaviour. By default Spring rolls back on unchecked exceptions and commits on checked ones, which surprises nearly everyone who has not read that line. If your code throws a checked exception to signal failure, the transaction commits unless you say otherwise."
+    },
+    {
+      "heading": "Constructor injection, and why field injection hides problems",
+      "body": "Field injection with `@Autowired` is shorter and it conceals how many dependencies a class has. A constructor with nine parameters is uncomfortable to look at, which is useful information — the class is doing too much.\n\nConstructor injection also makes the object valid once constructed, allows fields to be final, and lets a test build the class without starting a Spring context. That last point matters more than it sounds: a test suite that boots the container for every unit test is a test suite that takes fifteen minutes and gets skipped.\n\nWe keep `@SpringBootTest` for the handful of tests that genuinely need the whole context, and use slice annotations or plain constructors for the rest."
+    },
+    {
+      "heading": "Knowing what auto-configuration decided",
+      "body": "Spring Boot chooses a connection pool size, a Jackson configuration, a transaction manager and a great deal else. Each default is reasonable and some will be wrong for you — the default pool size in particular is frequently larger than the database can usefully serve, which moves the queue somewhere with no visibility.\n\nSo we run with the conditions report available and read it, especially when adding a starter. A dependency added for one feature can bring an auto-configuration that changes behaviour elsewhere.\n\nActuator earns its place here: health checks that distinguish liveness from readiness, metrics exported to something that alerts, and the ability to see the resolved configuration in a running service rather than inferring it from the files."
+    }
+  ],
+  "codeExample": {
+    "language": "Java",
+    "filename": "src/main/java/.../OrderService.java",
+    "caption": "The self-invocation trap, and the fix. The commented-out version reads as if `placeOrder` runs in a transaction — the annotation is right there — but the internal call goes straight to the method and bypasses the proxy, so nothing rolls back when the charge fails. Moving the transactional work to a separate bean restores the boundary. The `afterCommit` listener is the second half: the confirmation email must not be sent for a transaction that ended up rolling back.",
+    "code": "@Service\npublic class OrderService {\n\n    private final OrderTransactions transactions; // a different bean, on purpose\n\n    // Constructor injection: final fields, no container needed to build this\n    // in a test, and nine parameters would look as wrong as they are.\n    public OrderService(OrderTransactions transactions) {\n        this.transactions = transactions;\n    }\n\n    public Order placeOrder(NewOrder request) {\n        validate(request);\n        // Through the proxy, so @Transactional actually applies.\n        return transactions.persistAndCharge(request);\n    }\n\n    // WRONG - this is the bug we find most often:\n    //\n    //   public Order placeOrder(NewOrder r) { return this.persistAndCharge(r); }\n    //\n    //   @Transactional\n    //   public Order persistAndCharge(NewOrder r) { ... }\n    //\n    // The internal call never leaves the object, so the proxy is bypassed and\n    // there is no transaction. Nothing warns you; it just does not roll back.\n}\n\n@Component\nclass OrderTransactions {\n\n    // rollbackFor because Spring commits on checked exceptions by default,\n    // which surprises almost everyone who has not read that line.\n    @Transactional(rollbackFor = Exception.class)\n    public Order persistAndCharge(NewOrder request) throws PaymentException {\n        Order order = repository.save(Order.from(request));\n        gateway.charge(order.id(), order.amountMinor());\n        return order;\n    }\n}\n\n@Component\nclass OrderNotifications {\n    // Not inside the transaction: an email sent for a rolled-back order\n    // cannot be unsent.\n    @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)\n    public void onPlaced(OrderPlaced event) {\n        mailer.sendConfirmation(event.orderId());\n    }\n}"
+  },
+  "faq": [
+    {
+      "q": "Why is our Spring Boot service slow to start?",
+      "a": "Usually component scanning over a broad package, plus every auto-configuration a starter brought with it. Narrowing the scan and removing starters you are not using helps immediately. Where cold start genuinely matters, GraalVM native images cut it to milliseconds at the cost of a more restrictive build."
+    },
+    {
+      "q": "Do we need Spring Cloud?",
+      "a": "Only with several services that genuinely need service discovery, distributed configuration and circuit breaking. For a single service it is weight without benefit. Adopting it early, in anticipation of a microservice architecture you have not built, is a common and expensive mistake."
+    },
+    {
+      "q": "JPA or plain SQL?",
+      "a": "JPA for straightforward entity persistence, plain SQL or jOOQ for reporting and anything with a complex query. Fighting the ORM to express a query you could write directly is time spent producing something harder to read. Mixing the two deliberately is healthier than committing to either everywhere."
+    },
+    {
+      "q": "How do we keep tests fast?",
+      "a": "By not booting the context for most of them. Constructor injection means a unit test is a plain object graph; slice annotations cover the layer being tested; full `@SpringBootTest` is reserved for the few that need everything. Testcontainers gives a real database for the integration layer without a shared environment that tests fight over."
+    }
+  ],
+  "notFor": {
+    "heading": "When Spring Boot is more than the job needs",
+    "body": "For a small internal API or a scheduled job, Spring brings a container, a startup cost and a set of conventions that a plain JVM application or a lighter framework would avoid. If cold start and memory dominate — serverless, or scaling from zero — Quarkus and Micronaut are built for that and Spring is fighting its own history. Spring Boot is the right default for substantial services on the JVM in an organisation that already runs them, where the ecosystem and the familiarity are worth more than the overhead."
+  },
+  "related": {
+    "services": ["back-end", "cloud-application", "custom-software", "database"],
+    "technologies": ["java", "kotlin", "docker", "aws"]
+  }
+}

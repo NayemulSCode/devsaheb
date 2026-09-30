@@ -19,6 +19,12 @@
       "body": "We do not ship a deployment pipeline until the rollback path has been tested under load. The question is never whether a bad release will reach production; it is how long it stays there.\n\nThat usually means versioned, reversible database migrations and a deployment strategy where the previous version is still running when the new one starts taking traffic. It costs a little more to build and it is the difference between a four-minute incident and a four-hour one."
     }
   ],
+  "codeExample": {
+    "language": "YAML",
+    "filename": ".github/workflows/deploy.yml",
+    "caption": "A gate that cannot be skipped under pressure. Each check runs unconditionally — no continue-on-error, no manual override — and deploy depends on all of them, so a red build cannot reach production by someone approving past it. The rollback is verified as part of the pipeline rather than assumed: the previous revision is deployed to a canary and health-checked before traffic moves, because the question is never whether a bad release will ship, only how long it stays.",
+    "code": "name: deploy\non:\n  push:\n    branches: [main]\n\njobs:\n  gates:\n    runs-on: ubuntu-latest\n    strategy:\n      fail-fast: false        # report every failing gate, not just the first\n      matrix:\n        check: [typecheck, test, audit, budget, a11y]\n    steps:\n      - uses: actions/checkout@v4\n      - uses: actions/setup-node@v4\n        with: { node-version: 22, cache: npm }\n      - run: npm ci\n      # No continue-on-error anywhere. A gate with an override is a\n      # suggestion, and it gets overridden on exactly the day it mattered.\n      - run: npm run ${{ matrix.check }}\n\n  deploy:\n    needs: gates             # every gate, not a subset\n    runs-on: ubuntu-latest\n    concurrency:\n      group: production      # two deploys must not interleave\n      cancel-in-progress: false\n    steps:\n      - uses: actions/checkout@v4\n\n      # The rollback path is exercised here, not discovered during an\n      # incident: the previous revision is brought up and health-checked\n      # before any traffic is shifted to the new one.\n      - name: Verify rollback target\n        run: ./scripts/verify-previous-revision.sh\n\n      - name: Deploy\n        run: ./scripts/deploy.sh\n\n      - name: Smoke test\n        run: ./scripts/smoke.sh || ./scripts/rollback.sh"
+  },
   "deliverables": [
     "Infrastructure as code, environments reproducible from scratch",
     "CI/CD pipeline with enforced quality gates",

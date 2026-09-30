@@ -1,0 +1,62 @@
+{
+  "slug": "erp",
+  "primaryQuery": "custom erp development",
+  "title": "Custom ERP Development — Records You Can Audit",
+  "description": "Custom ERP for businesses whose operations do not fit the products. Immutable ledgers, stock that reconciles, and an audit trail that survives a dispute.",
+  "h1": "ERP where every number can be traced back to what caused it",
+  "intro": "Most companies should configure an ERP rather than build one. The products encode decades of accounting and inventory practice, and reproducing that is a larger job than it looks. Custom work earns its cost in a narrow case: when your operation genuinely does not fit — unusual units, multi-party fulfilment, a regulated process no product models — or when the licence and customisation cost of bending a product has overtaken building the part you actually need. We will tell you which case you are in before quoting.",
+  "sections": [
+    {
+      "heading": "Posted records are never edited",
+      "body": "The single most important rule in a system that carries money or stock is that a posted transaction is immutable. If a journal line or a stock movement can be updated in place, then last month's figures can change silently, and no report is reproducible.\n\nSo corrections are reversals: a new entry that cancels the original, with a reason and an author, and then the corrected entry. Balances are derived from the movements rather than stored and adjusted, or kept as a running total that is verified against the movements on a schedule.\n\nThis costs a little more to build and is the difference between an audit you can answer and one you cannot. It is also what makes a dispute solvable — someone can see exactly what happened and when, rather than what the record currently says."
+    },
+    {
+      "heading": "Stock is where the reconciliation happens",
+      "body": "Inventory goes wrong in predictable places: goods received but not invoiced, stock reserved for an order that was never cancelled, a transfer between locations counted twice, a return that never made it back into available quantity.\n\nThe fix is to model the movements rather than the totals. Every change in quantity is an event with a type, a source document and a timestamp, and the quantity on hand is the sum of those events. A discrepancy then has a trail to walk rather than a number to argue about.\n\nPhysical counts get the same treatment. A stocktake produces adjustment movements with a reason, so the gap between system and shelf is visible and attributable rather than quietly overwritten."
+    },
+    {
+      "heading": "The integrations and the permissions are the project",
+      "body": "An ERP sits between systems that already exist: accounting, a store, a payment provider, a courier, sometimes a supplier's own system. Each connection is a permanent relationship with an API you do not control, and each needs idempotent handling, a visible failure queue and a way to detect drift.\n\nPermissions are the other half. ERP data is genuinely sensitive — costs, margins, payroll-adjacent figures — and access is rarely shaped like the org chart. A warehouse supervisor needs stock and not margin; a salesperson needs their own accounts and not everyone's. Those rules belong in the query layer, not in the interface, so a report or an export cannot quietly bypass them."
+    }
+  ],
+  "codeExample": {
+    "language": "SQL",
+    "filename": "migrations/0007_stock_movements.sql",
+    "caption": "Immutability enforced by the database rather than promised by the application. The trigger refuses any update or delete on a posted movement, so a correction has to be a reversing entry with an author and a reason — which means last month's numbers cannot change after the fact. Quantity on hand is derived from the movements, so a discrepancy has a trail to walk instead of a total to argue about.",
+    "code": "CREATE TABLE stock_movements (\n  id            bigserial PRIMARY KEY,\n  sku           text        NOT NULL REFERENCES products (sku),\n  location_id   bigint      NOT NULL REFERENCES locations (id),\n  -- Signed: receipts positive, issues negative. No separate in/out columns\n  -- that can disagree about direction.\n  quantity      integer     NOT NULL CHECK (quantity <> 0),\n  reason        text        NOT NULL,\n  source_doc    text        NOT NULL,        -- the order, transfer or count\n  reverses_id   bigint      REFERENCES stock_movements (id),\n  created_by    bigint      NOT NULL REFERENCES users (id),\n  created_at    timestamptz NOT NULL DEFAULT now()\n);\n\n-- Append-only. Enforced here because the application is not the only writer:\n-- a migration, an admin console or a support engineer all bypass it.\nCREATE FUNCTION stock_movements_immutable() RETURNS trigger AS $$\nBEGIN\n  RAISE EXCEPTION\n    'stock_movements is append-only; post a reversal referencing id %',\n    OLD.id;\nEND;\n$$ LANGUAGE plpgsql;\n\nCREATE TRIGGER stock_movements_no_update\n  BEFORE UPDATE OR DELETE ON stock_movements\n  FOR EACH ROW EXECUTE FUNCTION stock_movements_immutable();\n\n-- On hand is derived, never stored and adjusted.\nCREATE VIEW stock_on_hand AS\nSELECT sku, location_id, sum(quantity) AS quantity\nFROM stock_movements\nGROUP BY sku, location_id;"
+  },
+  "deliverables": [
+    "Append-only ledgers and stock movements, enforced in the database",
+    "Corrections as reversals, with author and reason",
+    "Balances derived from movements, reconciled on a schedule",
+    "Stocktake adjustments that are visible and attributable",
+    "Idempotent integrations with a visible failure queue",
+    "Record-level permissions enforced in the query layer"
+  ],
+  "faq": [
+    {
+      "q": "Should we build or configure an existing ERP?",
+      "a": "Configure, in most cases. Odoo, ERPNext and the larger products encode a great deal of accounting and inventory practice you would otherwise rebuild. Building makes sense when your operation genuinely does not fit, or when the cost of customising a product has overtaken the cost of building the specific part you need and integrating it."
+    },
+    {
+      "q": "Can you build only the part we are missing?",
+      "a": "Often that is the best answer. Keep the product for accounting and general ledger, build the module that does not fit, and integrate them properly with clear ownership per field. It is a smaller project with a smaller risk, and it leaves you able to replace either side later."
+    },
+    {
+      "q": "How do you handle multi-currency?",
+      "a": "Store amounts in minor units as integers, never floating point, alongside the currency and the rate used at the time of the transaction. Reporting currency is converted at a stated rate rather than recalculated at today's rate, so a historical report does not change value between two viewings."
+    },
+    {
+      "q": "What about migrating our existing data?",
+      "a": "Opening balances rather than full history, usually. Importing years of transactions from a system with different rules produces a ledger that does not reconcile and nobody trusts. We bring balances forward as dated opening entries and keep the old system readable for the period it covered."
+    }
+  ],
+  "notFor": {
+    "heading": "When buying is clearly right",
+    "body": "If your operation is ordinary — purchase, stock, sell, invoice — an established ERP will do it better on day one than a custom build will in a year, and it will keep pace with tax and reporting changes without you funding that work. The honest signal for custom is when you can name specific things about how you operate that no product supports and that you are unwilling to change. Short of that, we would rather help you configure and integrate what you buy."
+  },
+  "related": {
+    "services": ["custom-software", "crm", "database", "back-end"],
+    "technologies": ["typescript", "nodejs", "python", "aws"]
+  }
+}

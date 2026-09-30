@@ -1,0 +1,54 @@
+{
+  "slug": "google-cloud",
+  "primaryQuery": "google cloud development services",
+  "title": "Google Cloud Development Services — Cloud Run First",
+  "description": "Google Cloud applications on Cloud Run: containers that scale to zero, workload identity instead of service account keys, and costs that follow real traffic.",
+  "h1": "Google Cloud where a container is the whole deployment unit",
+  "intro": "Google Cloud's most useful property for smaller teams is Cloud Run: a container, a request, and billing that stops when traffic does. No cluster to run, no instance sizing to argue about, and a service that costs nothing overnight. That fits a large share of what agencies and product teams actually deploy. Vendor-neutral cloud architecture is our cloud application service; this page is about Google Cloud specifically.",
+  "sections": [
+    {
+      "heading": "Cloud Run removes most of the operational surface",
+      "body": "Give Cloud Run a container that listens on a port and it handles TLS, scaling, revisions and traffic splitting. Scaling to zero means an internal tool or a low-traffic service costs almost nothing between uses.\n\nThe details that decide whether it works well are concurrency and cold start. Cloud Run sends multiple concurrent requests to one instance by default, which is efficient and assumes your application is genuinely concurrent — a service with a global mutable cache will behave oddly. Setting concurrency deliberately, against what the application can actually handle, is one of the more consequential settings and one of the least considered.\n\nCold start is the trade for scaling to zero. Minimum instances remove it at a cost, and the honest answer is usually to accept it for internal tools and pay for a warm instance on anything customer-facing."
+    },
+    {
+      "heading": "Service account keys are the thing to eliminate",
+      "body": "A downloaded service account key is a long-lived credential in a JSON file. It ends up in a repository, a CI variable or a developer's laptop, and it does not expire. It is the most common serious finding in Google Cloud projects we review.\n\nInside Google Cloud there is no need for one: a service runs as a service account and receives tokens automatically. From outside — GitHub Actions, most commonly — Workload Identity Federation lets the pipeline exchange its own OIDC token for short-lived Google credentials, so the deploy authenticates with no stored key at all.\n\nWe set that up at the start, because migrating away from keys later means finding every place one was copied to, and the honest answer to that question is usually incomplete."
+    },
+    {
+      "heading": "Choosing the data store, and watching the bill",
+      "body": "Cloud SQL is managed Postgres or MySQL and is the right default for relational data. Firestore suits document-shaped data with real-time sync and charges per read, write and delete — fine until a dashboard polls a collection every few seconds and the invoice reflects it. BigQuery is excellent for analytics and charges by bytes scanned, so partitioning and clustering are cost decisions rather than performance tuning.\n\nThe pattern across all three is that pricing is usage-shaped and rewards architectures that touch less data. That is a good incentive, and it punishes designs that were perfectly economical on a fixed-price server.\n\nBudget alerts go in on day one, per project, before anything is deployed."
+    }
+  ],
+  "codeExample": {
+    "language": "YAML",
+    "filename": ".github/workflows/deploy.yml",
+    "caption": "Deploying with no stored credential. The workflow exchanges GitHub's own OIDC token for short-lived Google credentials through Workload Identity Federation, so there is no service account key in a repository secret — the long-lived JSON file that is the most common serious finding in Google Cloud reviews. Concurrency is stated rather than defaulted, because Cloud Run sends that many simultaneous requests to a single instance and the safe number is a property of the application, not of the platform.",
+    "code": "name: deploy\non:\n  push:\n    branches: [main]\n\npermissions:\n  contents: read\n  id-token: write   # required to mint the OIDC token; without it, no federation\n\njobs:\n  deploy:\n    runs-on: ubuntu-latest\n    steps:\n      - uses: actions/checkout@v4\n\n      # No service account key anywhere. GitHub's own token is exchanged for\n      # short-lived Google credentials that expire within the hour.\n      - uses: google-github-actions/auth@v2\n        with:\n          workload_identity_provider: >-\n            projects/123456789/locations/global/workloadIdentityPools/github/providers/repo\n          service_account: deployer@example-project.iam.gserviceaccount.com\n\n      - uses: google-github-actions/deploy-cloudrun@v2\n        with:\n          service: orders-api\n          region: asia-south1\n          source: .\n          # concurrency is stated, not inherited: this many simultaneous\n          # requests share one instance, and the safe number depends on the\n          # application rather than on the platform default.\n          # min-instances buys away the cold start on a customer-facing API.\n          flags: >-\n            --concurrency=40\n            --min-instances=1\n            --max-instances=20\n            --cpu-boost"
+  },
+  "faq": [
+    {
+      "q": "Google Cloud, AWS or Azure?",
+      "a": "Whichever your team already knows — the operational cost of a platform nobody has run outweighs almost any feature difference. Google Cloud's genuine advantages are Cloud Run being the simplest path from container to production, and BigQuery being outstanding for analytics. AWS has the broadest service catalogue; Azure wins where Microsoft identity is already in use."
+    },
+    {
+      "q": "Do we need GKE?",
+      "a": "Usually not. Cloud Run covers most services without a cluster to operate, and GKE Autopilot is the middle ground if you genuinely need Kubernetes APIs. Full GKE earns its operational weight at real scale or with specific workload requirements — not because you have several services to run."
+    },
+    {
+      "q": "Firestore or Cloud SQL?",
+      "a": "Cloud SQL for relational data, which is most data. Firestore when you want real-time sync to clients and a document shape genuinely fits. The cost model is the thing to watch: Firestore charges per document operation, so a design that reads a collection on every page view can produce a bill that surprises everyone."
+    },
+    {
+      "q": "How do you handle secrets?",
+      "a": "Secret Manager, accessed through the service's own identity, with versioning and rotation. The rule is that no credential lives in a container image, an environment variable set at build time, or a repository — and with Workload Identity Federation for CI, there is usually no long-lived credential in the system at all."
+    }
+  ],
+  "notFor": {
+    "heading": "When another platform suits you better",
+    "body": "If your team knows AWS or Azure, use that — familiarity beats a feature comparison for anything you have to operate under pressure. If you need a small site or application running cheaply with no operational overhead, Vercel, Netlify or Render will take an afternoon rather than a sprint. And if your organisation already runs Microsoft identity and licensing, Azure's integration there is genuinely hard to reproduce. Google Cloud is the strongest choice when you want container-shaped deployment without a cluster, or when analytics at scale is central to the product."
+  },
+  "related": {
+    "services": ["cloud-application", "devops", "back-end", "ai-development"],
+    "technologies": ["docker", "nodejs", "python", "typescript"]
+  }
+}

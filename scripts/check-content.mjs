@@ -165,10 +165,18 @@ function strayContacts(raw) {
     });
 }
 
-/** Every service and technology slug the taxonomy defines, hidden ones included. */
-const knownSlugs = new Set(
-  [...(bundle.SERVICES ?? []), ...(bundle.TECHNOLOGIES ?? [])].map((i) => i.slug),
-);
+/**
+ * Slugs each taxonomy defines, kept apart on purpose.
+ *
+ * A service slug listed under related.technologies passes a combined check and
+ * still renders wrongly, because the renderer builds the path from which list
+ * it was in - /technologies/database for a slug that is a service. Checking
+ * them separately is what catches that.
+ */
+const knownSlugs = {
+  services: new Set((bundle.SERVICES ?? []).map((i) => i.slug)),
+  technologies: new Set((bundle.TECHNOLOGIES ?? []).map((i) => i.slug)),
+};
 
 const failures = [];
 
@@ -219,17 +227,26 @@ for (const { file, schema, kind } of targets) {
      */
     if (kind === 'taxonomy' && parsed.success) {
       const related = parsed.data.related ?? {};
-      const unknown = [...(related.services ?? []), ...(related.technologies ?? [])].filter(
-        (slug) => !knownSlugs.has(slug),
-      );
-      if (unknown.length > 0) {
+      const issues = [];
+
+      for (const list of ['services', 'technologies']) {
+        for (const slug of related[list] ?? []) {
+          if (knownSlugs[list].has(slug)) continue;
+
+          const other = list === 'services' ? 'technologies' : 'services';
+          issues.push(
+            knownSlugs[other].has(slug)
+              ? `related.${list} lists "${slug}", which is a ${other.slice(0, -1)} — move it to related.${other}`
+              : `related.${list} lists "${slug}", which does not exist`,
+          );
+        }
+      }
+
+      if (issues.length > 0) {
         failures.push({
           rel,
           kind,
-          issues: [
-            `related names slugs that do not exist: ${unknown.join(', ')}`,
-            'The link is dropped silently at render time. Fix the slug, or remove it.',
-          ],
+          issues: [...issues, 'The link is dropped silently at render time rather than 404ing.'],
         });
       }
     }

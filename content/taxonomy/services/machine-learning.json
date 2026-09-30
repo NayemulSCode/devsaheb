@@ -1,0 +1,62 @@
+{
+  "slug": "machine-learning",
+  "primaryQuery": "machine learning development services",
+  "title": "Machine Learning Development Services — Models In Production",
+  "description": "Models built to be deployed and monitored: one feature definition for training and serving, honest evaluation, and a plan for the day the data shifts.",
+  "h1": "Machine learning that survives the gap between notebook and production",
+  "intro": "A model that performs well on a held-out set has cleared the easiest bar in the project. The work that decides whether it is useful happens after: whether the features it sees in production match the ones it was trained on, whether anyone would notice it degrading, and whether the metric it optimises is the one the business cares about. This is modelling work — training and evaluating. Integrating existing models into a product is our AI development service, and that is the right page for most requests.",
+  "sections": [
+    {
+      "heading": "Training and serving must compute features identically",
+      "body": "The most common reason a model performs worse in production than in testing is not the model. It is that a feature was computed one way in the training pipeline and another way at serving time — a different rounding, a different default for missing values, a window computed over a subtly different period.\n\nThe fix is structural: one definition of each feature, imported by both paths, rather than two implementations that were written to agree. Where the training pipeline and the serving code are in different languages, that means a single specification with tests asserting both produce the same output for the same input.\n\nThe related trap is leakage — a feature that encodes the answer, usually through a timestamp. A model that looks unusually good on validation is far more often leaking than brilliant, and the check is to ask whether every input would genuinely have been available at prediction time."
+    },
+    {
+      "heading": "Evaluate against the decision, not the metric",
+      "body": "Accuracy is a poor measure of almost anything real. For a rare event it is trivially high while catching nothing; for a business decision it treats a false positive and a false negative as equally costly, which they never are.\n\nSo we start from the decision the model informs and what each kind of mistake costs. Fraud detection tolerates false positives and hates misses; a recommendation is the reverse. That determines whether precision, recall or a calibrated probability is what matters, and where the threshold sits.\n\nThe baseline also matters more than people allow. Before anything is trained we measure what a simple rule achieves — most recent value, most common class, a threshold someone already uses. A model that beats it by two percent has not earned the operational cost of running it, and knowing that early is cheaper than knowing it after deployment."
+    },
+    {
+      "heading": "Models decay, and nothing tells you",
+      "body": "Software fails loudly. A model degrades silently: the world changes, the input distribution moves, and predictions get worse while every dashboard stays green.\n\nSo monitoring covers the inputs as well as the outputs. Distribution drift on the important features, prediction distribution over time, and — where ground truth eventually arrives — measured accuracy against it, lagged but real. Alerts fire on drift before anyone complains.\n\nRetraining is scheduled and evaluated rather than automatic. A pipeline that retrains and deploys without a gate will eventually promote a worse model on a bad week of data, which is a harder failure to notice than not retraining at all."
+    }
+  ],
+  "codeExample": {
+    "language": "Python",
+    "filename": "features/recency.py",
+    "caption": "One definition, imported by both the training pipeline and the serving API — the structural fix for train/serve skew, which is the usual reason a model that validated well performs badly in production. The `as_of` argument is the important detail: it forces every caller to state the moment the prediction is made, so a feature cannot accidentally be computed from data that did not exist yet. The test asserts both paths agree rather than trusting that they do.",
+    "code": "from datetime import datetime, timedelta\nimport pandas as pd\n\n# Imported by train.py AND by serve.py. Two implementations written to agree\n# is the single most common cause of a model that validated well and does not\n# perform in production.\ndef days_since_last_order(\n    orders: pd.DataFrame,\n    customer_id: int,\n    as_of: datetime,          # explicit: no feature may see the future\n) -> float:\n    history = orders[\n        (orders[\"customer_id\"] == customer_id)\n        & (orders[\"placed_at\"] < as_of)     # strictly before, not <=\n    ]\n    if history.empty:\n        # Stated, not implicit. A NaN here gets imputed differently by the\n        # training pipeline and the serving path, and the model never matches.\n        return 999.0\n    latest = history[\"placed_at\"].max()\n    return (as_of - latest).total_seconds() / 86_400\n\n\n# tests/test_parity.py\ndef test_training_and_serving_agree():\n    as_of = datetime(2026, 3, 1)\n    offline = build_training_frame(orders, as_of=as_of)\n    online = feature_vector(orders, customer_id=42, as_of=as_of)\n\n    assert offline.loc[42, \"days_since_last_order\"] == online[\"days_since_last_order\"]"
+  },
+  "deliverables": [
+    "One feature definition shared by training and serving, with parity tests",
+    "Leakage review — every input available at prediction time",
+    "A measured baseline before any model is trained",
+    "Evaluation against the decision cost, not accuracy",
+    "Drift monitoring on inputs and predictions, with alerts",
+    "Retraining on a schedule, gated on evaluation before promotion"
+  ],
+  "faq": [
+    {
+      "q": "How is this different from your AI development service?",
+      "a": "This is training and evaluating models on your data. AI development is integrating existing models — usually language models — into a product, with retrieval, guardrails and cost control. Most requests that arrive asking for machine learning turn out to be the second, which is cheaper and faster."
+    },
+    {
+      "q": "How much data do we need?",
+      "a": "It depends far more on signal strength than volume. A clear pattern can be learned from a few thousand labelled examples; a weak one is not rescued by millions. The better early question is whether the labels exist and are consistent, because relabelling is usually the real cost."
+    },
+    {
+      "q": "Can you work with our existing models?",
+      "a": "Yes — deploying, monitoring and retraining models someone else built is common and often more valuable than training new ones. We start by reproducing the reported evaluation, which is frequently where the first surprise appears."
+    },
+    {
+      "q": "How do you explain a prediction to a customer or a regulator?",
+      "a": "By choosing for it. Where explanation is a requirement, a simpler and more interpretable model is often the correct trade even at some accuracy cost. Where a complex model is justified, feature attribution gives a defensible account of individual predictions — but it is weaker than a model whose logic can simply be read."
+    }
+  ],
+  "notFor": {
+    "heading": "When a rule beats a model",
+    "body": "If the decision can be written down as a rule, write the rule. It is cheaper, faster, testable, explainable and fails in ways you can predict. Machine learning earns its operational cost when the pattern is genuinely too complex to state and the data to learn it exists. A great deal of what is requested as machine learning is a threshold, a lookup or a well-built report, and we would rather build that and be done than deploy a model you will then have to monitor for years."
+  },
+  "related": {
+    "services": ["ai-development", "database", "cloud-application", "back-end"],
+    "technologies": ["python", "aws", "docker", "django"]
+  }
+}

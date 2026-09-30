@@ -1,0 +1,62 @@
+{
+  "slug": "legacy-application-modernization",
+  "primaryQuery": "legacy application modernization services",
+  "title": "Legacy Application Modernization — Without the Big Rewrite",
+  "description": "Modernising systems incrementally: characterisation tests first, then a slice at a time behind a routing layer, with the old system running until it is not needed.",
+  "h1": "Modernising a system without stopping it",
+  "intro": "The rewrite is the most expensive way to modernise and the most commonly chosen. It takes longer than estimated, delivers nothing until the end, and restarts the clock on every bug the old system already found and fixed — while that old system still has to be maintained in parallel. We work incrementally instead: understand what the system actually does, protect that with tests, then move it one slice at a time while it keeps running.",
+  "sections": [
+    {
+      "heading": "First, find out what it really does",
+      "body": "A legacy system's documented behaviour and its actual behaviour have diverged, and the difference is what people depend on. Somewhere there is a rounding rule, a special case for one customer, or an ordering that something downstream relies on. None of it is written down and all of it is load-bearing.\n\nSo before changing anything we write characterisation tests: tests that assert what the system currently does, including behaviour that looks wrong. Those are the safety net. Where the behaviour genuinely is wrong, that becomes a decision someone makes deliberately rather than a regression discovered later.\n\nWe also measure before judging. Which parts are actually used, which are slow, which change most often. Modernisation effort should follow that evidence, and it regularly points somewhere other than where the team assumed."
+    },
+    {
+      "heading": "Strangle it, do not replace it",
+      "body": "The pattern that works is to put a routing layer in front of the old system and move one capability at a time behind it. Traffic for that slice goes to the new implementation; everything else continues untouched.\n\nEach slice ships to production and delivers value on its own, which is the property a rewrite lacks. It also means the project can be paused, reprioritised or stopped without leaving you with two half-systems and nothing running.\n\nThe key discipline is that the new implementation does not inherit the old data model by default. An anti-corruption layer translates between the legacy shape and a clean one, so the new code is not a reimplementation of the old system's accidents. Where the two must coexist for a while, one side owns each field and the direction of sync is written down."
+    },
+    {
+      "heading": "Data is the part that takes longest",
+      "body": "Moving behaviour is tractable. Moving data that both systems need during the transition is the genuinely hard part, and it is where these projects overrun.\n\nWe plan for a period where both read the same store, or where changes flow one way with a reconciliation job proving they agree. Dual-write without reconciliation is the trap — it looks correct and drifts, and the drift is discovered by a customer.\n\nThe cutover for each slice is reversible: the routing layer can send traffic back to the old path, and the data written by the new one has to remain valid for the old. That constraint shapes the schema, and it is what makes each step safe enough to take on a Tuesday rather than a weekend."
+    }
+  ],
+  "codeExample": {
+    "language": "TypeScript",
+    "filename": "src/gateway/strangler.ts",
+    "caption": "The routing layer that makes incremental migration safe. Traffic moves to the new implementation a percentage at a time, and any single request can be sent back to the legacy path by changing a flag rather than deploying. The shadow comparison is the part teams skip: for a sampled share of traffic the old path is also run and the results are diffed, so a behavioural difference is found in a log before it is found by a customer.",
+    "code": "export async function handleQuote(req: QuoteRequest): Promise<Quote> {\n  const useNew = await flags.enabled('quotes.v2', {\n    // Sticky per customer: a customer must not see two different quoting\n    // engines on consecutive requests.\n    key: req.customerId,\n    percentage: 10,\n  });\n\n  if (!useNew) return legacyQuote(req);\n\n  const quote = await newQuote(req);\n\n  // Shadow-compare a sample. The old path still runs, its result is not\n  // returned, and any difference is logged. This is how a rounding rule\n  // nobody documented gets found before a customer finds it.\n  if (sample(0.05)) {\n    void (async () => {\n      try {\n        const legacy = await legacyQuote(req);\n        if (legacy.totalMinor !== quote.totalMinor) {\n          log.warn('quote.mismatch', {\n            customerId: req.customerId,\n            legacy: legacy.totalMinor,\n            next: quote.totalMinor,\n            delta: quote.totalMinor - legacy.totalMinor,\n          });\n        }\n      } catch (err) {\n        // The shadow path must never affect the response the user gets.\n        log.warn('quote.shadow_failed', { err });\n      }\n    })();\n  }\n\n  return quote;\n}"
+  },
+  "deliverables": [
+    "Characterisation tests capturing what the system does today",
+    "Usage and performance measured before scope is decided",
+    "A routing layer so slices move independently and reversibly",
+    "An anti-corruption layer keeping the legacy model out of new code",
+    "Shadow comparison to find behavioural differences before users do",
+    "Reconciliation during any period of dual ownership"
+  ],
+  "faq": [
+    {
+      "q": "Is a rewrite ever the right answer?",
+      "a": "Occasionally — when the platform is genuinely unsupportable, when nobody remaining understands the system and there are no tests, or when the product itself is changing so much that the old behaviour is not worth preserving. It should be a decision made with evidence, not the default because the codebase is unpleasant to work in."
+    },
+    {
+      "q": "How long does this take?",
+      "a": "It is deliberately open-ended, which is the point — each slice delivers on its own, so there is no date on which everything must be finished. We size the first two or three slices precisely and re-plan from what they actually cost, because estimates made before touching a legacy system are guesses."
+    },
+    {
+      "q": "What if nobody understands the old code?",
+      "a": "That is the common case. We work from behaviour rather than intent: what goes in, what comes out, what the database shows. Characterisation tests are built from observed behaviour, and the parts nobody can explain are the ones that get shadow-compared longest."
+    },
+    {
+      "q": "Can you move it to the cloud as part of this?",
+      "a": "Yes, and we would separate the two. Moving a system unchanged onto cloud infrastructure is a hosting change with a known cost; making it cloud-native is an architectural change. Doing both at once means a failure could be either, and the debugging is much harder."
+    }
+  ],
+  "notFor": {
+    "heading": "When to leave it alone",
+    "body": "A system that works, rarely changes and is understood well enough to patch does not need modernising because it is old. The costs worth acting on are concrete: you cannot hire for it, it cannot meet a security or compliance requirement, a change takes weeks that should take days, or it is blocking something the business needs to do. If none of those is true, the money is better spent elsewhere and we will say so."
+  },
+  "related": {
+    "services": ["custom-software", "cloud-application", "qa", "database"],
+    "technologies": ["typescript", "nodejs", "docker", "aws"]
+  }
+}

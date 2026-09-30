@@ -1,0 +1,54 @@
+{
+  "slug": "azure",
+  "primaryQuery": "azure development services",
+  "title": "Azure Development Services — Identity, Not Secrets",
+  "description": "Azure applications using managed identity instead of connection strings, infrastructure defined in Bicep, and costs modelled before the architecture is committed.",
+  "h1": "Azure applications with no connection strings to leak",
+  "intro": "Azure's strongest feature is the one most projects half-use. Entra ID and managed identities mean a service can authenticate to a database, a storage account or a key vault with no secret existing anywhere — nothing in configuration, nothing in a pipeline variable, nothing to rotate or leak. Most Azure applications we inherit still pass connection strings around, which is the same architecture as any other cloud with more steps. Vendor-neutral cloud architecture is our cloud application service; this page is about Azure specifically.",
+  "sections": [
+    {
+      "heading": "Managed identity removes the secret entirely",
+      "body": "A connection string in app settings is a credential: it can be read by anyone with access to the configuration, it appears in deployment pipelines, and it has to be rotated by someone who remembers to.\n\nA managed identity has none of those properties. The platform issues the token, the resource trusts the identity, and there is nothing to store. Azure SQL, Storage, Service Bus and Key Vault all support it, and the code is usually simpler than the version with a secret in it.\n\nWhere a secret genuinely must exist — a third-party API key — it belongs in Key Vault, accessed through the managed identity, with rotation configured. The rule we hold to is that no credential appears in configuration, a pipeline variable or a repository, and it is checkable rather than a matter of discipline."
+    },
+    {
+      "heading": "Bicep, and knowing what changed",
+      "body": "Azure's portal makes it easy to fix something by clicking, and that fix exists nowhere else. Six months later nobody can rebuild the environment, and staging and production have drifted in ways that only appear during an incident.\n\nSo infrastructure is defined in Bicep — readable, typed, and without the JSON noise of raw ARM templates — and a what-if run shows exactly what a deployment will change before it runs. That preview is the part that makes infrastructure-as-code genuinely safe rather than merely repeatable.\n\nResource groups and naming get decided early because they are awkward to change later, and role assignments are defined in the same templates. Access granted by hand in the portal is access nobody will find when they audit it."
+    },
+    {
+      "heading": "Choosing the compute, and the bill that follows",
+      "body": "Azure offers several ways to run the same container and they differ mostly in what you manage and what you pay for idle time. App Service is the straightforward path for a web application. Container Apps suits event-driven services and scales to zero, which matters for anything with spiky traffic. AKS is Kubernetes with the operational weight that implies, and is worth it at genuine scale or multi-tenancy — not for three services.\n\nThe cost drivers are consistent: an over-provisioned SQL tier, egress across regions, Log Analytics retention left at the default, and premium tiers chosen for one feature. We model those before committing to an architecture and set a budget alert on day one.\n\nFor identity in customer-facing products, Entra External ID handles sign-in, social providers and multi-factor without you storing passwords at all — which is a security posture worth having for free."
+    }
+  ],
+  "codeExample": {
+    "language": "Bicep",
+    "filename": "infra/app.bicep",
+    "caption": "The whole point of Azure, expressed as infrastructure rather than as discipline. The app gets a system-assigned identity and a role assignment on the storage account, so it authenticates as itself and there is no connection string anywhere — nothing in configuration, nothing in the pipeline, nothing to rotate or leak. The role assignment lives in the template rather than being granted by hand in the portal, which is what makes it survive a rebuild and show up in an audit.",
+    "code": "param location string = resourceGroup().location\nparam appName string\n\nresource storage 'Microsoft.Storage/storageAccounts@2023-05-01' = {\n  name: '${appName}store'\n  location: location\n  sku: { name: 'Standard_LRS' }\n  kind: 'StorageV2'\n  properties: {\n    allowBlobPublicAccess: false\n    minimumTlsVersion: 'TLS1_2'\n    // No shared keys: with these disabled the only way in is Entra ID,\n    // so a leaked key cannot exist because there is no key.\n    allowSharedKeyAccess: false\n  }\n}\n\nresource app 'Microsoft.Web/sites@2023-12-01' = {\n  name: appName\n  location: location\n  identity: { type: 'SystemAssigned' }   // the platform issues the token\n  properties: {\n    httpsOnly: true\n    siteConfig: {\n      appSettings: [\n        // The account name, not a connection string. There is no secret\n        // here to appear in a pipeline log or a configuration export.\n        { name: 'STORAGE_ACCOUNT', value: storage.name }\n      ]\n    }\n  }\n}\n\n// Storage Blob Data Contributor, scoped to this account only. Declared here\n// rather than clicked in the portal, so it survives a rebuild and is visible\n// in review.\nvar blobContributor = 'ba92f5b4-2d11-453d-a403-e96b0029c9fe'\n\nresource grant 'Microsoft.Authorization/roleAssignments@2022-04-01' = {\n  scope: storage\n  name: guid(storage.id, app.id, blobContributor)\n  properties: {\n    principalId: app.identity.principalId\n    principalType: 'ServicePrincipal'\n    roleDefinitionId: subscriptionResourceId(\n      'Microsoft.Authorization/roleDefinitions', blobContributor)\n  }\n}"
+  },
+  "faq": [
+    {
+      "q": "Azure or AWS?",
+      "a": "Whichever your team already knows — the operational cost of a platform nobody has run outweighs almost any feature difference. Azure has a genuine edge if you are already invested in Microsoft identity and licensing, since Entra ID integration and existing agreements are real advantages. On raw capability the two are close enough that it is rarely the deciding factor."
+    },
+    {
+      "q": "Do we need AKS?",
+      "a": "Usually not. Container Apps runs containers with scaling and revisions without a cluster to operate, and App Service is simpler still for a web application. AKS earns its operational weight at real scale, with genuine multi-tenancy, or where you need Kubernetes-specific tooling — not because you have several services."
+    },
+    {
+      "q": "How do you keep Azure costs under control?",
+      "a": "Model before building, then alert. The recurring causes are an over-provisioned SQL tier, cross-region egress nobody accounted for, Log Analytics retention left at its default, and a premium tier bought for one feature. A budget alert on day one turns a surprising invoice into a notification in the first week."
+    },
+    {
+      "q": "Can you migrate our on-premises applications?",
+      "a": "Yes, and we would separate the moves. Lifting an application onto Azure VMs is a hosting change with a predictable cost; making it cloud-native is an architectural one. Doing both at once means any failure could be either, and the debugging is considerably harder."
+    }
+  ],
+  "notFor": {
+    "heading": "When Azure is not the right platform",
+    "body": "If your team knows AWS, use AWS — familiarity beats feature comparisons for anything you have to operate at three in the morning. If you need a small application running cheaply with no operational overhead, a managed platform such as Vercel or Render will cost less and take an afternoon rather than a sprint. Azure is the strongest choice when Microsoft identity, licensing or compliance agreements are already part of how your organisation works, because that integration is genuinely hard to reproduce elsewhere."
+  },
+  "related": {
+    "services": ["cloud-application", "devops", "back-end", "custom-software"],
+    "technologies": ["dotnet", "csharp", "docker", "nodejs"]
+  }
+}

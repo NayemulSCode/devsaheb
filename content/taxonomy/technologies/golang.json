@@ -1,0 +1,54 @@
+{
+  "slug": "golang",
+  "primaryQuery": "golang development company",
+  "title": "Golang Development Company — Services That Stay Predictable",
+  "description": "Go services with context propagated properly, bounded concurrency and no leaked goroutines. Small binaries, predictable memory, readable by whoever inherits them.",
+  "h1": "Go services where the concurrency is bounded and the goroutines end",
+  "intro": "Go's appeal is that a service compiles to one binary, starts instantly, uses predictable memory and can be read by someone who has never seen the codebase. Its sharp edge is that starting concurrent work is so easy that stopping it gets forgotten. A goroutine with no way to end, or a channel nobody reads, leaks quietly — and a service that looks healthy for a week is the hardest kind to diagnose.",
+  "sections": [
+    {
+      "heading": "Context is not optional plumbing",
+      "body": "A `context.Context` carries cancellation and a deadline through a call chain. When it is threaded properly, a client disconnecting cancels the database query, the outbound HTTP call and everything else started on its behalf.\n\nWhen it is dropped — passed as `context.Background()` halfway down because the signature was inconvenient — work continues for a request nobody is waiting for. Under load that is how a service ends up doing far more work than it is serving.\n\nSo context is the first parameter everywhere, deadlines are set at the boundary rather than hoped for, and any function that blocks takes one. A `time.Sleep` that cannot be cancelled is a small bug that becomes a large one during a shutdown that times out."
+    },
+    {
+      "heading": "Every goroutine needs an owner and an end",
+      "body": "`go doSomething()` is one of the easiest things to write in any language and one of the easiest to leak. The goroutine runs until it returns, whatever happened to whoever started it.\n\nThe rule we hold to is that the code starting a goroutine is responsible for knowing when it stops. In practice that means `errgroup` with a context, so a failure in one cancels its siblings and the caller waits for all of them; or an explicit done channel where the lifetime is longer-lived.\n\nUnbounded fan-out is the same problem wearing different clothes. Launching one goroutine per item over a slice of ten thousand will exhaust connections or memory somewhere downstream. Concurrency is limited explicitly — a semaphore or `errgroup.SetLimit` — sized against what the dependency can actually take."
+    },
+    {
+      "heading": "Errors, and interfaces defined where they are used",
+      "body": "Go's error handling is verbose and it is honest: every failure is visible at the point it can happen. Wrapping with `%w` preserves the chain so a caller can test for a specific condition with `errors.Is` rather than matching on message text, which breaks the moment someone improves the wording.\n\nThe idiom that most improves a Go codebase is defining interfaces where they are consumed rather than alongside the implementation. A package that declares a small interface describing exactly what it needs is testable with a two-method fake, and does not drag a large dependency into every test.\n\nOn structure, we resist the elaborate layouts that circulate. A flat package structure organised by domain is easier to navigate than four levels of directories mirroring an architecture diagram."
+    }
+  ],
+  "codeExample": {
+    "language": "Go",
+    "filename": "internal/enrich/enrich.go",
+    "caption": "Bounded, cancellable fan-out. Without `SetLimit` this launches one goroutine per record and exhausts the upstream's connection limit on a large batch — the failure looks like the dependency being flaky rather than like the caller overwhelming it. The context is threaded all the way to the HTTP request, so a cancelled parent stops in-flight calls rather than leaving them running for a result nobody will read, and the first real error cancels its siblings instead of waiting for all of them to fail.",
+    "code": "func Enrich(ctx context.Context, records []Record) ([]Enriched, error) {\n\tg, ctx := errgroup.WithContext(ctx)\n\t// Sized against what the upstream can serve, not against len(records).\n\t// Unbounded fan-out looks like the dependency failing, not like us.\n\tg.SetLimit(8)\n\n\tout := make([]Enriched, len(records))\n\n\tfor i, rec := range records {\n\t\tg.Go(func() error {\n\t\t\t// Per-item deadline, so one slow upstream call cannot hold the\n\t\t\t// whole batch open until the parent deadline fires.\n\t\t\tctx, cancel := context.WithTimeout(ctx, 3*time.Second)\n\t\t\tdefer cancel()\n\n\t\t\tdetail, err := lookup(ctx, rec.ID)\n\t\t\tif err != nil {\n\t\t\t\t// %w keeps the chain so the caller can use errors.Is rather\n\t\t\t\t// than matching on the message text.\n\t\t\t\treturn fmt.Errorf(\"lookup %s: %w\", rec.ID, err)\n\t\t\t}\n\n\t\t\t// Index assignment, not append: no mutex needed because no two\n\t\t\t// goroutines touch the same slot.\n\t\t\tout[i] = Enriched{Record: rec, Detail: detail}\n\t\t\treturn nil\n\t\t})\n\t}\n\n\t// Waits for every goroutine. The first error cancels ctx, so the rest\n\t// stop rather than running on for a result that is already discarded.\n\tif err := g.Wait(); err != nil {\n\t\treturn nil, err\n\t}\n\treturn out, nil\n}"
+  },
+  "faq": [
+    {
+      "q": "When would you choose Go over Node or Python?",
+      "a": "When throughput and predictable memory matter, when you want a single binary with no runtime to install, or when the work is genuinely CPU-parallel — Go has real threads where Node and Python do not. For I/O-bound web work all three are fine, and the deciding factor is usually what your team writes."
+    },
+    {
+      "q": "Which web framework?",
+      "a": "The standard library plus a router such as chi covers most services, and `net/http` improved enough recently that even the router is sometimes unnecessary. Go's culture favours small dependencies, and a service built on the standard library is one that still compiles in five years."
+    },
+    {
+      "q": "How do you find a goroutine leak?",
+      "a": "pprof's goroutine profile, taken twice a few minutes apart and compared. A count that only grows points straight at the leak, and the stack traces name the line that started it. Enabling pprof behind an internal endpoint before you need it is the difference between a ten-minute diagnosis and a long afternoon."
+    },
+    {
+      "q": "Is the lack of exceptions a problem?",
+      "a": "It is verbose and it is honest — every failure is visible where it can occur, rather than propagating invisibly to a handler somewhere above. Generics, added in 1.18, removed most of the genuine complaints about repetition. What remains is a style preference rather than a capability gap."
+    }
+  ],
+  "notFor": {
+    "heading": "When Go is the wrong tool",
+    "body": "For data and machine learning, Python has the libraries and Go does not — that gap is not closing. For a web application with a browser front end, sharing TypeScript across both halves is worth more than Go's runtime characteristics. And for a small team already fluent in one language, adding Go means a second toolchain and a second hiring pool for a benefit that may not be measurable at your scale. Go is the right answer for high-throughput services, infrastructure tooling and anything that has to ship as a single binary."
+  },
+  "related": {
+    "services": ["back-end", "cloud-application", "devops", "custom-software"],
+    "technologies": ["docker", "aws", "typescript", "python"]
+  }
+}

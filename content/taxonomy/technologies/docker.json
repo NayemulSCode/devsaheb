@@ -1,0 +1,54 @@
+{
+  "slug": "docker",
+  "primaryQuery": "docker containerization services",
+  "title": "Docker Containerization Services — Images Built Properly",
+  "description": "Containers that build fast, ship small and run unprivileged: multi-stage builds, ordered layers, pinned bases and no secrets baked into the image.",
+  "h1": "Containers that are small, reproducible and not running as root",
+  "intro": "Containerising an application is easy; containerising it well is a series of decisions that show up later as slow builds, large images and security findings. A Dockerfile written the obvious way typically produces an image several times larger than it needs to be, rebuilds everything when one source file changes, runs as root, and contains the credentials used during the build. None of that is visible until it matters.",
+  "sections": [
+    {
+      "heading": "Layer order decides how fast you can ship",
+      "body": "Docker caches each instruction and invalidates everything after the first change. Copy your whole source tree before installing dependencies and every code change reinstalls them — turning a ten-second rebuild into three minutes, on every commit, for everyone.\n\nSo the manifest and lockfile are copied and installed first, then the source. Dependencies change rarely, source changes constantly, and the cache then does what it is for.\n\nA `.dockerignore` matters as much and is more often missing. Without it, `node_modules`, the `.git` directory and local environment files are sent to the build context, which is slow and is one of the routes by which a secret ends up in an image."
+    },
+    {
+      "heading": "Multi-stage builds, and what actually ships",
+      "body": "The toolchain that builds an application has no business being in the image that runs it. Compilers, dev dependencies and build caches are attack surface and weight.\n\nA multi-stage build compiles in one stage and copies only the artefact into a minimal runtime stage. For a typical Node service that is the difference between roughly a gigabyte and a couple of hundred megabytes, and the smaller image pulls faster on every deploy and every scale-up.\n\nThe base image is a real decision. Alpine is small and uses musl, which occasionally breaks native modules in ways that are painful to diagnose; the slim Debian variants are larger and behave predictably. Whichever you choose, pin it by digest rather than by a floating tag, so that a rebuild six months from now produces the same thing."
+    },
+    {
+      "heading": "Secrets, users and signals",
+      "body": "Three things go wrong at runtime. First, secrets: a build argument or an `ENV` line is visible in the image history forever, so credentials come from the orchestrator at runtime or through BuildKit's secret mounts, never from an instruction.\n\nSecond, the user. Containers run as root by default, and a root process in a container is one escape away from being root on the host. A non-privileged user costs one line.\n\nThird, signals. A process started through a shell does not receive SIGTERM, so the container is killed after the grace period instead of shutting down cleanly — which drops in-flight requests on every deploy. The exec form of `CMD` fixes it, and an init process handles zombie reaping where the application spawns children."
+    }
+  ],
+  "codeExample": {
+    "language": "Dockerfile",
+    "filename": "Dockerfile",
+    "caption": "The four decisions that separate a workable image from a good one. Dependencies are installed before the source is copied, so a code change does not reinstall them — the difference between a ten-second rebuild and three minutes. The build toolchain stays in the first stage and never ships. The base is pinned by digest so a rebuild next year produces the same image. And the exec-form CMD means the process actually receives SIGTERM, which is what allows a graceful shutdown instead of dropped requests on every deploy.",
+    "code": "# Pinned by digest, not by tag: :22-slim moves, and a rebuild months later\n# should produce the same image rather than a surprise.\nFROM node:22.11.0-slim@sha256:4e2f8f...bd91 AS build\n\nWORKDIR /app\n\n# Manifest first. Source changes constantly, dependencies rarely - copying\n# them in this order is what makes the layer cache useful.\nCOPY package.json package-lock.json ./\nRUN --mount=type=cache,target=/root/.npm \\\n    npm ci\n\nCOPY . .\nRUN npm run build && npm prune --omit=dev\n\n# ---- runtime: no compiler, no dev dependencies, no build cache ----\nFROM node:22.11.0-slim@sha256:4e2f8f...bd91\n\nENV NODE_ENV=production\nWORKDIR /app\n\n# Non-root. Root in a container is one escape from root on the host.\nRUN useradd --system --uid 10001 --no-create-home app\n\nCOPY --from=build --chown=app:app /app/node_modules ./node_modules\nCOPY --from=build --chown=app:app /app/dist ./dist\nCOPY --from=build --chown=app:app /app/package.json ./\n\nUSER app\nEXPOSE 3000\n\n# Exec form. The shell form runs the process under /bin/sh, which does not\n# forward SIGTERM - so the container is killed rather than draining.\nCMD [\"node\", \"dist/server.js\"]"
+  },
+  "faq": [
+    {
+      "q": "Do we need Kubernetes as well?",
+      "a": "Usually not. Containers are useful on their own, and a managed container platform such as Cloud Run, ECS or App Service runs them without the operational weight of a cluster. Kubernetes earns its complexity at real scale or with genuine multi-tenancy — adopting it for three services costs more than it returns."
+    },
+    {
+      "q": "Why is our image so large?",
+      "a": "Almost always a single-stage build shipping the toolchain, or a base image chosen without thought. A multi-stage build plus a slim base typically cuts a Node or Python image by most of its size, and `docker history` will show you which layer is responsible in about a minute."
+    },
+    {
+      "q": "How do you handle secrets at build time?",
+      "a": "With BuildKit secret mounts, which make a value available during a build step without recording it in a layer. Build arguments and ENV lines both persist in the image history, so a private registry token passed that way is readable by anyone who can pull the image."
+    },
+    {
+      "q": "Should the database run in a container too?",
+      "a": "In development, yes — it makes environments reproducible. In production we would generally use a managed database instead. Backups, failover, patching and point-in-time restore are what you are buying, and reproducing them well around a containerised database is more work than the saving justifies."
+    }
+  ],
+  "notFor": {
+    "heading": "When containers are not the answer",
+    "body": "A single application deployed to one server with a script that works does not need containerising because containers are current. The benefits — reproducible environments, easy rollback, consistent deployment across several services — are real and they scale with how many things you deploy and how often. For a static site or a serverless function, containers add a layer between you and a platform that already handles this. We would rather containerise when there is a problem it solves than because it is the default answer."
+  },
+  "related": {
+    "services": ["devops", "cloud-application", "back-end", "legacy-application-modernization"],
+    "technologies": ["nodejs", "python", "aws", "azure"]
+  }
+}

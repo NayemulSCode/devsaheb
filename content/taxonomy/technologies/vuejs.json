@@ -1,0 +1,54 @@
+{
+  "slug": "vuejs",
+  "primaryQuery": "vue.js development company",
+  "title": "Vue.js Development Company — Composition, Done Right",
+  "description": "Vue 3 applications built on the Composition API with reactivity understood rather than fought: composables that compose, and state that stays traceable.",
+  "h1": "Vue applications where the reactivity is predictable",
+  "intro": "Vue is the most approachable of the major frameworks, and that approachability produces its characteristic failure: a codebase that grew organically, mixes two API styles, and has reactivity behaving in ways nobody can quite explain. The framework is not the problem — the gaps in how reactivity actually works are. Get those right and Vue is an excellent choice; leave them vague and every bug takes twice as long to find.",
+  "sections": [
+    {
+      "heading": "ref and reactive are not interchangeable",
+      "body": "The single most common Vue 3 confusion is losing reactivity by destructuring. A `reactive` object destructured into local variables gives you plain values, disconnected from the source, and the template stops updating with no error to explain it.\n\nThe rule we apply is simple: `ref` for almost everything, `reactive` only where an object genuinely needs to be mutated in place, and `toRefs` whenever a reactive object is destructured. Replacing a whole `ref` object works and is often clearer than mutating nested fields.\n\nThe related trap is `watch` on a reactive source. Watching a ref gives old and new values; watching a reactive object gives the same object twice, because it was mutated in place. Knowing that in advance saves a genuinely baffling afternoon."
+    },
+    {
+      "heading": "Composables are the unit of reuse",
+      "body": "The Composition API's value is that stateful logic becomes a plain function, testable without mounting a component. A composable that fetches, caches and exposes loading and error state can be used by four components and tested once.\n\nThe discipline is cleanup. A composable that registers an event listener, starts an interval or opens a connection must tear it down in `onScopeDispose` or `onUnmounted` — otherwise it leaks on every mount, and in a long-lived single-page application that accumulates.\n\nWe also keep composables free of component assumptions. One that reaches for a router or a global store is not reusable; one that takes what it needs as arguments is."
+    },
+    {
+      "heading": "State, and when Pinia is not the answer",
+      "body": "Pinia is the right store when state is genuinely shared across unrelated parts of the application. It is not the right home for server data, which needs caching, staleness and revalidation rather than a single source of truth that someone has to remember to refresh.\n\nSo server data goes to a query layer and client state stays local until sharing is actually needed. A global store used as the default destination for everything grows until nobody can say what a change affects, which is the same failure Vuex codebases had.\n\nOn the build side, Vite is Vue's native tooling and the developer experience is genuinely excellent. Nuxt earns its place when you need server rendering, file-based routing and the conventions that come with them — the same trade Next.js makes for React."
+    }
+  ],
+  "codeExample": {
+    "language": "TypeScript",
+    "filename": "src/composables/useOrders.ts",
+    "caption": "A composable that behaves correctly in the two places these usually go wrong. The watcher cancels the previous request before starting a new one, so responses arriving out of order cannot overwrite newer results — the bug that makes a filtered list flicker back to stale data. And the abort happens in `onScopeDispose` too, so a component unmounted mid-request does not leave work running or try to write into state that is gone.",
+    "code": "import { ref, watch, onScopeDispose, type Ref } from 'vue';\n\nexport function useOrders(customerId: Ref<string>) {\n  // ref, not reactive: these get destructured by every caller, and a\n  // destructured reactive object silently stops being reactive.\n  const orders = ref<Order[]>([]);\n  const loading = ref(false);\n  const error = ref<string | null>(null);\n\n  let controller: AbortController | undefined;\n\n  async function load(id: string) {\n    controller?.abort(); // the previous request is now irrelevant\n    controller = new AbortController();\n    loading.value = true;\n    error.value = null;\n\n    try {\n      const res = await fetch(`/api/customers/${id}/orders`, {\n        signal: controller.signal,\n      });\n      if (!res.ok) throw new Error(`Failed: ${res.status}`);\n      orders.value = await res.json();\n    } catch (e) {\n      if ((e as Error).name === 'AbortError') return; // expected, not a failure\n      error.value = (e as Error).message;\n    } finally {\n      loading.value = false;\n    }\n  }\n\n  watch(customerId, load, { immediate: true });\n\n  // Without this, unmounting mid-request leaves the fetch running and the\n  // handler writing into refs that no longer belong to a mounted component.\n  onScopeDispose(() => controller?.abort());\n\n  return { orders, loading, error, reload: () => load(customerId.value) };\n}"
+  },
+  "faq": [
+    {
+      "q": "Vue or React?",
+      "a": "Both are capable of the same applications. Vue's templates and single-file components are easier for a team with strong HTML and CSS skills; React has a larger hiring pool in most markets and a bigger ecosystem. If you have no existing preference we would usually suggest React on hiring grounds alone, and that is a market observation rather than a technical verdict."
+    },
+    {
+      "q": "Should we migrate from Vue 2?",
+      "a": "Yes — Vue 2 reached end of life at the end of 2023, so it receives no security fixes. Migration is well documented and mostly mechanical, with the Composition API adoptable gradually afterwards rather than as part of the same change."
+    },
+    {
+      "q": "Options API or Composition API?",
+      "a": "Composition for new code — logic extracts into testable functions and TypeScript support is considerably better. There is no need to convert working Options API components; they interoperate, so the migration can follow whatever you are changing anyway."
+    },
+    {
+      "q": "Do we need Nuxt?",
+      "a": "If you need server rendering for SEO, file-based routing and conventions out of the box, yes. For an application behind a login, plain Vue with Vite is simpler and there is no server to run. It is the same decision as React and Next.js, with the same answer: it depends on whether public pages have to rank."
+    }
+  ],
+  "notFor": {
+    "heading": "When to choose differently",
+    "body": "If hiring is your constraint, React has a deeper pool in most markets and that is a legitimate reason to choose it over a framework you might prefer. If the application is largely content with a little interactivity, a static site with small islands of JavaScript will be faster and simpler than any single-page framework. Vue is an excellent choice when your team already knows it, or when the team's strength is markup and styling rather than JavaScript architecture."
+  },
+  "related": {
+    "services": ["front-end", "web-development", "custom-software", "cms"],
+    "technologies": ["typescript", "javascript", "nodejs", "reactjs"]
+  }
+}

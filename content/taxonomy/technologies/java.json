@@ -1,0 +1,54 @@
+{
+  "slug": "java",
+  "primaryQuery": "java development company",
+  "title": "Java Development Company — Modern Java, Not Java 8",
+  "description": "Java 21 and later: records, sealed types, pattern matching and virtual threads. Services built to be maintained, on a runtime that is still receiving updates.",
+  "h1": "Java as it is today, not as it was in 2014",
+  "intro": "Most Java in production was written against Java 8, and most opinions about Java were formed there too. The language has changed substantially: records removed the boilerplate that made value types painful, sealed interfaces made exhaustive handling possible, and virtual threads removed the reason most services needed reactive frameworks. A team still writing Java 8 patterns on a Java 21 runtime is paying the old costs without collecting the new benefits.",
+  "sections": [
+    {
+      "heading": "Records and sealed types change how you model",
+      "body": "A value class in old Java was forty lines of constructor, getters, equals, hashCode and toString, which is why people reached for maps instead. A record is one line, immutable, with all of that generated correctly.\n\nSealed interfaces are the more consequential addition. They let you state that a type has exactly these implementations, and pattern matching in switch then requires every one to be handled. Add a case later and the compiler points at each place that must change, rather than a default branch quietly swallowing it.\n\nTogether they make a domain model that reads as what it is. The alternative — a class with six nullable fields where only certain combinations are valid — is the shape that produces null checks scattered through the codebase and a runtime failure for the combination nobody considered."
+    },
+    {
+      "heading": "Virtual threads changed the concurrency calculation",
+      "body": "For years, the answer to handling many concurrent requests in Java was a reactive framework: non-blocking all the way down, at the cost of stack traces that were unreadable and debugging that was genuinely hard.\n\nVirtual threads removed most of that pressure. Blocking code on a virtual thread scales to very large numbers of concurrent operations because the thread parks cheaply rather than holding an OS thread. Straightforward, readable, blocking code gets the throughput that previously required restructuring the whole application.\n\nThe caveat worth knowing is pinning: a virtual thread inside a `synchronized` block cannot unmount, so it holds its carrier thread. That was substantially improved in recent releases, and legacy code heavy with `synchronized` is still worth reviewing before assuming the benefit."
+    },
+    {
+      "heading": "Which runtime, and staying on a supported one",
+      "body": "Java's release cadence gives a long-term-support version every two years, and versions fall out of support on a published schedule. Running an unsupported one is a finding in any security review, and the upgrades between LTS versions are usually far less painful than the reputation suggests.\n\nThe distribution is a real choice too — Temurin, Corretto and Zulu are all sound, and the practical difference is who provides updates and for how long rather than anything about behaviour.\n\nFor services, we would default to Spring Boot, which has its own page. Quarkus and Micronaut are worth considering where startup time and memory matter — a serverless function or a container that scales from zero, where the JVM's warm-up is a real cost rather than a theoretical one."
+    }
+  ],
+  "codeExample": {
+    "language": "Java",
+    "filename": "src/main/java/.../PaymentOutcome.java",
+    "caption": "Modern Java doing what six nullable fields used to. The sealed interface states that these are the only outcomes, so pattern matching in the switch has to handle each — and adding a fifth becomes a compile error at every call site rather than a default branch silently swallowing it. Records give immutability and correct equality in one line, and the deconstruction pattern binds the fields directly, so there is no casting and no null check for a field that only exists in one case.",
+    "code": "public sealed interface PaymentOutcome\n    permits Settled, Declined, Pending, Failed {\n\n    // One line each. The Java 8 version of this was forty, which is why\n    // people used maps and lost the types entirely.\n    record Settled(String reference, long amountMinor) implements PaymentOutcome {}\n    record Declined(String code, boolean retryable) implements PaymentOutcome {}\n    record Pending(Instant expectedBy) implements PaymentOutcome {}\n    record Failed(String message) implements PaymentOutcome {}\n}\n\npublic String describe(PaymentOutcome outcome) {\n    // No default branch. Add a fifth outcome and this stops compiling, which\n    // is the entire reason the interface is sealed.\n    return switch (outcome) {\n        case Settled(String ref, long amount) ->\n            \"Settled %s (%d)\".formatted(ref, amount);\n\n        // Guarded pattern: the condition is part of the match, not an if\n        // nested inside the branch.\n        case Declined(String code, boolean retryable) when retryable ->\n            \"Declined (%s) - retrying\".formatted(code);\n        case Declined(String code, boolean ignored) ->\n            \"Declined (%s) - do not retry\".formatted(code);\n\n        case Pending(Instant by) ->\n            \"Awaiting confirmation until %s\".formatted(by);\n        case Failed(String message) ->\n            \"Failed: %s\".formatted(message);\n    };\n}"
+  },
+  "faq": [
+    {
+      "q": "We are on Java 8. How hard is the upgrade?",
+      "a": "Usually less painful than expected, and the awkward step is 8 to 11 rather than anything after it — the module system and removed internal APIs cause most of the friction. From 11 onward, upgrades are mostly routine. The real work is typically third-party libraries that have not kept up, so the dependency audit is where we start."
+    },
+    {
+      "q": "Do we still need a reactive framework?",
+      "a": "Much less often. Virtual threads give blocking code the concurrency that previously required reactive programming, with stack traces you can read and debugging that behaves normally. Reactive still suits genuine streaming and backpressure-sensitive pipelines; for a typical request-response service it is now a cost without a matching benefit."
+    },
+    {
+      "q": "Java or Kotlin for new work?",
+      "a": "Kotlin is more concise and its null safety removes a real class of defect, and the two interoperate completely so a codebase can be mixed. Java's advantage is the hiring pool, which in most markets is considerably deeper. For a team already writing Java well, modern Java is a perfectly reasonable answer."
+    },
+    {
+      "q": "Is Java too heavy for containers?",
+      "a": "Less so than it was. Recent JVMs are container-aware, and startup and memory have both improved. Where cold start genuinely matters — serverless, or scaling from zero — GraalVM native images or a framework built for it such as Quarkus will cut startup to milliseconds, at the cost of a more constrained build."
+    }
+  ],
+  "notFor": {
+    "heading": "When to pick something else",
+    "body": "For a small service or an internal tool, Java brings ceremony and a build that a Node or Python service does not. For data and machine learning, Python has the libraries. And if your team already writes TypeScript across the stack, adding a JVM means a second toolchain, a second hiring pool and a second set of deployment conventions. Java earns its place on long-lived systems with real throughput requirements and teams that already know it — which describes a great deal of enterprise software, and not much greenfield product work."
+  },
+  "related": {
+    "services": ["back-end", "custom-software", "cloud-application", "legacy-application-modernization"],
+    "technologies": ["spring-boot", "kotlin", "docker", "aws"]
+  }
+}

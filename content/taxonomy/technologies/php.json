@@ -1,0 +1,54 @@
+{
+  "slug": "php",
+  "primaryQuery": "php development company",
+  "title": "PHP Development Company — Modern PHP, Typed",
+  "description": "PHP 8 written with types, enums and readonly objects rather than arrays and strings. Static analysis at a real level, and no legacy patterns carried forward.",
+  "h1": "PHP written the way the language works in version 8",
+  "intro": "PHP's reputation was earned by code written fifteen years ago, and a lot of that code is still running. Modern PHP is a different language: typed properties, enums, readonly classes, first-class callables, and a runtime several times faster than the one people remember. The gap between the two is what we spend most of our PHP time closing — not rewriting working systems, but replacing the patterns that make them fragile.",
+  "sections": [
+    {
+      "heading": "Types, and a static analyser that means it",
+      "body": "PHP's type system is optional, which means a codebase is only as typed as its least careful file. Declaring `strict_types` at the top of every file turns silent coercion — the string \"5 apples\" quietly becoming the integer 5 — into an error where it happens.\n\nThen a static analyser, at a level that actually rejects things. PHPStan or Psalm at a low level tells you almost nothing; raised progressively, it finds real defects: a nullable value used without a check, an array key that may not exist, a method that can return null where the caller assumes otherwise.\n\nWe raise the level incrementally with a baseline for existing violations, so the analyser is a gate on new code from day one rather than a report nobody has time to act on."
+    },
+    {
+      "heading": "Objects and enums instead of arrays and strings",
+      "body": "The defining shape of legacy PHP is the associative array used as a record. It has no defined keys, no types, and no way to know what it should contain other than reading every function that touches it.\n\nReadonly classes replace it: constructed valid, impossible to mutate afterwards, and self-documenting. A value object for money — amount in minor units plus currency — removes an entire category of rounding and mixed-currency bug that floating point arithmetic on a bare number invites.\n\nEnums replace the magic strings. A status that can only be one of four values should be a type the language enforces, not a string compared in fourteen places with one of them misspelled."
+    },
+    {
+      "heading": "Composer, and what is actually running",
+      "body": "Dependencies are managed with Composer and the lockfile is committed — that part is settled. The parts that get skipped are auditing for known vulnerabilities in CI, and knowing which PHP version production actually runs.\n\nVersion matters more in PHP than in most ecosystems because each release brings a real performance improvement, and because end-of-life versions stop receiving security fixes on a published schedule. A system on an unsupported version is not an inconvenience; it is a finding in any security review.\n\nFor frameworks, Laravel is where most of our PHP work happens and has its own page. Symfony is the other serious choice, and for a system with no framework at all the first step is usually a router and a dependency injection container rather than a rewrite into one."
+    }
+  ],
+  "codeExample": {
+    "language": "PHP",
+    "filename": "src/Billing/Money.php",
+    "caption": "The replacement for the associative array that legacy PHP uses as a record. Money is integer minor units with a currency attached, so a float rounding error cannot creep into a total and two currencies cannot be added by accident — the constructor refuses. Readonly means an instance cannot be mutated after construction, and the enum makes an invalid status unrepresentable rather than a string someone might misspell.",
+    "code": "<?php\n\ndeclare(strict_types=1);\n\nenum Currency: string\n{\n    case BDT = 'BDT';\n    case USD = 'USD';\n    case EUR = 'EUR';\n}\n\n// Constructed valid, impossible to mutate afterwards. The array version of\n// this has no defined keys and no types, and every caller guesses.\nfinal readonly class Money\n{\n    public function __construct(\n        public int $minorUnits,      // never float: 0.1 + 0.2 is not 0.3\n        public Currency $currency,\n    ) {\n        if ($minorUnits < 0) {\n            throw new InvalidArgumentException('Money cannot be negative');\n        }\n    }\n\n    public function add(self $other): self\n    {\n        // Mixing currencies is a bug, not a conversion. Refusing it here is\n        // cheaper than finding a total that silently added dollars to taka.\n        if ($this->currency !== $other->currency) {\n            throw new DomainException(\n                \"Cannot add {$other->currency->value} to {$this->currency->value}\",\n            );\n        }\n\n        return new self($this->minorUnits + $other->minorUnits, $this->currency);\n    }\n\n    public function format(): string\n    {\n        return number_format($this->minorUnits / 100, 2) . ' ' . $this->currency->value;\n    }\n}"
+  },
+  "faq": [
+    {
+      "q": "Is PHP still worth building on?",
+      "a": "Yes. PHP 8 is fast, properly typed and has a mature ecosystem, and Laravel and Symfony are both excellent frameworks. The reasonable objections are about hiring in your market and about sharing a language with your front end — not about the language being unfit, which it has not been for a long time."
+    },
+    {
+      "q": "Can you upgrade our old PHP application?",
+      "a": "Usually, and incrementally. Rector automates a large share of the mechanical changes between versions, which leaves the genuine work: patterns that relied on behaviour removed in PHP 8. We put tests around the behaviour first, because an upgrade without them is a rewrite with extra steps."
+    },
+    {
+      "q": "Laravel or Symfony?",
+      "a": "Laravel for speed of delivery and a large ecosystem; Symfony for more explicit structure and component-level reuse, which some larger teams prefer. Both are well maintained. Most of our PHP work is Laravel and it has a page of its own."
+    },
+    {
+      "q": "What about performance?",
+      "a": "PHP 8 with OPcache handles substantial traffic, and the bottleneck is almost always the database rather than the language. Where a genuinely hot path needs more, JIT helps for computational work and long-running runtimes such as Swoole or FrankenPHP remove the per-request bootstrap. Both are worth reaching for after measuring, not before."
+    }
+  ],
+  "notFor": {
+    "heading": "When another language fits better",
+    "body": "If your team writes TypeScript and the product is heavily interactive, one language across the front end and API is worth more than PHP's productivity — one type system, one hiring pool. If the work is data or machine learning, Python has the libraries and PHP does not. PHP is the right answer for conventional web applications with substantial server-rendered content and business rules, particularly where PHP hosting and PHP developers are what you already have — which in much of the market is exactly the situation."
+  },
+  "related": {
+    "services": ["back-end", "web-development", "cms", "ecommerce"],
+    "technologies": ["laravel", "javascript", "docker", "typescript"]
+  }
+}

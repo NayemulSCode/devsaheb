@@ -1,0 +1,54 @@
+{
+  "slug": "webflow",
+  "primaryQuery": "webflow development agency",
+  "title": "Webflow Development Agency — Built to Be Handed Over",
+  "description": "Webflow sites built with a real class system and a structured CMS, so your marketing team can publish without us — and so the build survives its second year.",
+  "h1": "Webflow sites your marketing team can actually run",
+  "intro": "Webflow is the right tool more often than engineers like to admit. For a marketing site that needs to look distinctive and be edited by people who do not write code, it removes a developer from the critical path of every content change — which is usually the real bottleneck. It is also easy to build badly, and a badly built Webflow project is harder to fix than a badly built codebase, because there is no refactoring tool and no version control worth the name.",
+  "sections": [
+    {
+      "heading": "The class system decides whether it survives",
+      "body": "Webflow generates a class for every element you style, and accepting those defaults produces a project with four hundred one-off classes, none reusable and none named after anything. The first redesign then means touching every page.\n\nSo we build to a naming convention from the start — a small set of layout, typography and component classes, combo classes for variants — and style the component rather than the instance. A change to a button then changes every button, which is the entire point.\n\nThis is the difference between a site a marketing team can extend and one where every new page is a fresh build. It costs a little discipline at the beginning and it is effectively impossible to retrofit."
+    },
+    {
+      "heading": "The CMS is a content model, not a set of fields",
+      "body": "Webflow's CMS is genuinely capable and it rewards the same thinking as any other: model the content as what it is, not as the page it currently appears on.\n\nA case study collection with a client, a constraint, an approach and a measured result can be laid out three different ways without touching a record. The same content built as one rich text field per page cannot be redesigned, reused or fed anywhere else.\n\nThe constraints are real and worth knowing before you commit. Collection item limits, nesting that only goes so far, and reference fields that do not do everything a relational database would. We check the model against those limits at the design stage, because discovering them after two hundred items are entered is genuinely expensive."
+    },
+    {
+      "heading": "Knowing where the ceiling is",
+      "body": "Webflow does static marketing content extremely well. It does not do application logic, authentication, complex search, or anything requiring server-side computation — and the workarounds built from embedded scripts and third-party widgets are where Webflow projects become fragile.\n\nThe healthy pattern is a clear boundary: Webflow for the marketing site, a real application for the product, on a subdomain or a path, sharing a design system so the seam is invisible to visitors.\n\nWhere a little dynamic behaviour is genuinely needed, custom code embeds and the CMS API cover a lot — a form posting to your own endpoint, or content synced out to a search index. We keep that code small, versioned in a repository rather than pasted into a settings field, and documented, because the next person will not know it exists otherwise."
+    }
+  ],
+  "codeExample": {
+    "language": "TypeScript",
+    "filename": "functions/webflow-form.ts",
+    "caption": "The boundary between Webflow and a real backend, handled properly. Webflow posts the form to your own endpoint rather than a third-party widget, and the handler verifies the signature before trusting anything — a public endpoint that accepts whatever arrives is the usual way these get abused. The submission is keyed so a double-click or a retry cannot create two leads, which matters because a duplicate in a CRM is work for a human rather than a harmless extra row.",
+    "code": "import { createHmac, timingSafeEqual } from 'node:crypto';\n\nexport async function handler(req: Request): Promise<Response> {\n  const signature = req.headers.get('x-webflow-signature') ?? '';\n  const timestamp = req.headers.get('x-webflow-timestamp') ?? '';\n  const raw = await req.text();\n\n  // Reject replays before doing any work. Without this a captured request\n  // can be resent indefinitely.\n  if (Math.abs(Date.now() - Number(timestamp)) > 5 * 60_000) {\n    return new Response('Stale', { status: 401 });\n  }\n\n  const expected = createHmac('sha256', process.env.WEBFLOW_SECRET!)\n    .update(`${timestamp}:${raw}`)\n    .digest();\n\n  const provided = Buffer.from(signature, 'hex');\n  // timingSafeEqual, not ===: string comparison leaks how much matched.\n  if (provided.length !== expected.length || !timingSafeEqual(provided, expected)) {\n    return new Response('Bad signature', { status: 401 });\n  }\n\n  const form = JSON.parse(raw) as WebflowFormPayload;\n\n  // Keyed on the submission id: a double-click, a retry or a replay that got\n  // through cannot create a second lead for someone to de-duplicate by hand.\n  await crm.upsertLead({\n    idempotencyKey: `webflow:${form.id}`,\n    email: form.data.email.trim().toLowerCase(),\n    name: form.data.name,\n    source: 'website',\n  });\n\n  return new Response(null, { status: 204 });\n}"
+  },
+  "faq": [
+    {
+      "q": "Is Webflow good for SEO?",
+      "a": "Yes — it produces clean semantic markup, handles meta tags, sitemaps and redirects, and hosts on a fast CDN. The limits are technical rather than fundamental: less control over some rendering details than a custom build, and internationalisation that costs extra. For a marketing site it is competitive with anything else."
+    },
+    {
+      "q": "What happens if we outgrow it?",
+      "a": "Webflow exports static HTML and CSS, but not the CMS content in a usable site form — that comes out through the API. A migration is therefore a template rebuild with the content ported. What keeps it cheap is a well-structured content model, which is the thing worth getting right at the start anyway."
+    },
+    {
+      "q": "Can we build a web application in Webflow?",
+      "a": "Not really, and attempting it is where these projects go wrong. Authentication, dashboards, complex search and anything computed on the server belong in an application. The right shape is Webflow for the marketing site and a real application beside it, sharing a design system so visitors never see the seam."
+    },
+    {
+      "q": "How do you handle version control?",
+      "a": "Webflow has backups and page-level restore rather than anything resembling git, so a change on the live site is genuinely risky. We work in a staging project and publish deliberately, and any custom code lives in a repository rather than pasted into settings — that part at least can be reviewed and rolled back properly."
+    }
+  ],
+  "notFor": {
+    "heading": "When to build instead",
+    "body": "If the site is the product — logins, user data, anything computed on a server — Webflow is the wrong foundation and the workarounds get fragile quickly. If you need content in several languages, or the marketing site must share components with an application you are also building, a code-based site with a CMS will cost less over its life. Webflow is the right answer when the content is marketing, the design matters, and the people who will update it are not developers — which describes a great many company websites honestly."
+  },
+  "related": {
+    "services": ["cms", "web-development", "front-end", "ecommerce"],
+    "technologies": ["javascript", "typescript", "nodejs", "nextjs"]
+  }
+}

@@ -133,7 +133,10 @@ export const TECHNOLOGY_GROUPS: TaxonomyGroup[] = [
       { name: 'Azure', slug: 'azure' },
       { name: 'Google Cloud', slug: 'google-cloud' },
       { name: 'Docker', slug: 'docker' },
-      { name: 'AI', slug: 'ai' },
+      // Folded into /services/ai-development. Its query, 'ai development
+      // services', is the same intent as that page's 'ai development company',
+      // so the two competed - which docs/keyword-map.md flagged and this acts on.
+      { name: 'AI', slug: 'ai', hidden: true },
     ],
   },
 ];
