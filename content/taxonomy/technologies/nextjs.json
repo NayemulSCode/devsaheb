@@ -25,6 +25,13 @@
     "caption": "The boundary in practice. The page is a server component — it fetches, formats and renders without shipping any of that to the browser. Only the quantity selector is a client component, so `Intl`, the data layer and the product type never reach the bundle. `revalidate` is stated rather than inherited, and the tag lets a single product be invalidated without rebuilding the catalogue.",
     "code": "import { notFound } from 'next/navigation';\nimport AddToCart from './add-to-cart'; // 'use client' lives in here, not here\n\nexport const revalidate = 3600;\n\nasync function getProduct(slug: string) {\n  const res = await fetch(`${process.env.API_URL}/products/${slug}`, {\n    // Stated per fetch. Inheriting the default is how a personalised page\n    // ends up cached at the edge for everyone.\n    next: { revalidate: 3600, tags: [`product:${slug}`] },\n  });\n  if (res.status === 404) return null;\n  if (!res.ok) throw new Error(`Upstream ${res.status}`);\n  return res.json() as Promise<Product>;\n}\n\nexport default async function Page({ params }: { params: { slug: string } }) {\n  const product = await getProduct(params.slug);\n  if (!product) notFound();\n\n  // Runs on the server. Intl is never sent to the browser.\n  const price = new Intl.NumberFormat('en-BD', {\n    style: 'currency',\n    currency: 'BDT',\n  }).format(product.priceMinor / 100);\n\n  return (\n    <main>\n      <h1>{product.name}</h1>\n      <p>{price}</p>\n      <AddToCart sku={product.sku} max={product.stock} />\n    </main>\n  );\n}"
   },
+  "engineers": [
+    {
+      "name": "Nayemul Saheb",
+      "role": "CEO & Software Engineer",
+      "focus": "Rendering strategy, server components and the caching decisions."
+    }
+  ],
   "faq": [
     {
       "q": "Should we use the App Router or the Pages Router?",

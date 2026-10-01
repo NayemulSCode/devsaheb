@@ -25,15 +25,30 @@
         "people": [
           {
             "name": "Nayemul Saheb",
-            "role": "CEO",
-            "focus": "Main Course",
+            "role": "CEO & Software Engineer",
+            "focus": "Project architecture and the build. Custom software, web applications, React and TypeScript.",
             "image": "/media/1790662882385-4ecc86cf1d54.png"
           },
           {
-            "name": "Mr .x",
+            "name": "Fahim Asfaq",
             "role": "COO",
-            "focus": "",
+            "focus": "Operations, delivery and how engagements are run.",
             "image": "/media/1790667003763-1238a86d5fb2.jpg"
+          },
+          {
+            "name": "Sumaiya Noor Muna",
+            "role": "Software Quality Assurance",
+            "focus": "Test coverage, release gates, and the behaviour we commit to before a build ships."
+          },
+          {
+            "name": "Mollika Alam",
+            "role": "HR Intern",
+            "focus": "Hiring and the people side of how the team grows."
+          },
+          {
+            "name": "Khusbu",
+            "role": "Social Media Marketing Intern",
+            "focus": "How the work gets talked about outside the company."
           }
         ]
       }

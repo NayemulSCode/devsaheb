@@ -33,6 +33,13 @@
     "Runbook per alert",
     "Handover so your team can run it without us"
   ],
+  "engineers": [
+    {
+      "name": "Nayemul Saheb",
+      "role": "CEO & Software Engineer",
+      "focus": "Builds the pipelines and runs the deployments."
+    }
+  ],
   "faq": [
     {
       "q": "Do we need DevOps if we deploy once a month?",

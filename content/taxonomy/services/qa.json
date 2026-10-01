@@ -33,6 +33,13 @@
     "Coverage floor as a CI gate",
     "Flaky tests tracked as defects, with the race actually fixed"
   ],
+  "engineers": [
+    {
+      "name": "Sumaiya Noor Muna",
+      "role": "Software Quality Assurance",
+      "focus": "Owns the test suite, the release gates and what counts as done."
+    }
+  ],
   "faq": [
     {
       "q": "We have no tests at all. Where do you start?",
@@ -56,7 +63,17 @@
     "body": "A prototype meant to answer one question and then be deleted does not need a suite; the test is whether you learned the thing. Equally, exhaustive tests on a feature nobody has validated is effort spent protecting code that may not survive the month. Testing earns its cost in proportion to how long the code lives and how expensive a failure is — and if the honest answer is a throwaway, we will tell you to skip it rather than sell you a suite."
   },
   "related": {
-    "services": ["devops", "custom-software", "web-development", "back-end"],
-    "technologies": ["typescript", "nodejs", "python", "javascript"]
+    "services": [
+      "devops",
+      "custom-software",
+      "web-development",
+      "back-end"
+    ],
+    "technologies": [
+      "typescript",
+      "nodejs",
+      "python",
+      "javascript"
+    ]
   }
 }

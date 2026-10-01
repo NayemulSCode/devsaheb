@@ -33,6 +33,13 @@
     "caption": "The contract that stops the browser and the server drifting apart. One module defines the shape; the server validates its own response against it before sending, and the browser derives its type from the same definition rather than restating it. Rename a field on the server and the browser fails to compile in the same commit — instead of rendering undefined for a customer and being found weeks later by someone reading a bug report.",
     "code": "// shared/contracts/invoice.ts — imported by both halves. One definition.\nimport { z } from 'zod';\n\nexport const invoice = z.object({\n  id: z.string().uuid(),\n  reference: z.string(),\n  totalMinor: z.number().int(),\n  currency: z.enum(['BDT', 'USD', 'EUR']),\n  dueOn: z.string().date(),\n  settledAt: z.string().datetime().nullable(),\n});\n\nexport type Invoice = z.infer<typeof invoice>;\n\n\n// server/routes/invoices.ts\nimport { invoice, type Invoice } from '../../shared/contracts/invoice';\n\napp.get('/api/invoices/:id', async (req, res) => {\n  const row = await db.invoices.findById(req.params.id);\n  if (!row) return res.status(404).json({ error: 'NOT_FOUND' });\n\n  // Validated on the way OUT too. A column rename fails here, in our own\n  // tests, rather than silently sending a field the browser does not expect.\n  res.json(invoice.parse(toApiShape(row)));\n});\n\n\n// src/api/useInvoice.ts\nimport { invoice, type Invoice } from '../../shared/contracts/invoice';\n\nexport function useInvoice(id: string) {\n  return useQuery<Invoice>({\n    queryKey: ['invoice', id],\n    queryFn: async ({ signal }) => {\n      const res = await fetch(`/api/invoices/${id}`, { signal });\n      if (!res.ok) throw new Error(`Invoice ${id}: ${res.status}`);\n      // Not `as Invoice`. A cast trusts the server; this checks it.\n      return invoice.parse(await res.json());\n    },\n  });\n}\n\n// Remove `reference` from the schema and every component reading\n// invoice.reference stops compiling. That is the whole point of sharing it."
   },
+  "engineers": [
+    {
+      "name": "Nayemul Saheb",
+      "role": "CEO & Software Engineer",
+      "focus": "Designs the client-server contract and builds both halves."
+    }
+  ],
   "faq": [
     {
       "q": "Is this different from building a website?",
@@ -56,7 +63,17 @@
     "body": "If you need a marketing site with a blog and a few landing pages, a well-chosen CMS or a site builder will serve you better and cost a fraction of this. Custom development earns its keep when the rules are yours, the integrations are awkward, or the thing has to scale in a way an off-the-shelf product cannot. If you are unsure which you have, the tell is usually whether you can describe the job in terms of pages or in terms of what the software must not allow to happen."
   },
   "related": {
-    "services": ["custom-software", "front-end", "back-end", "cloud-application"],
-    "technologies": ["reactjs", "nextjs", "typescript", "nodejs"]
+    "services": [
+      "custom-software",
+      "front-end",
+      "back-end",
+      "cloud-application"
+    ],
+    "technologies": [
+      "reactjs",
+      "nextjs",
+      "typescript",
+      "nodejs"
+    ]
   }
 }

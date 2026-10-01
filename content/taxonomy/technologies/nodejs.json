@@ -25,6 +25,13 @@
     "caption": "The shutdown sequence most services skip. Readiness flips first so the load balancer stops sending traffic, then the server stops accepting, then in-flight work is given a deadline it cannot exceed. The `unref` on the timer means a clean finish does not hold the process open, and the double-signal guard stops a second SIGTERM restarting the sequence.",
     "code": "import http from 'node:http';\nimport { app } from './app.js';\nimport { pool } from './db.js';\n\nconst server = http.createServer(app);\nserver.keepAliveTimeout = 65_000; // must exceed the load balancer's idle timeout\n\nlet ready = true;\nlet closing = false;\n\n// Readiness is separate from liveness on purpose: this goes unhealthy while\n// the process is still perfectly alive and finishing work.\napp.get('/ready', (_req, res) => res.status(ready ? 200 : 503).end());\n\nasync function shutdown(signal: string) {\n  if (closing) return; // a second SIGTERM must not restart the sequence\n  closing = true;\n  console.info(`${signal}: draining`);\n\n  ready = false;\n  // Give the load balancer time to notice before refusing connections.\n  await new Promise((r) => setTimeout(r, 5_000).unref());\n\n  const forced = setTimeout(() => {\n    console.error('drain timed out, exiting anyway');\n    process.exit(1);\n  }, 25_000);\n  forced.unref();\n\n  await new Promise<void>((resolve) => server.close(() => resolve()));\n  await pool.end();\n  clearTimeout(forced);\n  process.exit(0);\n}\n\nfor (const signal of ['SIGTERM', 'SIGINT'] as const) {\n  process.on(signal, () => void shutdown(signal));\n}\n\nserver.listen(Number(process.env.PORT ?? 3000));"
   },
+  "engineers": [
+    {
+      "name": "Nayemul Saheb",
+      "role": "CEO & Software Engineer",
+      "focus": "Builds and operates our Node services."
+    }
+  ],
   "faq": [
     {
       "q": "Is Node.js fast enough for our workload?",
@@ -48,7 +55,17 @@
     "body": "If the work is genuinely CPU-heavy, or the team's strength is elsewhere, Node is not the automatic answer. Python is better placed for data and machine-learning work because that is where the libraries live; Go is a better fit for high-throughput services where predictable memory and real parallelism matter. Node's advantage is sharing a language and types with the browser, and a mature ecosystem for web-shaped problems. Where neither of those is the deciding factor, we will say so."
   },
   "related": {
-    "services": ["back-end", "custom-software", "cloud-application", "saas"],
-    "technologies": ["typescript", "javascript", "aws", "docker"]
+    "services": [
+      "back-end",
+      "custom-software",
+      "cloud-application",
+      "saas"
+    ],
+    "technologies": [
+      "typescript",
+      "javascript",
+      "aws",
+      "docker"
+    ]
   }
 }

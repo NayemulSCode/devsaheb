@@ -57,7 +57,7 @@ export const SERVICE_GROUPS: TaxonomyGroup[] = [
     name: 'Build',
     items: [
       { name: 'Custom Software', slug: 'custom-software', tier1: true, published: true },
-      { name: 'Web Development', slug: 'web-development', tier1: true, draft: true },
+      { name: 'Web Development', slug: 'web-development', tier1: true, published: true },
       { name: 'Mobile App', slug: 'mobile-app', tier1: true, draft: true },
       { name: 'iOS', slug: 'ios', draft: true },
       { name: 'Android', slug: 'android', draft: true },
@@ -89,7 +89,7 @@ export const SERVICE_GROUPS: TaxonomyGroup[] = [
     items: [
       { name: 'Cloud Application', slug: 'cloud-application', tier1: true, draft: true },
       { name: 'DevOps', slug: 'devops', tier1: true, published: true },
-      { name: 'QA', slug: 'qa', draft: true },
+      { name: 'QA', slug: 'qa', published: true },
       { name: 'Legacy Modernization', slug: 'legacy-application-modernization', draft: true },
       { name: 'Digital Transformation', slug: 'digital-transformation', draft: true },
     ],
@@ -107,7 +107,7 @@ export const TECHNOLOGY_GROUPS: TaxonomyGroup[] = [
     name: 'Frontend',
     items: [
       { name: 'JavaScript', slug: 'javascript', draft: true },
-      { name: 'TypeScript', slug: 'typescript', tier1: true, draft: true },
+      { name: 'TypeScript', slug: 'typescript', tier1: true, published: true },
       { name: 'React.js', slug: 'reactjs', tier1: true, published: true },
       { name: 'Next.js', slug: 'nextjs', tier1: true, published: true },
       { name: 'Vue.js', slug: 'vuejs', draft: true },
@@ -118,7 +118,7 @@ export const TECHNOLOGY_GROUPS: TaxonomyGroup[] = [
   {
     name: 'Backend',
     items: [
-      { name: 'Node.js', slug: 'nodejs', tier1: true, draft: true },
+      { name: 'Node.js', slug: 'nodejs', tier1: true, published: true },
       { name: 'Python', slug: 'python', tier1: true, draft: true },
       { name: 'Django', slug: 'django', draft: true },
       { name: 'PHP', slug: 'php', draft: true },

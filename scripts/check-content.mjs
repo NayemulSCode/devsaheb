@@ -134,6 +134,18 @@ const published = new Set(
 );
 
 /**
+ * Routes that are actually linked and indexed, as opposed to drafts.
+ *
+ * A draft is reachable at its URL but carries noindex and is absent from the
+ * menus, so it is held to a lower bar than something a visitor can find.
+ */
+const indexed = new Set(
+  (bundle.routes ?? [])
+    .filter((r) => r.contentPath && !r.meta?.noindex)
+    .map((r) => r.contentPath),
+);
+
+/**
  * Contact details that site.json owns.
  *
  * A mailto: or tel: typed into a block is a second copy of a value that already
@@ -247,6 +259,28 @@ for (const { file, schema, kind } of targets) {
           rel,
           kind,
           issues: [...issues, 'The link is dropped silently at render time rather than 404ing.'],
+        });
+      }
+    }
+
+    /**
+     * A published taxonomy page names who works on it.
+     *
+     * Substance bar item 4, enforced rather than remembered. It is the item
+     * most easily skipped because nothing visibly breaks without it - the page
+     * renders perfectly and simply asserts expertise the way every competitor's
+     * page does. A draft may be unnamed; something linked from the navigation
+     * and listed in the sitemap may not.
+     */
+    if (kind === 'taxonomy' && parsed.success && indexed.has(contentPath)) {
+      if (!parsed.data.engineers?.length) {
+        failures.push({
+          rel,
+          kind,
+          issues: [
+            'published, but names no engineer — substance bar item 4',
+            'Add `engineers`, or set published: false in src/content/taxonomy.ts',
+          ],
         });
       }
     }

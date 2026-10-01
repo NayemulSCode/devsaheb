@@ -33,6 +33,13 @@
     "caption": "The AWS default that quietly multiplies your bill. A Lambda consuming SQS reports success or failure for the whole batch, so one poison message sends all ten back to the queue and every one of them is processed again — repeatedly, until the message expires. Reporting partial failures returns only the ones that actually failed. It costs a few lines and it is the difference between paying for a batch once and paying for it until someone notices the duplicate side effects.",
     "code": "import type { SQSEvent, SQSBatchResponse } from 'aws-lambda';\n\n// Requires ReportBatchItemFailures on the event source mapping. Without that\n// setting this return value is ignored and the behaviour is unchanged, which\n// is an easy thing to configure half of.\nexport async function handler(event: SQSEvent): Promise<SQSBatchResponse> {\n  const batchItemFailures: { itemIdentifier: string }[] = [];\n\n  for (const record of event.Records) {\n    try {\n      const order = JSON.parse(record.body) as OrderMessage;\n\n      // SQS is at-least-once by design, so this will arrive twice eventually.\n      // Keyed on the message id, the second delivery is a no-op.\n      await processOrder(order, { idempotencyKey: record.messageId });\n    } catch (err) {\n      // A message that can never succeed should not be retried forever.\n      // Past the redrive limit it belongs in the dead-letter queue, where\n      // someone can look at it, rather than back in the main queue.\n      if (isPermanent(err)) {\n        await sendToDeadLetter(record, err);\n        continue; // handled: do not ask for a retry\n      }\n\n      log.error('order.failed', { messageId: record.messageId, err });\n      batchItemFailures.push({ itemIdentifier: record.messageId });\n    }\n  }\n\n  // Only the genuinely failed ones go back. Returning nothing here - or\n  // throwing - redelivers all ten, reprocesses the nine that worked, and\n  // bills you for each attempt.\n  return { batchItemFailures };\n}"
   },
+  "engineers": [
+    {
+      "name": "Nayemul Saheb",
+      "role": "CEO & Software Engineer",
+      "focus": "Infrastructure, deployment and what it costs to run."
+    }
+  ],
   "faq": [
     {
       "q": "AWS, Azure, or Google Cloud?",

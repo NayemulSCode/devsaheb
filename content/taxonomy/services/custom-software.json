@@ -33,6 +33,13 @@
     "caption": "What owning the code actually means in practice. The rule lives in one pure function with no database, no framework and no HTTP in sight, so it can be read, tested and changed by whoever inherits it. The awkward case — the one the client mentioned once in a meeting — is named in the code and pinned by a test, which is the difference between a rule that survives staff turnover and one that gets quietly re-derived wrong.",
     "code": "/**\n * Trade pricing, exactly as the client's sales team describes it.\n *\n * The odd one is `settlementDiscount`: it applies to the line total BEFORE\n * volume banding, not after. Applying it after is the intuitive reading and\n * produces numbers roughly 2% low, which is how the previous system had been\n * under-invoicing for two years.\n */\nexport function priceLine(input: LineInput, terms: CustomerTerms): LineTotal {\n  const list = input.unitPriceMinor * input.quantity;\n\n  const afterSettlement = terms.settlementDiscountBps\n    ? Math.round(list * (1 - terms.settlementDiscountBps / 10_000))\n    : list;\n\n  const band = terms.volumeBands\n    .filter((b) => input.quantity >= b.fromQuantity)\n    .sort((a, b) => b.fromQuantity - a.fromQuantity)[0];\n\n  const afterVolume = band\n    ? Math.round(afterSettlement * (1 - band.discountBps / 10_000))\n    : afterSettlement;\n\n  // Minor units throughout. A float here is a rounding dispute later.\n  return { listMinor: list, netMinor: afterVolume, bandApplied: band?.id ?? null };\n}\n\n// tests/pricing.test.ts — the test exists to stop someone 'fixing' the order.\ntest('settlement discount applies before volume banding', () => {\n  const result = priceLine(\n    { unitPriceMinor: 10_000, quantity: 100 },\n    { settlementDiscountBps: 250, volumeBands: [{ id: 'v100', fromQuantity: 100, discountBps: 500 }] },\n  );\n\n  // 1,000,000 -> 975,000 (settlement) -> 926,250 (volume).\n  // Reversing the order gives 926,875, which looks close enough to pass review\n  // and is wrong on every invoice.\n  expect(result.netMinor).toBe(926_250);\n});"
   },
+  "engineers": [
+    {
+      "name": "Nayemul Saheb",
+      "role": "CEO & Software Engineer",
+      "focus": "Scopes the build, owns the architecture, and writes the code."
+    }
+  ],
   "faq": [
     {
       "q": "How long does a custom build take?",

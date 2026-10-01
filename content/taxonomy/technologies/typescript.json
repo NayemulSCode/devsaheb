@@ -25,6 +25,13 @@
     "caption": "One definition, two uses. The schema validates at the boundary and the static type is inferred from it, so a server-side change cannot pass unnoticed. The union makes the impossible states — paid but no reference, failed but no reason — impossible to construct, and the exhaustiveness check turns a new state into a compile error rather than a blank screen.",
     "code": "import { z } from 'zod';\n\n// Validator first, type derived from it. Two hand-written declarations drift;\n// this pair cannot.\nconst checkout = z.discriminatedUnion('status', [\n  z.object({ status: z.literal('pending'), expiresAt: z.string().datetime() }),\n  z.object({ status: z.literal('paid'), reference: z.string().min(1) }),\n  z.object({ status: z.literal('failed'), reason: z.string(), retryable: z.boolean() }),\n]);\n\nexport type Checkout = z.infer<typeof checkout>;\n\nexport async function loadCheckout(id: string): Promise<Checkout> {\n  const res = await fetch(`/api/checkout/${id}`);\n  if (!res.ok) throw new Error(`Checkout ${id}: ${res.status}`);\n  // Not `as Checkout`. A cast is a promise; this is a check.\n  return checkout.parse(await res.json());\n}\n\nexport function describe(c: Checkout): string {\n  switch (c.status) {\n    case 'pending':\n      return `Awaiting payment until ${c.expiresAt}`;\n    case 'paid':\n      return `Paid — ${c.reference}`; // reference exists only in this branch\n    case 'failed':\n      return c.retryable ? `Failed: ${c.reason}. Try again.` : `Failed: ${c.reason}`;\n    default: {\n      // Add a fourth status and this line stops compiling, which is the point.\n      const unreachable: never = c;\n      return unreachable;\n    }\n  }\n}"
   },
+  "engineers": [
+    {
+      "name": "Nayemul Saheb",
+      "role": "CEO & Software Engineer",
+      "focus": "Sets the compiler strictness and the typed boundaries we hold to."
+    }
+  ],
   "faq": [
     {
       "q": "Can we migrate an existing JavaScript codebase gradually?",
@@ -48,7 +55,17 @@
     "body": "A script that runs once, a prototype you intend to throw away, or a build step of forty lines does not need a type system — the ceremony would outweigh the benefit. TypeScript pays off in proportion to how long the code lives and how many people touch it. If the honest answer is that this will be deleted next month, JSDoc annotations on the tricky functions will give you most of the editor support with none of the setup."
   },
   "related": {
-    "services": ["web-development", "custom-software", "back-end", "front-end"],
-    "technologies": ["reactjs", "nodejs", "nextjs", "javascript"]
+    "services": [
+      "web-development",
+      "custom-software",
+      "back-end",
+      "front-end"
+    ],
+    "technologies": [
+      "reactjs",
+      "nodejs",
+      "nextjs",
+      "javascript"
+    ]
   }
 }
