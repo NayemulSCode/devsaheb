@@ -27,6 +27,12 @@
     "Accessibility to WCAG 2.2 AA",
     "Bundle budget enforced in CI"
   ],
+  "codeExample": {
+    "language": "TypeScript",
+    "filename": "src/components/InvoiceTable.tsx",
+    "caption": "The most common avoidable bug in React codebases, and the fix. Copying props into state and syncing with an effect means every change renders once with stale data before the effect corrects it — visible as a flicker, and the source of filters that reset themselves. Anything derivable from props and state is computed during render instead, which removes the effect, the duplicated state and the entire class of bug. Only genuine synchronisation with something outside React is left as an effect.",
+    "code": "// Before: three pieces of state that are all the same information, kept in\n// step by effects. Each render shows the old value first, then corrects it.\n//\n//   const [visible, setVisible] = useState(invoices);\n//   const [total, setTotal] = useState(0);\n//   useEffect(() => { setVisible(invoices.filter(matches)); }, [invoices, query]);\n//   useEffect(() => { setTotal(visible.reduce(sum, 0)); }, [visible]);\n\nexport function InvoiceTable({ invoices }: { invoices: Invoice[] }) {\n  // The only real state: what the user typed. Everything else follows from it.\n  const [query, setQuery] = useState('');\n  const [sort, setSort] = useState<SortKey>('dueOn');\n\n  // Derived during render. No effect, no stale first paint, no flicker.\n  const visible = useMemo(\n    () => invoices.filter((i) => matches(i, query)).sort(by(sort)),\n    [invoices, query, sort],\n  );\n\n  // useMemo is a performance hint, not correctness: this would still be right\n  // computed inline. It is here because the list is long, which is a reason.\n  const totalMinor = useMemo(\n    () => visible.reduce((sum, i) => sum + i.totalMinor, 0),\n    [visible],\n  );\n\n  // An effect that is genuinely one: synchronising with something outside\n  // React, with a cleanup, rather than deriving state from other state.\n  useEffect(() => {\n    const title = document.title;\n    document.title = `${visible.length} invoices — ${title}`;\n    return () => { document.title = title; };\n  }, [visible.length]);\n\n  return <Table rows={visible} footerTotalMinor={totalMinor} onQuery={setQuery} />;\n}"
+  },
   "faq": [
     {
       "q": "React or Next.js?",

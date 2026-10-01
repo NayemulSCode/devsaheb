@@ -27,6 +27,12 @@
     "Cost model produced before build, with budget alarms from day one",
     "Infrastructure as code, so environments are reproducible"
   ],
+  "codeExample": {
+    "language": "TypeScript",
+    "filename": "src/pricing/client.ts",
+    "caption": "What \"a defined degraded mode per feature\" means when written down. The breaker stops hammering a dependency that is already struggling, and the fallback is a decision the product made in advance — serve the last known prices with a staleness marker — rather than a 500 chosen by whichever exception propagated furthest. Jitter on the retry matters more than it looks: without it every instance retries on the same schedule and the recovering service is knocked over again by its own clients.",
+    "code": "const breaker = new CircuitBreaker({\n  failureThreshold: 5,\n  // Long enough for the dependency to actually recover. Too short and the\n  // breaker becomes a slower way of hammering it.\n  resetAfterMs: 30_000,\n});\n\nexport async function getPrices(skus: string[]): Promise<PriceResult> {\n  if (breaker.isOpen()) {\n    // Decided in advance, in the design, not by whichever error escaped.\n    return degraded(skus, 'circuit-open');\n  }\n\n  try {\n    const prices = await withRetry(\n      () => fetchPrices(skus, { timeoutMs: 800 }),\n      {\n        attempts: 3,\n        // Jitter, not a fixed backoff: synchronised retries from every\n        // instance are how a recovering service gets knocked back down.\n        delayMs: (n) => Math.round((2 ** n * 100) * (0.5 + Math.random())),\n      },\n    );\n\n    breaker.recordSuccess();\n    await cache.set(skus, prices, { ttlSeconds: 3600 });\n    return { prices, stale: false };\n  } catch (err) {\n    breaker.recordFailure();\n    return degraded(skus, err);\n  }\n}\n\nasync function degraded(skus: string[], cause: unknown): Promise<PriceResult> {\n  const cached = await cache.getAllowingStale(skus);\n\n  // A stale price the customer can see beats an error page. The flag travels\n  // with the data so the UI can say so rather than quietly showing old\n  // numbers as though they were current.\n  if (cached) {\n    log.warn('pricing.degraded', { cause, skus: skus.length });\n    return { prices: cached, stale: true };\n  }\n\n  // Nothing cached is the one case where failing is the honest answer.\n  throw new ServiceUnavailableError('Pricing unavailable', { cause });\n}"
+  },
   "faq": [
     {
       "q": "What is the difference between this and your DevOps service?",

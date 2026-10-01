@@ -27,6 +27,12 @@
     "Crash and performance reporting wired to real alerts",
     "Store listings, assets and submission handled"
   ],
+  "codeExample": {
+    "language": "TypeScript",
+    "filename": "src/release/gate.ts",
+    "caption": "The release machinery that has to exist before the first submission, not after. A half-finished feature ships dark and is switched on without another review, which is what lets you release on your own schedule rather than the store's. The forced-update path is the other half: when a build has to be recalled, the only lever you have over an installed app is refusing to let it continue — and it has to be in the version people already have, which is why it goes in at the start.",
+    "code": "type Gate =\n  | { kind: 'ok' }\n  | { kind: 'update-available' }      // prompt, dismissible\n  | { kind: 'update-required'; reason: string };  // block, not dismissible\n\n/**\n * Checked on launch and on return to foreground. The response is cached with\n * a short TTL so a dead config endpoint cannot lock anyone out of the app -\n * failing open is correct here, because the alternative is bricking every\n * install the moment a server has a bad morning.\n */\nexport async function checkGate(build: number): Promise<Gate> {\n  const config = await remoteConfig.fetch({ ttlSeconds: 300 }).catch(() => null);\n  if (!config) return { kind: 'ok' };\n\n  // minimumBuild is raised only to recall a broken release. It is the one\n  // lever that works on an app already installed on someone's phone.\n  if (build < config.minimumBuild) {\n    return { kind: 'update-required', reason: config.recallReason };\n  }\n  if (build < config.latestBuild) return { kind: 'update-available' };\n  return { kind: 'ok' };\n}\n\n/**\n * Shipping dark: the code is in the build that passed review, switched on\n * later without a second submission. Default false, so a flag the server\n * has never heard of stays off rather than enabling itself.\n */\nexport function isEnabled(flag: FlagName, userId: string): boolean {\n  const rule = remoteConfig.flags[flag];\n  if (!rule?.enabled) return false;\n  if (rule.percentage >= 100) return true;\n\n  // Stable per user: a feature must not flicker on and off between launches.\n  return hashToPercent(`${flag}:${userId}`) < rule.percentage;\n}"
+  },
   "faq": [
     {
       "q": "Should we launch on one platform first?",

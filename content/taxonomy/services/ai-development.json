@@ -27,6 +27,12 @@
     "Cost ceiling per feature with alarms, plus caching and model tiering",
     "Defined behaviour when the provider is slow or unavailable"
   ],
+  "codeExample": {
+    "language": "TypeScript",
+    "filename": "evals/support-answers.eval.ts",
+    "caption": "The thing that turns a prompt change from an argument into a number. The evaluation set is real questions with answers your experts accepted, run on every change, so a model upgrade or a retrieval tweak produces a measurement rather than a demo someone remembers favourably. Grounding is checked separately from correctness, because an answer can be right and still cite nothing — and an ungrounded right answer is luck that will not hold on the next question.",
+    "code": "import { evaluate, scorers } from './harness';\nimport cases from './cases/support.json'; // real questions, expert-approved answers\n\n/**\n * Runs in CI on every change to a prompt, a model version, or the retrieval\n * pipeline. The gate is a regression check, not a target: we care that a\n * change did not make it worse, and by how much.\n */\nconst result = await evaluate({\n  cases,\n  run: async (question: string) => {\n    const passages = await retrieve(question, { tenantId: 'eval', topK: 6 });\n    return answer(question, passages);\n  },\n  scorers: [\n    // Did it say the right thing?\n    scorers.factualMatch({ against: (c) => c.expected }),\n\n    // Is every claim traceable to a retrieved passage? An answer can be\n    // correct and ungrounded, which is luck rather than a working system.\n    scorers.groundedness({ passages: (r) => r.passages }),\n\n    // Did it decline when retrieval found nothing relevant? The cases\n    // deliberately include questions the documents cannot answer.\n    scorers.abstainsWhenUnsupported(),\n  ],\n});\n\nconst baseline = await loadBaseline('support-answers');\n\n// A 2% drop is noise; a 5% drop is a change someone needs to look at before\n// it reaches customers.\nif (result.factualMatch < baseline.factualMatch - 0.05) {\n  throw new Error(\n    `Accuracy regressed: ${pct(result.factualMatch)} vs ${pct(baseline.factualMatch)} baseline. ` +\n      `Failing cases written to ${result.reportPath}`,\n  );\n}\n\nif (result.groundedness < 0.95) {\n  throw new Error(`Groundedness ${pct(result.groundedness)} — answers are drifting from the sources`);\n}"
+  },
   "faq": [
     {
       "q": "Do we need to train our own model?",

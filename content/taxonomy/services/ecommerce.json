@@ -8,7 +8,7 @@
   "sections": [
     {
       "heading": "Speed is a commercial number here",
-      "body": "On a product listing page, the cost of slowness is not abstract — a visitor who waits leaves, and mobile shoppers on ordinary connections are the majority of the traffic for most stores.\n\nSo the performance budget is set against the templates that matter: home, category, product, cart, checkout. Images are sized and served in modern formats rather than uploaded at whatever dimensions the photographer supplied. Third-party scripts — analytics, chat, reviews, pixels — are loaded so that none of them can block the page, and we measure the cost of each one before agreeing to it. Marketing tags are usually the single largest source of slowness in a store, and they arrive after launch, so the build has to be resilient to them.\n\nThe layout also has to settle. A price or an Add to cart button that moves as the page loads produces mis-taps and abandoned sessions."
+      "body": "On a product listing page the cost of slowness is not abstract — a visitor who waits leaves, and mobile shoppers on ordinary connections are most of the traffic for most stores.\n\nSo the performance budget is set against the templates that matter: home, category, product, cart, checkout. Images are sized and served in modern formats rather than uploaded at whatever dimensions the photographer supplied. Third-party scripts — analytics, chat, reviews, pixels — load so that none of them can block the page, and each one's cost is measured before it is agreed to.\n\nThe layout also has to settle. A price or an Add to cart button that moves as the page loads produces mis-taps and abandoned sessions."
     },
     {
       "heading": "Checkout is where the money leaks",
@@ -27,6 +27,12 @@
     "Stock reservation and idempotent order processing",
     "Structured data for products, so listings are eligible for rich results"
   ],
+  "codeExample": {
+    "language": "TypeScript",
+    "filename": "src/lib/third-party.ts",
+    "caption": "Marketing tags are usually the largest single cause of slowness in a store, and they arrive after launch when nobody is looking at the budget any more. Nothing here can block the first render: each tag loads after the page is interactive, during an idle moment, and a tag that fails to load is logged rather than left to break the page. The budget is the part that matters commercially — a tag that costs 80 kB is a conversion decision, so it is measured and reported rather than assumed to be free.",
+    "code": "type Tag = { id: string; src: string; maxKb: number; consent: ConsentKey };\n\n// Each entry is a deliberate decision with a size it is allowed to cost.\n// 'the marketing team asked for it' is not a budget.\nconst TAGS: Tag[] = [\n  { id: 'analytics', src: 'https://cdn.example/a.js', maxKb: 12, consent: 'analytics' },\n  { id: 'chat', src: 'https://cdn.example/chat.js', maxKb: 60, consent: 'functional' },\n];\n\nexport function loadThirdParty(consent: Consent) {\n  // After interactive, in idle time. A tag in <head> delays the first paint\n  // of the product the customer came to buy.\n  const whenIdle = window.requestIdleCallback ?? ((cb: () => void) => setTimeout(cb, 1));\n\n  whenIdle(() => {\n    for (const tag of TAGS) {\n      if (!consent[tag.consent]) continue;\n\n      const script = document.createElement('script');\n      script.src = tag.src;\n      script.async = true;\n      // A third-party outage must not become our outage.\n      script.onerror = () => report('third_party.failed', { id: tag.id });\n      document.body.append(script);\n    }\n  });\n}\n\n/**\n * Runs in CI against a real load. A tag that grew past its budget shows up\n * as a failing build rather than as a slow product page nobody attributes\n * to the tag added three sprints ago.\n */\nexport async function auditTagSizes(page: Page) {\n  const transferred = await measureTransferByOrigin(page);\n\n  for (const tag of TAGS) {\n    const kb = transferred[new URL(tag.src).origin] ?? 0;\n    if (kb > tag.maxKb) {\n      throw new Error(`${tag.id}: ${kb}kB exceeds its ${tag.maxKb}kB budget`);\n    }\n  }\n}"
+  },
   "faq": [
     {
       "q": "Should we use Shopify or build custom?",
@@ -38,7 +44,7 @@
     },
     {
       "q": "Can you migrate our existing store?",
-      "a": "Yes, and the risky part is rarely the products — it is URLs, order history and customer accounts. We map every old URL to a new one with permanent redirects before launch, because losing the search rankings an established store has built is usually a bigger loss than anything the redesign gains."
+      "a": "Yes, and the risky part is rarely the products — it is URLs, order history and customer accounts. Every old URL is mapped to a new one with permanent redirects before launch, because losing the rankings an established store has built usually costs more than the redesign gains."
     },
     {
       "q": "Do you handle PCI compliance?",
@@ -47,7 +53,7 @@
   ],
   "notFor": {
     "heading": "When a platform beats a build",
-    "body": "If you sell a manageable catalogue of ordinary products, a hosted platform with a well-implemented theme will get you trading sooner and cheaper, and it will keep pace with payment and tax changes without you paying for that work. Custom development is the right call when the platform is actively obstructing how you sell, when the catalogue is large enough that performance becomes an engineering problem, or when you need to integrate with systems the platform has no answer for. We would rather set you up properly on a platform than build you something you will maintain for no advantage."
+    "body": "If you sell a manageable catalogue of ordinary products, a hosted platform with a well-implemented theme will get you trading sooner and cheaper, and will keep pace with payment and tax changes without you paying for that work. Custom development is the right call when the platform actively obstructs how you sell, when the catalogue is large enough that performance becomes an engineering problem, or when you must integrate with systems the platform has no answer for. We would rather set you up properly on a platform than build something you will maintain for no advantage."
   },
   "related": {
     "services": ["web-development", "custom-software", "cms", "cloud-application"],

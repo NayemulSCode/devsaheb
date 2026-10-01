@@ -109,7 +109,7 @@ export const TECHNOLOGY_GROUPS: TaxonomyGroup[] = [
       { name: 'JavaScript', slug: 'javascript', draft: true },
       { name: 'TypeScript', slug: 'typescript', tier1: true, draft: true },
       { name: 'React.js', slug: 'reactjs', tier1: true, published: true },
-      { name: 'Next.js', slug: 'nextjs', tier1: true, draft: true },
+      { name: 'Next.js', slug: 'nextjs', tier1: true, published: true },
       { name: 'Vue.js', slug: 'vuejs', draft: true },
       { name: 'Angular', slug: 'angular', draft: true },
       { name: 'Webflow', slug: 'webflow', draft: true },
