@@ -124,3 +124,28 @@ systems assess quality **sitewide**, not per page.
 
 Items 2 and 4 need facts only DevSaheb has. Pages ship when those exist, not
 when the template renders.
+
+Item 4 is enforced: `check-content` refuses a published taxonomy page that
+names no engineer. Drafts are exempt — they carry noindex and are absent from
+the menus, so they are held to a lower bar than something a visitor can find.
+
+## What is live, and why only this much
+
+Nine pages, not forty-four. The team is one software engineer and one QA
+engineer, and item 4 asks for engineers who work in the area — one name across
+every specialism is the template claim this bar exists to prevent.
+
+| Page | Named | Basis |
+|---|---|---|
+| `custom-software`, `web-development` | Nayemul Saheb | Architecture and the build |
+| `qa` | Sumaiya Noor Muna | Her discipline |
+| `reactjs`, `typescript`, `nodejs` | Nayemul Saheb | The stack this site is built on |
+| `devops`, `nextjs`, `aws` | Nayemul Saheb | Confirmed by the CEO, 2026-10-01 |
+
+The last row is recorded because it was questioned once: this site deploys to
+cPanel and is built with Vite rather than Next.js, so the evidence for those
+three is client work that is not visible in this repository. It was confirmed
+directly and does not need asking again.
+
+The remaining thirty-five are written and reviewable as drafts. Each becomes
+publishable when someone who works in it can be named.
