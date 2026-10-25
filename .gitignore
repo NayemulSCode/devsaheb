@@ -23,3 +23,6 @@ brand/_icon.html
 # Lighthouse CI output
 .lighthouseci/
 release/
+
+# Passenger restart trigger, touched by scripts/deploy.sh
+tmp/
