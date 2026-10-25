@@ -117,7 +117,7 @@ cPanel → **Setup Node.js App → Create Application**
 | Application mode | production |
 | Application root | `devsaheb-app` |
 | Application URL | `devsaheb.com/api` |
-| Startup file | `app.js` |
+| Startup file | `app.cjs` |
 
 Then create `/home/devsaheb/devsaheb-app/.env`. Generate the credentials
 **locally** and paste the output — the plaintext password is never stored:

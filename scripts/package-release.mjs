@@ -31,7 +31,7 @@ const APP_ITEMS = [
   'assets/fonts',    // satori reads these TTFs to regenerate OG cards
   'brand/ds-mark.svg', // embedded into OG cards
   'server.js',
-  'app.js',          // Passenger startup file
+  'app.cjs',         // Passenger startup file
   'package.json',
   'package-lock.json',
 ];
@@ -114,7 +114,7 @@ STEPS
        Application mode: production
        Application root: devsaheb-app
        Application URL:  devsaheb.com/api
-       Startup file:     app.js
+       Startup file:     app.cjs
 
   4. In that app's panel, click "Run NPM Install"
      (or use its terminal command, then: npm install --omit=dev)

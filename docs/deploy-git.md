@@ -121,7 +121,7 @@ cPanel → **Setup Node.js App → CREATE APPLICATION**
 | Application mode | production |
 | Application root | `devsaheb-app` |
 | Application URL | `devsaheb.com` |
-| Application startup file | `app.js` |
+| Application startup file | `app.cjs` |
 
 cPanel creates `/home/devsaheb/devsaheb-app` and a virtualenv under
 `~/nodevenv/devsaheb-app/22/`. It also prints an `source ...activate` command —
@@ -269,7 +269,7 @@ hosting. Nothing about this setup works against that, and two decisions taken
 now decide whether the move is an hour or a bad week.
 
 **What the move actually costs.** There is no database, nothing in the code
-refers to this host, and `app.js` is a three-line shim over a plain Express app
+refers to this host, and `app.cjs` is a three-line shim over a plain Express app
 that runs anywhere Node 20+ runs. So the move is: clone the repo, restore
 `content/`, write `.env`, `npm install && npm run build`, repoint DNS. The
 cPanel-specific parts — Passenger, the startup-file field, the nodevenv

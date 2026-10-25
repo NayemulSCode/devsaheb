@@ -233,7 +233,7 @@ Full step-by-step in [RELEASE.md](RELEASE.md). Summary:
 4. Point the **domain's document root** at `dist/client`.
 5. Copy [deploy/.htaccess](deploy/.htaccess) into that document root.
 6. Create the Node app: application root = repo directory, **application URL =
-   `/api`**, startup file = `app.js`. Passenger then handles only API traffic.
+   `/api`**, startup file = `app.cjs`. Passenger then handles only API traffic.
 7. Confirm the app user can write to `content/` and `content/media/`.
 
 ### Why this shape
