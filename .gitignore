@@ -26,3 +26,6 @@ release/
 
 # Passenger restart trigger, touched by scripts/deploy.sh
 tmp/
+
+# LiteSpeed writes the app's stderr into the application root
+stderr.log
