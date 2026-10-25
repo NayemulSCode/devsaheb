@@ -14,9 +14,9 @@ import tailwindcss from '@tailwindcss/vite';
  * JSON parse fails, and /admin reports "Admin is not configured" - which sends
  * you to fix .env when the actual problem is that dev has no API at all.
  *
- * Only /api and /media are mounted; Vite keeps every other route. Saving a
- * page still needs `npm run build` to have run once, because the validation
- * schema is read from the built SSR bundle.
+ * Only /api and /media are mounted; Vite keeps every other route. The route
+ * table and validation schemas come from src/entry-server.tsx through Vite,
+ * not from dist/server, so the admin works on a fresh clone with no build.
  */
 function devApi(): PluginOption {
   let devServer: import('vite').ViteDevServer | undefined;
@@ -108,7 +108,13 @@ function devApi(): PluginOption {
       const { createApi } = await import('./server/api.js');
       // No media symlink in dev: dist/ may not exist, and Vite serves from the
       // project root rather than the build output.
-      const { api, auth } = await createApi({ linkMedia: false });
+      const { api, auth } = await createApi({
+        linkMedia: false,
+        bundle: () => server.ssrLoadModule('/src/entry-server.tsx'),
+        // A save writes content/*.json, which dev reads on the next request;
+        // there is no prerendered HTML or OG card to rebuild.
+        regenerate: async (path: string) => path,
+      });
       server.middlewares.use(api);
 
       if (!auth.configured) {

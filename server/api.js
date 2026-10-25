@@ -64,8 +64,16 @@ async function getBundle() {
  * @param {object} [options]
  * @param {boolean} [options.linkMedia] Create the docroot media symlink.
  *        Production only - in dev Vite serves from the project, not dist/.
+ * @param {() => Promise<any>} [options.bundle] Where the routes and schemas
+ *        come from. Dev passes Vite's ssrLoadModule so it needs no build.
+ * @param {(path: string) => Promise<string>} [options.regenerate] What a save
+ *        rebuilds. Dev renders from source, so there is nothing to write.
  */
-export async function createApi({ linkMedia = true } = {}) {
+export async function createApi({
+  linkMedia = true,
+  bundle = getBundle,
+  regenerate = regeneratePage,
+} = {}) {
   await ensureDirs();
 
   if (linkMedia) {
@@ -99,7 +107,7 @@ export async function createApi({ linkMedia = true } = {}) {
     });
   });
 
-  api.use('/api/admin', createAdminRouter({ auth, getBundle, regenerate: regeneratePage }));
+  api.use('/api/admin', createAdminRouter({ auth, getBundle: bundle, regenerate }));
 
   // Uploaded media. Served from the content directory, which persists across
   // deploys - this is why cPanel's real filesystem matters for this design.
