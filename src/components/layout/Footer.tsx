@@ -38,7 +38,9 @@ export default function Footer() {
       style={{ ['--accent' as string]: 'var(--color-gold)' }}
     >
       <Container>
-        <div className="grid gap-10 lg:grid-cols-[1.5fr_0.8fr_0.8fr_0.8fr] lg:gap-12">
+        {/* Brand and contact, then the link lists: two columns on a phone, three
+            from sm up, and beside the brand column from lg. */}
+        <div className="grid gap-12 lg:grid-cols-[minmax(0,1.4fr)_minmax(0,2fr)] lg:gap-16">
           <div>
             <Link to="/" aria-label="DevSaheb — home" className="inline-block">
               <img
@@ -105,48 +107,50 @@ export default function Footer() {
                 </ul>
               </div>
             ) : null}
+
+            <div className="mt-9 flex flex-wrap gap-3">
+              {/* Displayed as images only. Self-serving AggregateRating markup on
+                  your own Organization is disallowed for rich results. */}
+              <div className="grid gap-1 border border-silver/15 px-4 py-2.5">
+                <span className="font-display text-[15px] font-extrabold text-bone">BASIS</span>
+                <span className="font-mono text-[9px] uppercase tracking-[0.08em] text-silver-dim">
+                  Member — verify before use
+                </span>
+              </div>
+              <div className="grid gap-1 border border-silver/15 px-4 py-2.5">
+                <span className="text-xs tracking-[0.1em] text-gold">★★★★★</span>
+                <span className="font-mono text-[9px] uppercase tracking-[0.08em] text-silver-dim">
+                  Google reviews — display only
+                </span>
+              </div>
+            </div>
           </div>
 
-          <FooterColumn title="Company" links={COMPANY} />
+          <div className="grid grid-cols-2 gap-x-6 gap-y-10 sm:grid-cols-3">
+            <FooterColumn title="Company" links={COMPANY} />
 
-          {/* Six services and no technologies column. Sitewide links to all 45
-              pages would flatten the internal link graph so nothing reads as
-              important, and dense keyword-link footers are a known spam
-              pattern. The hubs distribute from here. */}
-          <FooterColumn
-            title="Services"
-            links={PUBLISHED_SERVICES.slice(0, 6).map((s) => ({
-              name: s.name,
-              path: servicePath(s.slug),
-            }))}
-            more={{ name: 'All services →', path: '/services' }}
-          />
+            {/* Six services and no technologies column. Sitewide links to all 45
+                pages would flatten the internal link graph so nothing reads as
+                important, and dense keyword-link footers are a known spam
+                pattern. The hubs distribute from here. */}
+            <FooterColumn
+              title="Services"
+              links={PUBLISHED_SERVICES.slice(0, 6).map((s) => ({
+                name: s.name,
+                path: servicePath(s.slug),
+              }))}
+              more={{ name: 'All services →', path: '/services' }}
+            />
 
-          <FooterColumn
-            title="Resources"
-            links={RESOURCES}
-            more={{ name: 'All technologies →', path: '/technologies' }}
-          />
+            <FooterColumn
+              title="Resources"
+              links={RESOURCES}
+              more={{ name: 'All technologies →', path: '/technologies' }}
+            />
+          </div>
         </div>
 
-        <div className="mt-11 flex flex-wrap items-center gap-6 lg:justify-end">
-          {/* Displayed as images only. Self-serving AggregateRating markup on
-              your own Organization is disallowed for rich results. */}
-          <div className="grid min-w-32 gap-1 border border-silver/15 px-4 py-2.5">
-            <span className="font-display text-[15px] font-extrabold text-bone">BASIS</span>
-            <span className="font-mono text-[9px] uppercase tracking-[0.08em] text-silver-dim">
-              Member — verify before use
-            </span>
-          </div>
-          <div className="grid min-w-32 gap-1 border border-silver/15 px-4 py-2.5">
-            <span className="text-xs tracking-[0.1em] text-gold">★★★★★</span>
-            <span className="font-mono text-[9px] uppercase tracking-[0.08em] text-silver-dim">
-              Google reviews — display only
-            </span>
-          </div>
-        </div>
-
-        <div className="mt-12 flex flex-wrap justify-between gap-4 border-t border-gold/20 py-6 font-mono text-[10.5px] tracking-[0.06em] text-silver-dim">
+        <div className="mt-14 flex flex-wrap justify-between gap-4 border-t border-gold/20 py-6 font-mono text-[10.5px] tracking-[0.06em] text-silver-dim">
           <span>
             © {new Date().getFullYear()} {site.name}
             {site.registrationNumber ? ` · Reg. No. ${site.registrationNumber}` : ''}
@@ -176,10 +180,13 @@ function FooterColumn({
 }) {
   return (
     <div>
-      <h2 className="mb-5 font-mono text-[10px] font-medium uppercase tracking-[0.16em] text-gold">
-        {title}
+      {/* The type sits on a span: the global h1-h4 rule in styles.css is
+          unlayered, so it beats utility classes placed on the heading itself. */}
+      <h2 className="flex items-center gap-3">
+        <span aria-hidden="true" className="h-px w-5 bg-gold" />
+        <span className="font-mono text-[10.5px] font-medium uppercase tracking-[0.16em] text-gold">{title}</span>
       </h2>
-      <ul className="grid gap-3">
+      <ul className="mt-5 grid gap-2.5">
         {links.map(({ name, path }) => (
           <li key={path}>
             <Link to={path} className="text-[13.5px] text-silver transition-colors hover:text-gold">
