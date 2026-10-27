@@ -11,10 +11,11 @@ const BASE =
   'ease-[var(--ease-brand)] hover:-translate-y-0.5 motion-reduce:hover:translate-y-0';
 
 const VARIANTS: Record<Variant, string> = {
-  // Ink text on the accent fill reads on both bands: gold->ink is 9.22:1 and
-  // gold-deep->bone is 5.33:1 inverted, both comfortably above AA.
+  // Fill, text and hover all come from <Section>, which pairs them per band:
+  // ink on gold / gold-lift on ink bands, bone on gold-deep / ink on bone bands.
   solid:
-    'border-[var(--accent)] bg-[var(--accent)] text-ink hover:bg-gold-lift hover:border-gold-lift',
+    'border-[var(--accent)] bg-[var(--accent)] text-[var(--on-accent)] ' +
+    'hover:bg-[var(--accent-hover)] hover:border-[var(--accent-hover)]',
   ghost:
     'border-[var(--accent-line)] bg-transparent text-[var(--accent)] hover:border-[var(--accent)]',
 };

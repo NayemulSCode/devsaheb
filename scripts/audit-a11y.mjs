@@ -55,6 +55,34 @@ function routePaths() {
   return paths.sort();
 }
 
+/**
+ * axe skips elements at opacity 0, and <Reveal> holds everything below the fold
+ * there until it scrolls into view. Measured straight after load, most of a page
+ * goes unchecked - a failing button in a bone band passed this way. So scroll
+ * the whole page in steps to fire every reveal, then let the transition settle.
+ */
+async function revealEverything(page) {
+  await page.evaluate(async () => {
+    const wait = (ms) => new Promise((r) => setTimeout(r, ms));
+    // A moving marquee shifts nodes between measurements; hold it still.
+    for (const el of document.querySelectorAll('.ds-marquee')) el.dataset.paused = 'true';
+    for (let y = 0; y < document.documentElement.scrollHeight; y += 300) {
+      window.scrollTo(0, y);
+      await wait(60);
+    }
+    window.scrollTo(0, document.documentElement.scrollHeight);
+    await wait(60);
+    window.scrollTo(0, 0);
+  });
+  // 0.5s transition plus the longest stagger delay, with margin.
+  await new Promise((r) => setTimeout(r, 1000));
+
+  const hidden = await page.evaluate(
+    () => document.querySelectorAll('.js [data-reveal]:not(.is-visible)').length,
+  );
+  if (hidden > 0) console.warn(`  ${hidden} reveal(s) never fired; axe will skip them`);
+}
+
 async function main() {
   if (!CHROME) {
     console.error('No Chrome or Edge found. Set one up or skip with SKIP_A11Y=1.');
@@ -77,6 +105,7 @@ async function main() {
 
     try {
       await page.goto(BASE + path, { waitUntil: 'networkidle0', timeout: 30000 });
+      await revealEverything(page);
 
       await page.evaluate(AXE_SOURCE);
       const results = await page.evaluate(
