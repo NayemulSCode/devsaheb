@@ -31,12 +31,19 @@ const TONES: Record<Tone, { className: string; style: CSSProperties }> = {
 export default function Section({
   tone = 'ink',
   as: Tag = 'section',
+  padded = true,
   className,
   children,
   ...rest
 }: {
   tone?: Tone;
   as?: 'section' | 'div' | 'header' | 'footer' | 'main';
+  /**
+   * Off for bands that set their own height, such as a ticker. cn() joins
+   * classes without resolving conflicts, so passing py-0 alongside the default
+   * would leave the winner to stylesheet order.
+   */
+  padded?: boolean;
   className?: string;
   children: ReactNode;
 } & Omit<React.HTMLAttributes<HTMLElement>, 'className' | 'children'>) {
@@ -44,7 +51,7 @@ export default function Section({
   return (
     <Tag
       style={style}
-      className={cn('py-18 md:py-32', toneClass, className)}
+      className={cn(padded && 'py-18 md:py-32', toneClass, className)}
       {...rest}
     >
       {children}

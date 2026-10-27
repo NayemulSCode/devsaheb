@@ -151,3 +151,78 @@ p {
     scroll-behavior: auto !important;
   }
 }
+
+/*
+  Ticker. The track holds the list twice and slides by half its width, which
+  lands the copy exactly where the original started: a seamless loop with no
+  script driving it. Each band sets its own duration from item count and speed.
+*/
+@keyframes ds-marquee {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(-50%);
+  }
+}
+
+.ds-marquee-track {
+  animation: ds-marquee var(--marquee-duration, 40s) linear infinite;
+}
+
+.ds-marquee[data-direction='right'] .ds-marquee-track {
+  animation-direction: reverse;
+}
+
+/* Hover, keyboard focus and the pause control all hold it still. */
+.ds-marquee:hover .ds-marquee-track,
+.ds-marquee:focus-within .ds-marquee-track,
+.ds-marquee[data-paused='true'] .ds-marquee-track {
+  animation-play-state: paused;
+}
+
+.ds-marquee-viewport {
+  mask-image: linear-gradient(to right, transparent, #000 6%, #000 94%, transparent);
+}
+
+/* A portrait arriving in the hero's rotation. */
+@keyframes ds-fade-in {
+  from {
+    opacity: 0;
+    transform: scale(0.96);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+.ds-fade-in {
+  animation: ds-fade-in 0.6s var(--ease-brand) both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  /*
+    No motion at all. The global rule above shortens animations to 0.01ms,
+    which on an infinite loop would strobe rather than stop - so the ticker is
+    switched off outright, and the list wraps in place of scrolling. The copy
+    and the pause control have nothing left to do.
+  */
+  .ds-marquee-track {
+    animation: none !important;
+    width: auto;
+  }
+  .ds-marquee-track,
+  .ds-marquee-track > ul {
+    flex-wrap: wrap;
+    justify-content: center;
+    row-gap: 0.75rem;
+  }
+  .ds-marquee-copy,
+  .ds-marquee-toggle {
+    display: none;
+  }
+  .ds-marquee-viewport {
+    mask-image: none;
+  }
+}

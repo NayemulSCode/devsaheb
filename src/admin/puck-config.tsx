@@ -13,6 +13,11 @@ import TeamGridBlock from '../components/blocks/TeamGridBlock';
 import MediaTextBlock from '../components/blocks/MediaTextBlock';
 import LogoWallBlock from '../components/blocks/LogoWallBlock';
 import ChecklistBlock from '../components/blocks/ChecklistBlock';
+import HeroShowcaseBlock from '../components/blocks/HeroShowcaseBlock';
+import MarqueeBlock from '../components/blocks/MarqueeBlock';
+import ServiceExplorerBlock from '../components/blocks/ServiceExplorerBlock';
+import IndustryGridBlock from '../components/blocks/IndustryGridBlock';
+import { INDUSTRY_ICONS, INDUSTRY_ICON_LABELS } from '../content/industry-icons';
 import MediaField from './MediaField';
 import { BLOCK_DEFAULTS, ARRAY_ITEM_DEFAULTS } from '../content/block-defaults';
 import type {
@@ -29,6 +34,10 @@ import type {
   MediaTextProps,
   LogoWallProps,
   ChecklistProps,
+  HeroShowcaseProps,
+  MarqueeProps,
+  ServiceExplorerProps,
+  IndustryGridProps,
 } from '../components/blocks/types';
 
 /**
@@ -93,11 +102,14 @@ const imageField = (label: string) => ({
 
 export const puckConfig: Config = {
   categories: {
-    layout: { title: 'Page structure', components: ['Hero', 'RichText', 'MediaText', 'Cta'] },
+    layout: {
+      title: 'Page structure',
+      components: ['Hero', 'HeroShowcase', 'RichText', 'MediaText', 'Cta', 'Marquee'],
+    },
     proof: { title: 'Proof', components: ['Stats', 'SpecTable', 'Quote', 'LogoWall'] },
     detail: {
       title: 'Detail',
-      components: ['CardGrid', 'Steps', 'Checklist', 'Faq', 'TeamGrid'],
+      components: ['CardGrid', 'ServiceExplorer', 'IndustryGrid', 'Steps', 'Checklist', 'Faq', 'TeamGrid'],
     },
   },
 
@@ -366,6 +378,140 @@ export const puckConfig: Config = {
       },
       defaultProps: BLOCK_DEFAULTS.TeamGrid,
       render: (props) => <TeamGridBlock {...(props as unknown as TeamGridProps)} />,
+    },
+
+    HeroShowcase: {
+      label: 'Hero with team',
+      fields: {
+        eyebrow: { type: 'text', label: 'Eyebrow' },
+        title: { type: 'text', label: 'Title' },
+        highlight: { type: 'text', label: 'Highlighted words' },
+        lede: { type: 'textarea', label: 'Lede' },
+        primaryLabel: { type: 'text', label: 'Primary button' },
+        primaryHref: { type: 'text', label: 'Primary link' },
+        secondaryLabel: { type: 'text', label: 'Secondary button' },
+        secondaryHref: { type: 'text', label: 'Secondary link' },
+        people: {
+          type: 'array',
+          label: 'People (four show at once; the rest rotate in)',
+          max: 12,
+          arrayFields: {
+            name: { type: 'text', label: 'Name' },
+            role: { type: 'text', label: 'Role' },
+            image: imageField('Photo (blank shows initials)'),
+          },
+          defaultItemProps: ARRAY_ITEM_DEFAULTS['HeroShowcase.people'],
+          getItemSummary: (item: { name?: string }) => item?.name || 'Person',
+        },
+        badges: {
+          type: 'array',
+          label: 'Badges (up to three)',
+          max: 3,
+          arrayFields: {
+            label: { type: 'text', label: 'Small label' },
+            value: { type: 'text', label: 'Value (short, e.g. 80%)' },
+          },
+          defaultItemProps: ARRAY_ITEM_DEFAULTS['HeroShowcase.badges'],
+          getItemSummary: (item: { value?: string }) => item?.value || 'Badge',
+        },
+        rotateSeconds: { type: 'number', label: 'Seconds between rotations (0 holds still)', min: 0, max: 60 },
+      },
+      defaultProps: BLOCK_DEFAULTS.HeroShowcase,
+      render: (props) => <HeroShowcaseBlock {...(props as unknown as HeroShowcaseProps)} />,
+    },
+
+    Marquee: {
+      label: 'Ticker',
+      fields: {
+        tone: toneField,
+        label: { type: 'text', label: 'Name read out by screen readers' },
+        speed: {
+          type: 'select',
+          label: 'Speed',
+          options: [
+            { label: 'Slow', value: 'slow' },
+            { label: 'Normal', value: 'normal' },
+            { label: 'Fast', value: 'fast' },
+          ],
+        },
+        direction: {
+          type: 'select',
+          label: 'Direction',
+          options: [
+            { label: 'Right to left', value: 'left' },
+            { label: 'Left to right', value: 'right' },
+          ],
+        },
+        items: {
+          type: 'array',
+          label: 'Items',
+          max: 30,
+          arrayFields: {
+            text: { type: 'text', label: 'Text' },
+            href: { type: 'text', label: 'Link (optional)' },
+          },
+          defaultItemProps: ARRAY_ITEM_DEFAULTS['Marquee.items'],
+          getItemSummary: (item: { text?: string }) => item?.text || 'Item',
+        },
+      },
+      defaultProps: BLOCK_DEFAULTS.Marquee,
+      render: (props) => <MarqueeBlock {...(props as unknown as MarqueeProps)} />,
+    },
+
+    ServiceExplorer: {
+      label: 'Service explorer',
+      fields: {
+        tone: toneField,
+        eyebrow: { type: 'text', label: 'Eyebrow' },
+        heading: { type: 'text', label: 'Heading' },
+        cardLabel: { type: 'text', label: 'Label above the card list' },
+        items: {
+          type: 'array',
+          label: 'Services',
+          max: 10,
+          arrayFields: {
+            title: { type: 'text', label: 'Title' },
+            description: { type: 'textarea', label: 'Description' },
+            subItems: textItems('Card list'),
+            image: imageField('Card image (blank shows the number)'),
+            imageAlt: { type: 'text', label: 'Image alt text (blank if decorative)' },
+            href: { type: 'text', label: 'Link (optional)' },
+            linkLabel: { type: 'text', label: 'Link label' },
+          },
+          defaultItemProps: ARRAY_ITEM_DEFAULTS['ServiceExplorer.items'],
+          getItemSummary: (item: { title?: string }) => item?.title || 'Service',
+        },
+      },
+      defaultProps: BLOCK_DEFAULTS.ServiceExplorer,
+      render: (props) => <ServiceExplorerBlock {...(props as unknown as ServiceExplorerProps)} />,
+    },
+
+    IndustryGrid: {
+      label: 'Industry grid',
+      fields: {
+        tone: toneField,
+        eyebrow: { type: 'text', label: 'Eyebrow' },
+        heading: { type: 'text', label: 'Heading' },
+        lede: { type: 'textarea', label: 'Lede' },
+        industries: {
+          type: 'array',
+          label: 'Industries',
+          max: 36,
+          arrayFields: {
+            label: { type: 'text', label: 'Name' },
+            icon: {
+              type: 'select',
+              label: 'Icon',
+              options: INDUSTRY_ICONS.map((value) => ({ label: INDUSTRY_ICON_LABELS[value], value })),
+            },
+            href: { type: 'text', label: 'Link (optional)' },
+          },
+          defaultItemProps: ARRAY_ITEM_DEFAULTS['IndustryGrid.industries'],
+          getItemSummary: (item: { label?: string }) => item?.label || 'Industry',
+        },
+      },
+      defaultProps: BLOCK_DEFAULTS.IndustryGrid,
+      render: (props) => <IndustryGridBlock {...(props as unknown as IndustryGridProps)} />,
     },
   },
 };

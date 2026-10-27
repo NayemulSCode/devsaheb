@@ -10,6 +10,10 @@ import type { Block } from '../../content/schema';
 export type PropsOf<T extends Block['type']> = Extract<Block, { type: T }>['props'];
 
 export type HeroProps = PropsOf<'Hero'>;
+export type HeroShowcaseProps = PropsOf<'HeroShowcase'>;
+export type MarqueeProps = PropsOf<'Marquee'>;
+export type ServiceExplorerProps = PropsOf<'ServiceExplorer'>;
+export type IndustryGridProps = PropsOf<'IndustryGrid'>;
 export type SpecTableProps = PropsOf<'SpecTable'>;
 export type CardGridProps = PropsOf<'CardGrid'>;
 export type RichTextProps = PropsOf<'RichText'>;

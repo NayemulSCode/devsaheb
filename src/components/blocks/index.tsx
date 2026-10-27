@@ -1,5 +1,9 @@
 import type { Block, PageContent } from '../../content/schema';
 import HeroBlock from './HeroBlock';
+import HeroShowcaseBlock from './HeroShowcaseBlock';
+import MarqueeBlock from './MarqueeBlock';
+import ServiceExplorerBlock from './ServiceExplorerBlock';
+import IndustryGridBlock from './IndustryGridBlock';
 import SpecTableBlock from './SpecTableBlock';
 import CardGridBlock from './CardGridBlock';
 import RichTextBlock from './RichTextBlock';
@@ -23,6 +27,10 @@ import ChecklistBlock from './ChecklistBlock';
  */
 const REGISTRY = {
   Hero: HeroBlock,
+  HeroShowcase: HeroShowcaseBlock,
+  Marquee: MarqueeBlock,
+  ServiceExplorer: ServiceExplorerBlock,
+  IndustryGrid: IndustryGridBlock,
   SpecTable: SpecTableBlock,
   CardGrid: CardGridBlock,
   RichText: RichTextBlock,
@@ -51,6 +59,14 @@ function BlockRenderer({ block }: { block: Block }) {
   switch (block.type) {
     case 'Hero':
       return <HeroBlock {...block.props} />;
+    case 'HeroShowcase':
+      return <HeroShowcaseBlock {...block.props} />;
+    case 'Marquee':
+      return <MarqueeBlock {...block.props} />;
+    case 'ServiceExplorer':
+      return <ServiceExplorerBlock {...block.props} />;
+    case 'IndustryGrid':
+      return <IndustryGridBlock {...block.props} />;
     case 'SpecTable':
       return <SpecTableBlock {...block.props} />;
     case 'CardGrid':

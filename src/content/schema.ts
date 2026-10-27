@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { INDUSTRY_ICONS } from './industry-icons';
 
 /**
  * Page content schema.
@@ -355,8 +356,99 @@ const checklistBlock = z.object({
   }),
 });
 
+/**
+ * Hero with a cluster of the people behind the work.
+ *
+ * Up to four portraits show at once; anyone beyond that rotates through the
+ * slots. A portrait with no image shows the person's initials, so the block is
+ * complete before photos exist.
+ *
+ * The lengths are what the floating layout was checked against: names and
+ * titles wrap to two lines at most, and a badge value stays on one.
+ */
+const heroShowcaseBlock = z.object({
+  type: z.literal('HeroShowcase'),
+  props: z.object({
+    id: blockId,
+    eyebrow: trimmed(60),
+    title: trimmed(200),
+    highlight: trimmed(60).optional(),
+    lede: trimmed(600).optional(),
+    primaryLabel: trimmed(40).optional(),
+    primaryHref: optional(href),
+    secondaryLabel: trimmed(40).optional(),
+    secondaryHref: optional(href),
+    people: z
+      .array(z.object({ name: trimmed(40), role: trimmed(40), image: optional(imageSrc) }))
+      .max(12),
+    // Three positions in the layout, so three at most.
+    badges: z.array(z.object({ label: trimmed(40), value: trimmed(16) })).max(3),
+    /** 0 holds still. Optional so a cleared number field still saves. */
+    rotateSeconds: z.number().int().min(0).max(60).optional(),
+  }),
+});
+
+/** Names on a continuous ticker. Pausable, and static for reduced motion. */
+const marqueeBlock = z.object({
+  type: z.literal('Marquee'),
+  props: z.object({
+    id: blockId,
+    tone,
+    /** What a screen reader announces for the band, e.g. "Services we deliver". */
+    label: trimmed(80),
+    speed: z.enum(['slow', 'normal', 'fast']),
+    direction: z.enum(['left', 'right']),
+    items: z.array(z.object({ text: trimmed(60), href: optional(href) })).max(30),
+  }),
+});
+
+/** A numbered list where choosing an item reveals its detail card. */
+const serviceExplorerBlock = z.object({
+  type: z.literal('ServiceExplorer'),
+  props: z.object({
+    id: blockId,
+    tone,
+    eyebrow: trimmed(60).optional(),
+    heading: trimmed(200).optional(),
+    /** Small label above the card's list, e.g. "Core services". */
+    cardLabel: trimmed(40).optional(),
+    items: z
+      .array(
+        z.object({
+          title: trimmed(80),
+          description: trimmed(600).optional(),
+          subItems: z.array(textItem).max(12).optional(),
+          image: optional(imageSrc),
+          imageAlt: trimmed(200).optional(),
+          href: optional(href),
+          linkLabel: trimmed(40).optional(),
+        }),
+      )
+      .max(10),
+  }),
+});
+
+/** Icon tiles for the sectors served. Icons come from a fixed, reviewed set. */
+const industryGridBlock = z.object({
+  type: z.literal('IndustryGrid'),
+  props: z.object({
+    id: blockId,
+    tone,
+    eyebrow: trimmed(60).optional(),
+    heading: trimmed(200).optional(),
+    lede: trimmed(400).optional(),
+    industries: z
+      .array(z.object({ label: trimmed(60), icon: z.enum(INDUSTRY_ICONS), href: optional(href) }))
+      .max(36),
+  }),
+});
+
 export const blockSchema = z.discriminatedUnion('type', [
   heroBlock,
+  heroShowcaseBlock,
+  marqueeBlock,
+  serviceExplorerBlock,
+  industryGridBlock,
   specTableBlock,
   cardGridBlock,
   richTextBlock,
@@ -408,6 +500,10 @@ export type PageContent = z.infer<typeof pageSchema>;
 
 export const BLOCK_TYPES = [
   'Hero',
+  'HeroShowcase',
+  'Marquee',
+  'ServiceExplorer',
+  'IndustryGrid',
   'SpecTable',
   'CardGrid',
   'RichText',
