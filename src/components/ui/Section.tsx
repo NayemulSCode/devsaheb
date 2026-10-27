@@ -10,6 +10,11 @@ export type Tone = 'ink' | 'bone';
  * 1.81:1 on bone, so a bone band swaps in gold-deep (5.33:1). Components read
  * --accent rather than naming a colour, which means the contrast rule holds by
  * construction - you cannot place unreadable gold type on a light band.
+ *
+ * Accent fills need the same treatment. --on-accent is the text colour on an
+ * --accent fill, and --accent-hover the fill a solid button lifts to. Ink on
+ * gold-deep is only 3.14:1, so a bone band puts bone on it instead (5.33:1)
+ * and hovers to ink (16.73:1) - gold-lift under bone text would be 1.50:1.
  */
 const TONES: Record<Tone, { className: string; style: CSSProperties }> = {
   ink: {
@@ -17,6 +22,8 @@ const TONES: Record<Tone, { className: string; style: CSSProperties }> = {
     style: {
       '--accent': 'var(--color-gold)',
       '--accent-line': 'rgb(204 170 80 / 0.2)',
+      '--accent-hover': 'var(--color-gold-lift)',
+      '--on-accent': 'var(--color-ink)',
     } as CSSProperties,
   },
   bone: {
@@ -24,6 +31,8 @@ const TONES: Record<Tone, { className: string; style: CSSProperties }> = {
     style: {
       '--accent': 'var(--color-gold-deep)',
       '--accent-line': 'rgb(11 16 32 / 0.12)',
+      '--accent-hover': 'var(--color-ink)',
+      '--on-accent': 'var(--color-bone)',
     } as CSSProperties,
   },
 };
