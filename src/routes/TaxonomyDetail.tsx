@@ -181,7 +181,7 @@ export default function TaxonomyDetail() {
         <Section tone="ink">
           <Container>
             <Reveal className="max-w-[80ch]">
-              <h2 className="font-mono text-[10px] uppercase tracking-[0.14em] text-gold">
+              <h2 className="font-mono text-[10px] uppercase tracking-[0.14em] text-gold wrap-anywhere">
                 {data.codeExample.language}
                 {data.codeExample.filename ? (
                   <span className="text-silver-dim"> · {data.codeExample.filename}</span>
