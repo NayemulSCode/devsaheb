@@ -195,7 +195,7 @@ function setCode(
 }
 
 const INPUT =
-  'w-full border border-black/15 bg-white px-3 py-2 text-[13.5px] outline-none focus-visible:border-black/50';
+  'w-full border border-black/15 bg-white px-3 py-2 text-[13.5px] focus-visible:border-black/50';
 
 function Group({ title, hint, children }: { title: string; hint?: string; children: React.ReactNode }) {
   return (

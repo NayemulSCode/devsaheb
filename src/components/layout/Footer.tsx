@@ -180,11 +180,9 @@ function FooterColumn({
 }) {
   return (
     <div>
-      {/* The type sits on a span: the global h1-h4 rule in styles.css is
-          unlayered, so it beats utility classes placed on the heading itself. */}
-      <h2 className="flex items-center gap-3">
+      <h2 className="flex items-center gap-3 font-mono text-[10.5px] font-medium uppercase tracking-[0.16em] text-gold">
         <span aria-hidden="true" className="h-px w-5 bg-gold" />
-        <span className="font-mono text-[10.5px] font-medium uppercase tracking-[0.16em] text-gold">{title}</span>
+        {title}
       </h2>
       <ul className="mt-5 grid gap-2.5">
         {links.map(({ name, path }) => (

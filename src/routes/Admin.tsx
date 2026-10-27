@@ -130,7 +130,7 @@ export default function Admin() {
               onChange={(e) => setPassword(e.target.value)}
               autoComplete="current-password"
               required
-              className="border border-gold/25 bg-ink-2 px-4 py-3 text-bone outline-none focus-visible:border-gold"
+              className="border border-gold/25 bg-ink-2 px-4 py-3 text-bone focus-visible:border-gold"
             />
           </label>
           {error ? (

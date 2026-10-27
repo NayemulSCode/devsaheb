@@ -60,39 +60,50 @@
   --on-accent: var(--color-ink);
 }
 
-html {
-  background: var(--color-ink);
-}
+/*
+  Element defaults live in the base layer. Unlayered CSS beats every layer
+  regardless of specificity, so left bare these would silently override any
+  utility on the same element (mt-6 or font-mono on an h2 did nothing).
+*/
+@layer base {
+  html {
+    background: var(--color-ink);
+  }
 
-body {
-  margin: 0;
-  color: var(--color-bone);
-  font-family: var(--font-sans);
-  font-size: var(--text-base);
-  line-height: 1.6;
-  -webkit-font-smoothing: antialiased;
-  text-rendering: optimizeLegibility;
-}
+  body {
+    margin: 0;
+    color: var(--color-bone);
+    font-family: var(--font-sans);
+    font-size: var(--text-base);
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+  }
 
-h1,
-h2,
-h3,
-h4 {
-  font-family: var(--font-display);
-  letter-spacing: -0.035em;
-  line-height: 1.05;
-  text-wrap: balance;
-  margin: 0;
-}
+  h1,
+  h2,
+  h3,
+  h4 {
+    font-family: var(--font-display);
+    letter-spacing: -0.035em;
+    line-height: 1.05;
+    /* text-3xl and friends set line-height: var(--tw-leading, <size default>),
+       which would otherwise replace 1.05 on every sized heading. leading-*
+       utilities still win: they set both --tw-leading and line-height. */
+    --tw-leading: 1.05;
+    text-wrap: balance;
+    margin: 0;
+  }
 
-p {
-  text-wrap: pretty;
-}
+  p {
+    text-wrap: pretty;
+  }
 
-:focus-visible {
-  outline: 2px solid var(--accent);
-  outline-offset: 3px;
-  border-radius: 2px;
+  :focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 3px;
+    border-radius: 2px;
+  }
 }
 
 /*
