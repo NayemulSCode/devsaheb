@@ -143,10 +143,10 @@ REDEPLOY
 
 CHECK
 
-  curl -sI https://www.devsaheb.com/            -> 200, text/html
-  curl -s  https://www.devsaheb.com/api/health  -> {"ok":true,"node":"v22...."}
-  curl -sI https://www.devsaheb.com/services/   -> 301 to /services
-  curl -s  https://www.devsaheb.com/robots.txt  -> lists the sitemap
+  curl -sI https://devsaheb.com/            -> 200, text/html
+  curl -s  https://devsaheb.com/api/health  -> {"ok":true,"node":"v22...."}
+  curl -sI https://devsaheb.com/services/   -> 301 to /services
+  curl -s  https://devsaheb.com/robots.txt  -> lists the sitemap
 
   DNS must point devsaheb.com at 198.177.120.114 (or this host's nameservers)
   before any of the above will answer.

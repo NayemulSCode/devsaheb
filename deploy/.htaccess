@@ -22,11 +22,20 @@ Options +SymLinksIfOwnerMatch
   RewriteCond %{REQUEST_URI} ^/(api|media)(/|$)
   RewriteRule ^ - [L]
 
-  # One canonical host. www.devsaheb.com is what every canonical tag, sitemap
-  # entry and og:url in the build points at; serving the apex as well would put
-  # identical pages on two hosts and split the ranking signal between them.
-  RewriteCond %{HTTP_HOST} ^devsaheb\.com$ [NC]
-  RewriteRule ^(.*)$ https://www.devsaheb.com/$1 [R=301,L,QSA]
+  # One canonical host: the apex.
+  #
+  # The certificate on this account is a Namecheap Standard SSL issued for
+  # devsaheb.com alone - its only SAN is DNS:devsaheb.com, so www falls back to
+  # the server's shared *.web-hosting.com certificate and fails verification.
+  # The canonical host has to be one that actually presents a valid certificate,
+  # so the apex wins and every canonical tag, og:url and sitemap entry follows
+  # content/site.json to match.
+  #
+  # This redirect cannot rescue anyone who types https://www - TLS is negotiated
+  # before any HTTP rule runs, so they see the certificate warning first. Fixing
+  # that needs a certificate covering www, which is a separate job from this one.
+  RewriteCond %{HTTP_HOST} ^www\.devsaheb\.com$ [NC]
+  RewriteRule ^(.*)$ https://devsaheb.com/$1 [R=301,L,QSA]
 
   # Trailing slashes create duplicate URLs for the same page, which splits
   # ranking signals. Redirect once, permanently. Real directories are exempt.

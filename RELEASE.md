@@ -4,12 +4,20 @@
 > [docs/deploy-git.md](docs/deploy-git.md). This document covers the split
 > design, where Apache serves static files and Node only handles /api.
 
-Target: **https://www.devsaheb.com** on cPanel (`devsaheb@server703`, shared IP
+Target: **https://devsaheb.com** on cPanel (`devsaheb@server703`, shared IP
 `198.177.120.114`), as an addon domain beside `thaitemptation.restaurant`.
 
-`www` is the canonical host. Every canonical tag, sitemap entry and `og:url`
-points at it, and `deploy/.htaccess` 301s the apex to it. Changing that later
-means re-issuing every one of those, so it is settled here.
+**The apex is the canonical host.** Every canonical tag, sitemap entry and
+`og:url` points at it, and `deploy/.htaccess` 301s `www` to it.
+
+This was `www` until the site went live, and the certificate settled it. The
+account carries a Namecheap Standard SSL issued for `devsaheb.com` alone — its
+only SAN is `DNS:devsaheb.com`, so `www` falls back to the server's shared
+`*.web-hosting.com` certificate and fails verification. A canonical host has to
+be one that presents a valid certificate, so the apex took it.
+
+Changing it again means rebuilding every page, the sitemap and every OG card,
+which is cheap while the site is new and expensive once it is indexed.
 
 ---
 
@@ -30,7 +38,7 @@ At your registrar, point both hosts at the server:
 Both are needed: `www` because it serves the site, the apex because it has to
 resolve in order to redirect.
 
-Check with `nslookup www.devsaheb.com` until it returns that IP.
+Check with `nslookup devsaheb.com` until it returns that IP.
 
 ### 2. Fill in what is still placeholder
 
@@ -176,25 +184,25 @@ symlink on boot, which is how uploaded images become reachable.
 ## Verify
 
 ```bash
-curl -sI https://www.devsaheb.com/
-curl -s  https://www.devsaheb.com/api/health
 curl -sI https://devsaheb.com/
-curl -sI https://www.devsaheb.com/services/
-curl -s  https://www.devsaheb.com/robots.txt
+curl -s  https://devsaheb.com/api/health
+curl -sI https://devsaheb.com/
+curl -sI https://devsaheb.com/services/
+curl -s  https://devsaheb.com/robots.txt
 ```
 
 | Check | Expected |
 |---|---|
 | `/` | `200`, `text/html` |
 | `/api/health` | `{"ok":true,"node":"v22...","prerendered":true}` |
-| apex | `301` → `https://www.devsaheb.com/` |
+| apex | `301` → `https://devsaheb.com/` |
 | `/services/` | `301` → `/services` |
 | `robots.txt` | lists the sitemap |
 
 If `/api/health` returns HTML instead of JSON, step 9 is the cause — the
 Passenger block is missing or sits below our rules.
 
-Then open `https://www.devsaheb.com/admin`, sign in, edit a page, publish, and
+Then open `https://devsaheb.com/admin`, sign in, edit a page, publish, and
 confirm the change appears on the live page.
 
 Finally, paste a page URL into LinkedIn's post box. If the card renders with the
@@ -241,8 +249,8 @@ every document are kept there.
 
 ## After launch
 
-- **Google Search Console** — add `www.devsaheb.com`, submit
-  `https://www.devsaheb.com/sitemap.xml`
+- **Google Search Console** — add `devsaheb.com`, submit
+  `https://devsaheb.com/sitemap.xml`
 - **Google Business Profile** — the `PostalAddress` in the Organization schema
   and a GBP listing reinforce each other for local queries
 - **Analytics** — Plausible or Umami rather than GA4: lighter, and no cookie

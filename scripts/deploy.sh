@@ -66,4 +66,4 @@ touch tmp/restart.txt
 
 echo
 echo "deployed. verify:"
-echo "  curl -s https://www.devsaheb.com/api/health"
+echo "  curl -s https://devsaheb.com/api/health"

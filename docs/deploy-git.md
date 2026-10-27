@@ -85,7 +85,7 @@ where the site lives, and it cannot be deleted without removing the addon
 domain and taking the site down with it.
 
 For visitors and for search it is a non-issue: `CANONICAL_HOST` 301s it to
-`www.devsaheb.com`, path preserved.
+`devsaheb.com`, path preserved.
 
 The residue is **Certificate Transparency**. AutoSSL puts that hostname in the
 certificate, every certificate is published to public append-only CT logs, and
@@ -170,12 +170,18 @@ Then on the server create `~/devsaheb-app/.env`:
 ADMIN_PASSWORD_HASH=scrypt$...
 SESSION_SECRET=...
 SECURE_COOKIES=1
-CANONICAL_HOST=www.devsaheb.com
+CANONICAL_HOST=devsaheb.com
 ```
 
-`CANONICAL_HOST` is what 301s the apex to www now that no `.htaccess` does it.
-Leave it out and the site answers on both hosts while every canonical tag points
-at one.
+`CANONICAL_HOST` is what 301s every other host to the canonical one now that no
+`.htaccess` does it. Leave it out and the site answers on both hosts while every
+canonical tag points at one.
+
+**It must match `url` in `content/site.json`.** That value feeds every canonical
+tag, sitemap entry and `og:url`; this one feeds the redirect. Set them to
+different hosts and the pages name one while the server sends visitors to the
+other. That happened once — `CANONICAL_HOST=www.devsaheb.com` against a `www`
+with no valid certificate, so every visit to the apex ended on a Cloudflare 526.
 
 **`SECURE_COOKIES=1` before SSL exists will lock you out of `/admin`** — the
 session cookie becomes HTTPS-only. Add that line after step 7, or accept that
@@ -214,17 +220,17 @@ Passenger watches that file's mtime.
 ## Verify
 
 ```bash
-curl -sI https://www.devsaheb.com/
-curl -s  https://www.devsaheb.com/api/health
 curl -sI https://devsaheb.com/
-curl -sI https://www.devsaheb.com/services/
+curl -s  https://devsaheb.com/api/health
+curl -sI https://devsaheb.com/
+curl -sI https://devsaheb.com/services/
 ```
 
 | Check | Expected |
 |---|---|
 | `/` | `200`, `text/html` |
 | `/api/health` | `{"ok":true,"node":"v22...","prerendered":true}` |
-| apex | `301` → `https://www.devsaheb.com/` |
+| apex | `301` → `https://devsaheb.com/` |
 | `/services/` | `301` → `/services` |
 
 Then sign in at `/admin`, publish an edit, and confirm it appears on the live

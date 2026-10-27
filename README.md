@@ -1,6 +1,6 @@
 # DevSaheb
 
-Marketing site for DevSaheb — https://www.devsaheb.com
+Marketing site for DevSaheb — https://devsaheb.com
 
 Vite · React 19 · React Router 7 · Tailwind 4 · Express 5 · no database.
 

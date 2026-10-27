@@ -1,6 +1,6 @@
 # DEVSAHEB — Portfolio Website Plan
 
-**Domain:** https://www.devsaheb.com
+**Domain:** https://devsaheb.com
 **Stack:** Vite 8 + React 19 + React Router 7 + Tailwind 4 + Express 5 + Puck + Tiptap + Framer Motion + Zustand
 **Content:** JSON on disk (no database)
 **Scope:** Full site — Home, Services, Work, About, Blog, Contact

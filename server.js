@@ -43,9 +43,13 @@ app.use(compression());
  *
  * Opt-in through CANONICAL_HOST so local preview is untouched; set it in .env
  * on the server. When the app is mounted at the domain root rather than behind
- * a document-root .htaccess, this is the only thing redirecting the apex to
- * www - and every canonical tag, sitemap entry and og:url in the build points
- * at www, so without it the site answers on two hosts.
+ * a document-root .htaccess, this is the only thing redirecting other hosts to
+ * the canonical one, so without it the site answers on two hosts.
+ *
+ * It must name the same host as `url` in content/site.json, which is what every
+ * canonical tag, sitemap entry and og:url points at. If the two disagree, the
+ * pages declare one host while this sends visitors to the other - which is how
+ * the apex came to redirect to a www that had no valid certificate.
  */
 const CANONICAL_HOST = process.env.CANONICAL_HOST?.trim();
 
