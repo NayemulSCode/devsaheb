@@ -228,3 +228,108 @@ p {
     mask-image: none;
   }
 }
+
+/*
+  Technology logos: single-colour SVGs used as a mask over currentColor, so a
+  logo takes the band's accent without a coloured copy of every file.
+*/
+.ds-tech-icon {
+  background-color: currentColor;
+  -webkit-mask: var(--icon) center / contain no-repeat;
+  mask: var(--icon) center / contain no-repeat;
+}
+
+/*
+  Tech stack grid: hairlines between tiles only, never round the outside, with
+  the brand diamond where two lines cross. Each tile draws its own top and left
+  line and a diamond at its top-left corner; the first row and first column
+  drop theirs. That depends only on the column count, which is set here per
+  breakpoint to match the grid classes in TechStackBlock (2 / 3 / 4 / 6).
+*/
+.ds-tech-tile {
+  border-top: 1px solid var(--accent-line);
+  border-left: 1px solid var(--accent-line);
+}
+
+.ds-tech-tile::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 7px;
+  height: 7px;
+  background: var(--accent);
+  opacity: 0.6;
+  transform: translate(-50%, -50%) rotate(45deg);
+}
+
+.ds-tech-tile:nth-child(-n + 2) {
+  border-top-color: transparent;
+}
+.ds-tech-tile:nth-child(2n + 1) {
+  border-left-color: transparent;
+}
+.ds-tech-tile:nth-child(-n + 2)::before,
+.ds-tech-tile:nth-child(2n + 1)::before {
+  display: none;
+}
+
+@media (min-width: 40rem) {
+  .ds-tech-tile:nth-child(n) {
+    border-top-color: var(--accent-line);
+    border-left-color: var(--accent-line);
+  }
+  .ds-tech-tile:nth-child(n)::before {
+    display: block;
+  }
+  .ds-tech-tile:nth-child(-n + 3) {
+    border-top-color: transparent;
+  }
+  .ds-tech-tile:nth-child(3n + 1) {
+    border-left-color: transparent;
+  }
+  .ds-tech-tile:nth-child(-n + 3)::before,
+  .ds-tech-tile:nth-child(3n + 1)::before {
+    display: none;
+  }
+}
+
+@media (min-width: 48rem) {
+  .ds-tech-tile:nth-child(n) {
+    border-top-color: var(--accent-line);
+    border-left-color: var(--accent-line);
+  }
+  .ds-tech-tile:nth-child(n)::before {
+    display: block;
+  }
+  .ds-tech-tile:nth-child(-n + 4) {
+    border-top-color: transparent;
+  }
+  .ds-tech-tile:nth-child(4n + 1) {
+    border-left-color: transparent;
+  }
+  .ds-tech-tile:nth-child(-n + 4)::before,
+  .ds-tech-tile:nth-child(4n + 1)::before {
+    display: none;
+  }
+}
+
+@media (min-width: 64rem) {
+  .ds-tech-tile:nth-child(n) {
+    border-top-color: var(--accent-line);
+    border-left-color: var(--accent-line);
+  }
+  .ds-tech-tile:nth-child(n)::before {
+    display: block;
+  }
+  .ds-tech-tile:nth-child(-n + 6) {
+    border-top-color: transparent;
+  }
+  .ds-tech-tile:nth-child(6n + 1) {
+    border-left-color: transparent;
+  }
+  .ds-tech-tile:nth-child(-n + 6)::before,
+  .ds-tech-tile:nth-child(6n + 1)::before {
+    display: none;
+  }
+}

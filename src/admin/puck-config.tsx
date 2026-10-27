@@ -17,9 +17,12 @@ import HeroShowcaseBlock from '../components/blocks/HeroShowcaseBlock';
 import MarqueeBlock from '../components/blocks/MarqueeBlock';
 import ServiceExplorerBlock from '../components/blocks/ServiceExplorerBlock';
 import IndustryGridBlock from '../components/blocks/IndustryGridBlock';
+import TechStackBlock from '../components/blocks/TechStackBlock';
+import CaseStudiesBlock from '../components/blocks/CaseStudiesBlock';
 import { INDUSTRY_ICONS, INDUSTRY_ICON_LABELS } from '../content/industry-icons';
+import { TECH_ICONS, TECH_ICON_LABELS } from '../content/tech-icons';
 import MediaField from './MediaField';
-import { BLOCK_DEFAULTS, ARRAY_ITEM_DEFAULTS } from '../content/block-defaults';
+import { BLOCK_DEFAULTS, ARRAY_ITEM_DEFAULTS, TECH_ITEM_DEFAULT } from '../content/block-defaults';
 import type {
   HeroProps,
   SpecTableProps,
@@ -38,6 +41,8 @@ import type {
   MarqueeProps,
   ServiceExplorerProps,
   IndustryGridProps,
+  TechStackProps,
+  CaseStudiesProps,
 } from '../components/blocks/types';
 
 /**
@@ -106,10 +111,10 @@ export const puckConfig: Config = {
       title: 'Page structure',
       components: ['Hero', 'HeroShowcase', 'RichText', 'MediaText', 'Cta', 'Marquee'],
     },
-    proof: { title: 'Proof', components: ['Stats', 'SpecTable', 'Quote', 'LogoWall'] },
+    proof: { title: 'Proof', components: ['Stats', 'SpecTable', 'Quote', 'LogoWall', 'CaseStudies'] },
     detail: {
       title: 'Detail',
-      components: ['CardGrid', 'ServiceExplorer', 'IndustryGrid', 'Steps', 'Checklist', 'Faq', 'TeamGrid'],
+      components: ['CardGrid', 'ServiceExplorer', 'IndustryGrid', 'TechStack', 'Steps', 'Checklist', 'Faq', 'TeamGrid'],
     },
   },
 
@@ -512,6 +517,77 @@ export const puckConfig: Config = {
       },
       defaultProps: BLOCK_DEFAULTS.IndustryGrid,
       render: (props) => <IndustryGridBlock {...(props as unknown as IndustryGridProps)} />,
+    },
+
+    TechStack: {
+      label: 'Technology stack',
+      fields: {
+        tone: toneField,
+        eyebrow: { type: 'text', label: 'Eyebrow' },
+        heading: { type: 'text', label: 'Heading' },
+        lede: { type: 'textarea', label: 'Lede' },
+        groups: {
+          type: 'array',
+          label: 'Tabs (one per group)',
+          max: 8,
+          arrayFields: {
+            label: { type: 'text', label: 'Tab name' },
+            items: {
+              type: 'array',
+              label: 'Technologies',
+              max: 36,
+              arrayFields: {
+                name: { type: 'text', label: 'Name' },
+                icon: {
+                  type: 'select',
+                  label: 'Logo',
+                  options: [
+                    { label: 'None (show letters)', value: '' },
+                    ...TECH_ICONS.map((value) => ({ label: TECH_ICON_LABELS[value], value })),
+                  ],
+                },
+                image: imageField('Logo image (overrides the logo above)'),
+                href: { type: 'text', label: 'Link (optional)' },
+              },
+              defaultItemProps: TECH_ITEM_DEFAULT,
+              getItemSummary: (item: { name?: string }) => item?.name || 'Technology',
+            },
+          },
+          defaultItemProps: ARRAY_ITEM_DEFAULTS['TechStack.groups'],
+          getItemSummary: (item: { label?: string }) => item?.label || 'Group',
+        },
+      },
+      defaultProps: BLOCK_DEFAULTS.TechStack,
+      render: (props) => <TechStackBlock {...(props as unknown as TechStackProps)} />,
+    },
+
+    CaseStudies: {
+      label: 'Case studies',
+      fields: {
+        tone: toneField,
+        eyebrow: { type: 'text', label: 'Eyebrow' },
+        heading: { type: 'text', label: 'Heading' },
+        lede: { type: 'textarea', label: 'Lede' },
+        primaryLabel: { type: 'text', label: 'Button' },
+        primaryHref: { type: 'text', label: 'Button link' },
+        studies: {
+          type: 'array',
+          label: 'Projects',
+          max: 12,
+          arrayFields: {
+            title: { type: 'text', label: 'Project name' },
+            category: { type: 'text', label: 'Category (e.g. Fintech · Web app)' },
+            summary: { type: 'textarea', label: 'One-line result' },
+            image: imageField('Screenshot (blank shows the number)'),
+            imageAlt: { type: 'text', label: 'Screenshot alt text (blank if decorative)' },
+            href: { type: 'text', label: 'Link to the write-up (optional)' },
+          },
+          defaultItemProps: ARRAY_ITEM_DEFAULTS['CaseStudies.studies'],
+          getItemSummary: (item: { title?: string }) => item?.title || 'Project',
+        },
+      },
+      defaultProps: BLOCK_DEFAULTS.CaseStudies,
+      render: (props) => <CaseStudiesBlock {...(props as unknown as CaseStudiesProps)} />,
     },
   },
 };

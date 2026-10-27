@@ -4,6 +4,8 @@ import HeroShowcaseBlock from './HeroShowcaseBlock';
 import MarqueeBlock from './MarqueeBlock';
 import ServiceExplorerBlock from './ServiceExplorerBlock';
 import IndustryGridBlock from './IndustryGridBlock';
+import TechStackBlock from './TechStackBlock';
+import CaseStudiesBlock from './CaseStudiesBlock';
 import SpecTableBlock from './SpecTableBlock';
 import CardGridBlock from './CardGridBlock';
 import RichTextBlock from './RichTextBlock';
@@ -31,6 +33,8 @@ const REGISTRY = {
   Marquee: MarqueeBlock,
   ServiceExplorer: ServiceExplorerBlock,
   IndustryGrid: IndustryGridBlock,
+  TechStack: TechStackBlock,
+  CaseStudies: CaseStudiesBlock,
   SpecTable: SpecTableBlock,
   CardGrid: CardGridBlock,
   RichText: RichTextBlock,
@@ -67,6 +71,10 @@ function BlockRenderer({ block }: { block: Block }) {
       return <ServiceExplorerBlock {...block.props} />;
     case 'IndustryGrid':
       return <IndustryGridBlock {...block.props} />;
+    case 'TechStack':
+      return <TechStackBlock {...block.props} />;
+    case 'CaseStudies':
+      return <CaseStudiesBlock {...block.props} />;
     case 'SpecTable':
       return <SpecTableBlock {...block.props} />;
     case 'CardGrid':

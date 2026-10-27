@@ -108,6 +108,14 @@ if (missingEditors.length > 0) {
     }
   }
 
+  // A logo the editor offers but the server cannot serve would publish fine
+  // and render as an empty square.
+  for (const name of bundle.TECH_ICONS ?? []) {
+    if (!existsSync(join(ROOT, 'public', 'tech', `${name}.svg`))) {
+      bad.push(`TechStack logo "${name}" → public/tech/${name}.svg does not exist`);
+    }
+  }
+
   if (bad.length > 0) {
     console.error('\nEditor defaults that cannot be published:\n');
     for (const line of bad) console.error(`  ${line}`);

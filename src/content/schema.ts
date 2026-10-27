@@ -1,5 +1,6 @@
 import { z } from 'zod';
 import { INDUSTRY_ICONS } from './industry-icons';
+import { TECH_ICONS } from './tech-icons';
 
 /**
  * Page content schema.
@@ -443,12 +444,75 @@ const industryGridBlock = z.object({
   }),
 });
 
+/**
+ * Technologies in tabs, one per group. A tile shows an uploaded logo, else a
+ * logo from the fixed set, else a lettermark from the name.
+ */
+const techStackBlock = z.object({
+  type: z.literal('TechStack'),
+  props: z.object({
+    id: blockId,
+    tone,
+    eyebrow: trimmed(60).optional(),
+    heading: trimmed(200).optional(),
+    lede: trimmed(400).optional(),
+    groups: z
+      .array(
+        z.object({
+          label: trimmed(30),
+          items: z
+            .array(
+              z.object({
+                name: trimmed(40),
+                icon: optional(z.enum(TECH_ICONS)),
+                image: optional(imageSrc),
+                href: optional(href),
+              }),
+            )
+            .max(36),
+        }),
+      )
+      .max(8),
+  }),
+});
+
+/**
+ * Project cards that slide sideways as the page scrolls past them, on wide
+ * screens; a swipeable row everywhere else. Each card links to its write-up.
+ */
+const caseStudiesBlock = z.object({
+  type: z.literal('CaseStudies'),
+  props: z.object({
+    id: blockId,
+    tone,
+    eyebrow: trimmed(60).optional(),
+    heading: trimmed(200).optional(),
+    lede: trimmed(400).optional(),
+    primaryLabel: trimmed(40).optional(),
+    primaryHref: optional(href),
+    studies: z
+      .array(
+        z.object({
+          title: trimmed(80),
+          category: trimmed(60).optional(),
+          summary: trimmed(240).optional(),
+          image: optional(imageSrc),
+          imageAlt: trimmed(200).optional(),
+          href: optional(href),
+        }),
+      )
+      .max(12),
+  }),
+});
+
 export const blockSchema = z.discriminatedUnion('type', [
   heroBlock,
   heroShowcaseBlock,
   marqueeBlock,
   serviceExplorerBlock,
   industryGridBlock,
+  techStackBlock,
+  caseStudiesBlock,
   specTableBlock,
   cardGridBlock,
   richTextBlock,
@@ -504,6 +568,8 @@ export const BLOCK_TYPES = [
   'Marquee',
   'ServiceExplorer',
   'IndustryGrid',
+  'TechStack',
+  'CaseStudies',
   'SpecTable',
   'CardGrid',
   'RichText',

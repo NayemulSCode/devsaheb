@@ -183,6 +183,101 @@ export const BLOCK_DEFAULTS = {
       { label: 'Retail & FMCG', icon: 'retail', href: '' },
     ],
   },
+  // Only tools the service pages already name, and links only to technology
+  // pages that are published - a link to a draft would expose it.
+  TechStack: {
+    tone: 'bone',
+    eyebrow: 'technology stack',
+    heading: 'The tools we build with, chosen for the job.',
+    lede: '',
+    groups: [
+      {
+        label: 'Frontend',
+        items: [
+          { name: 'JavaScript', icon: 'javascript', image: '', href: '' },
+          { name: 'TypeScript', icon: 'typescript', image: '', href: '/technologies/typescript' },
+          { name: 'React.js', icon: 'react', image: '', href: '/technologies/reactjs' },
+          { name: 'Next.js', icon: 'nextdotjs', image: '', href: '/technologies/nextjs' },
+          { name: 'Vue.js', icon: 'vuedotjs', image: '', href: '' },
+          { name: 'Angular', icon: 'angular', image: '', href: '' },
+          { name: 'Webflow', icon: 'webflow', image: '', href: '' },
+        ],
+      },
+      {
+        label: 'Backend',
+        items: [
+          { name: 'Node.js', icon: 'nodedotjs', image: '', href: '/technologies/nodejs' },
+          { name: 'Python', icon: 'python', image: '', href: '' },
+          { name: 'Django', icon: 'django', image: '', href: '' },
+          { name: 'PHP', icon: 'php', image: '', href: '' },
+          { name: 'Laravel', icon: 'laravel', image: '', href: '' },
+          { name: 'Java', icon: 'openjdk', image: '', href: '' },
+          { name: 'Spring Boot', icon: 'springboot', image: '', href: '' },
+          { name: 'Go', icon: 'go', image: '', href: '' },
+          { name: 'C#', icon: '', image: '', href: '' },
+          { name: '.NET', icon: 'dotnet', image: '', href: '' },
+          { name: 'GraphQL', icon: 'graphql', image: '', href: '' },
+        ],
+      },
+      {
+        label: 'Mobile',
+        items: [
+          { name: 'Flutter', icon: 'flutter', image: '', href: '' },
+          { name: 'React Native', icon: 'react', image: '', href: '' },
+          { name: 'Kotlin', icon: 'kotlin', image: '', href: '' },
+          { name: 'Swift', icon: 'swift', image: '', href: '' },
+          { name: 'Android', icon: 'android', image: '', href: '' },
+          { name: 'iOS', icon: 'ios', image: '', href: '' },
+        ],
+      },
+      {
+        label: 'Cloud & DevOps',
+        items: [
+          { name: 'AWS', icon: '', image: '', href: '/technologies/aws' },
+          { name: 'Azure', icon: '', image: '', href: '' },
+          { name: 'Google Cloud', icon: 'googlecloud', image: '', href: '' },
+          { name: 'Docker', icon: 'docker', image: '', href: '' },
+          { name: 'Kubernetes', icon: 'kubernetes', image: '', href: '' },
+          { name: 'GitHub Actions', icon: 'githubactions', image: '', href: '' },
+          { name: 'Vercel', icon: 'vercel', image: '', href: '' },
+        ],
+      },
+      {
+        label: 'Database',
+        items: [
+          { name: 'PostgreSQL', icon: 'postgresql', image: '', href: '' },
+          { name: 'MySQL', icon: 'mysql', image: '', href: '' },
+          { name: 'Firebase', icon: 'firebase', image: '', href: '' },
+          { name: 'Supabase', icon: 'supabase', image: '', href: '' },
+        ],
+      },
+      {
+        label: 'CMS & Commerce',
+        items: [
+          { name: 'Contentful', icon: 'contentful', image: '', href: '' },
+          { name: 'WordPress', icon: 'wordpress', image: '', href: '' },
+          { name: 'Webflow', icon: 'webflow', image: '', href: '' },
+          { name: 'Shopify', icon: 'shopify', image: '', href: '' },
+        ],
+      },
+    ],
+  },
+  // The site publishes no case studies yet, and invented ones would break its
+  // own rule. These are visibly placeholders, to be replaced before publishing.
+  CaseStudies: {
+    tone: 'ink',
+    eyebrow: 'case studies',
+    heading: 'Real projects. Measurable results.',
+    lede: 'Problem, approach and the number that moved, for every project we can name.',
+    primaryLabel: 'Discuss your project',
+    primaryHref: '/contact',
+    studies: [
+      { title: 'Project name', category: 'Industry · Service', summary: 'One line: the problem, and the result as a number.', image: '', imageAlt: '', href: '' },
+      { title: 'Project name', category: 'Industry · Service', summary: 'One line: the problem, and the result as a number.', image: '', imageAlt: '', href: '' },
+      { title: 'Project name', category: 'Industry · Service', summary: 'One line: the problem, and the result as a number.', image: '', imageAlt: '', href: '' },
+      { title: 'Project name', category: 'Industry · Service', summary: 'One line: the problem, and the result as a number.', image: '', imageAlt: '', href: '' },
+    ],
+  },
   RichText: {
     tone: 'ink',
     eyebrow: '',
@@ -236,6 +331,9 @@ export const BLOCK_DEFAULTS = {
   TeamGrid: { tone: 'bone', eyebrow: '', heading: '', lede: '', people: [] },
 } satisfies Record<BlockType, Record<string, unknown>>;
 
+/** A technology added inside a TechStack group. */
+export const TECH_ITEM_DEFAULT = { name: 'Technology', icon: '', image: '', href: '' };
+
 /**
  * A fresh array entry, for the same reason.
  *
@@ -263,4 +361,15 @@ export const ARRAY_ITEM_DEFAULTS: Record<string, Record<string, unknown>> = {
     linkLabel: '',
   },
   'IndustryGrid.industries': { label: 'Industry', icon: 'other', href: '' },
+  // A new group arrives with one technology in it, which also puts the nested
+  // entry's defaults through the same check.
+  'TechStack.groups': { label: 'Group', items: [TECH_ITEM_DEFAULT] },
+  'CaseStudies.studies': {
+    title: 'Project name',
+    category: '',
+    summary: '',
+    image: '',
+    imageAlt: '',
+    href: '',
+  },
 };
