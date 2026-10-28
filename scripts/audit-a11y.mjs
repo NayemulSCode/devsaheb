@@ -38,6 +38,8 @@ const CHROME = [
 ].find((p) => existsSync(p));
 
 /** WCAG 2.2 AA. axe tags map directly onto the conformance levels. */
+const THEMES = ['dark', 'light'];
+
 const TAGS = ['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa', 'wcag22aa', 'best-practice'];
 
 function routePaths() {
@@ -99,12 +101,23 @@ async function main() {
   const failures = [];
   let checked = 0;
 
-  for (const path of paths) {
+  // Every page is audited in both themes. The light theme remaps the palette
+  // rather than restyling components, so a contrast failure in one theme says
+  // nothing about the other. The theme follows prefers-color-scheme when no
+  // choice is stored, which is always the case in a fresh headless page.
+  for (const path of paths) for (const theme of THEMES) {
     const page = await browser.newPage();
     await page.setViewport({ width: 1280, height: 900 });
+    await page.emulateMediaFeatures([{ name: 'prefers-color-scheme', value: theme }]);
+    const where = `${path} (${theme})`;
 
     try {
       await page.goto(BASE + path, { waitUntil: 'networkidle0', timeout: 30000 });
+      const applied = await page.evaluate(() => document.documentElement.dataset.theme);
+      if (applied !== theme) {
+        failures.push({ path: where, kind: 'theme', id: 'theme-not-applied', impact: 'serious',
+          help: `Expected data-theme="${theme}", got "${applied}" - the head script did not run`, nodes: [] });
+      }
       await revealEverything(page);
 
       await page.evaluate(AXE_SOURCE);
@@ -115,7 +128,7 @@ async function main() {
 
       for (const v of results.violations) {
         failures.push({
-          path,
+          path: where,
           kind: 'axe',
           id: v.id,
           impact: v.impact,
@@ -126,7 +139,7 @@ async function main() {
 
       // WCAG 1.4.10 Reflow: no horizontal scrolling at 320 CSS px, which is
       // also what 400% zoom on a 1280px viewport reduces to.
-      for (const width of [320, 640]) {
+      for (const width of theme === THEMES[0] ? [320, 640] : []) {
         await page.setViewport({ width, height: 900 });
         const overflow = await page.evaluate(
           () => document.documentElement.scrollWidth - document.documentElement.clientWidth,
@@ -143,7 +156,7 @@ async function main() {
         }
       }
 
-      checked += 1;
+      if (theme === THEMES[0]) checked += 1;
     } finally {
       await page.close();
     }
@@ -191,7 +204,7 @@ async function main() {
 
   await browser.close();
 
-  console.log(`\naccessibility audit: ${checked} page(s), tags ${TAGS.join(' ')}`);
+  console.log(`\naccessibility audit: ${checked} page(s) in ${THEMES.join(' and ')} themes, tags ${TAGS.join(' ')}`);
   console.log(`keyboard: first tab stop is "${skip.text}" (${skip.href})`);
 
   if (failures.length === 0) {

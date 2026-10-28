@@ -48,7 +48,14 @@ export default function Footer() {
                 alt="DevSaheb"
                 width={103}
                 height={40}
-                className="h-10 w-auto"
+                className="h-10 w-auto light:hidden"
+              />
+              <img
+                src="/ds-lockup-h.svg"
+                alt="DevSaheb"
+                width={103}
+                height={40}
+                className="hidden h-10 w-auto light:block"
               />
             </Link>
 
@@ -228,10 +235,10 @@ function ContactLine({
         height="17"
         viewBox="0 0 24 24"
         fill="none"
-        stroke="#CCAA50"
+        stroke="currentColor"
         strokeWidth="1.6"
         aria-hidden="true"
-        className="mt-1 shrink-0"
+        className="mt-1 shrink-0 text-gold"
       >
         {icon === 'mail' ? <rect x="3" y="5" width="18" height="14" rx="2" /> : null}
         {icon === 'pin' ? <circle cx="12" cy="10" r="3" /> : null}

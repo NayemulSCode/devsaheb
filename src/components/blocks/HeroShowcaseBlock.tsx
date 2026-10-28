@@ -246,7 +246,7 @@ function Portrait({
         </span>
       )}
       {/* Capped and wrapping, so a long title cannot widen into a neighbour. */}
-      <figcaption className="relative z-10 -mt-4 max-w-52 border border-gold/25 bg-bone px-3 py-1.5 text-center">
+      <figcaption className="tone-bone relative z-10 -mt-4 max-w-52 border border-gold/25 bg-bone px-3 py-1.5 text-center">
         <span className="block text-balance text-[12.5px] font-bold text-ink">{person.name}</span>
         <span className="block text-balance font-mono text-[9.5px] uppercase tracking-[0.08em] text-muted">
           {person.role}
@@ -258,7 +258,7 @@ function Portrait({
 
 function Badge({ label, value }: { label: string; value: string }) {
   return (
-    <div className="h-full max-w-52 border border-gold/25 bg-bone px-4 py-2.5 shadow-[0_12px_28px_-14px_rgb(0_0_0/0.7)] lg:h-auto">
+    <div className="tone-bone h-full max-w-52 border border-gold/25 bg-bone px-4 py-2.5 shadow-[var(--shadow-chip)] lg:h-auto">
       <span className="block text-balance font-mono text-[9.5px] uppercase tracking-[0.12em] text-muted">{label}</span>
       <span className="mt-1 flex items-center gap-2 whitespace-nowrap font-display text-[17px] font-bold text-ink">
         {value}
@@ -272,8 +272,8 @@ function Badge({ label, value }: { label: string; value: string }) {
 function Backdrop() {
   return (
     <div aria-hidden="true" className="pointer-events-none absolute inset-0">
-      <div className="absolute inset-0 [background-image:radial-gradient(rgb(204_170_80/0.22)_1px,transparent_1.3px)] [background-size:22px_22px] [mask-image:radial-gradient(ellipse_70%_60%_at_50%_0%,black,transparent)]" />
-      <div className="absolute -bottom-1/3 left-1/2 h-[75%] w-[120%] -translate-x-1/2 rounded-[50%] bg-[radial-gradient(closest-side,rgb(204_170_80/0.14),transparent)]" />
+      <div className="absolute inset-0 [background-image:radial-gradient(color-mix(in_srgb,var(--color-gold)_22%,transparent)_1px,transparent_1.3px)] [background-size:22px_22px] [mask-image:radial-gradient(ellipse_70%_60%_at_50%_0%,black,transparent)]" />
+      <div className="absolute -bottom-1/3 left-1/2 h-[75%] w-[120%] -translate-x-1/2 rounded-[50%] bg-[radial-gradient(closest-side,color-mix(in_srgb,var(--color-gold)_14%,transparent),transparent)]" />
     </div>
   );
 }

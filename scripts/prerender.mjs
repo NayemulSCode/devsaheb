@@ -173,7 +173,11 @@ function buildDocument({ appHtml, meta, assets, site, jsonLd, data, ogImage }) {
          inline and blocking: deferring it would flash finished content and
          then hide it. If scripting is off this never runs, the .js class is
          never set, and every [data-reveal] block simply stays visible. -->
-    <script>document.documentElement.classList.add('js')</script>
+    <!-- Same reasoning for the theme: chosen here, before paint, from a saved
+         choice or else the system setting, so a light-mode visitor never sees
+         the dark page flash first. No script, no attribute: the dark default.
+         The key must match THEME_KEY in src/components/layout/Header.tsx. -->
+    <script>(function(d){d.classList.add('js');try{var t=localStorage.getItem('theme');if(t!=='light'&&t!=='dark')t=matchMedia('(prefers-color-scheme: light)').matches?'light':'dark';d.setAttribute('data-theme',t)}catch(e){}})(document.documentElement)</script>
 
     <title>${escape(meta.title)}</title>
     <meta name="description" content="${escape(meta.description)}">

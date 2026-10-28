@@ -18,19 +18,20 @@ export type Tone = 'ink' | 'bone';
  */
 const TONES: Record<Tone, { className: string; style: CSSProperties }> = {
   ink: {
-    className: 'bg-ink text-bone',
+    className: 'tone-ink bg-ink text-bone',
     style: {
       '--accent': 'var(--color-gold)',
-      '--accent-line': 'rgb(204 170 80 / 0.2)',
+      '--accent-line': 'color-mix(in srgb, var(--color-gold) 20%, transparent)',
       '--accent-hover': 'var(--color-gold-lift)',
       '--on-accent': 'var(--color-ink)',
     } as CSSProperties,
   },
   bone: {
-    className: 'bg-bone text-ink',
+    // tone-bone keeps this band's original palette under the light theme.
+    className: 'tone-bone bg-bone text-ink',
     style: {
       '--accent': 'var(--color-gold-deep)',
-      '--accent-line': 'rgb(11 16 32 / 0.12)',
+      '--accent-line': 'color-mix(in srgb, var(--color-ink) 12%, transparent)',
       '--accent-hover': 'var(--color-ink)',
       '--on-accent': 'var(--color-bone)',
     } as CSSProperties,

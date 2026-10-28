@@ -203,7 +203,9 @@ export default function CaseStudiesBlock({
 function Card({ study, index, tone }: { study: Study; index: number; tone: CaseStudiesProps['tone'] }) {
   const className = cn(
     'group flex h-full flex-col overflow-hidden text-ink transition-transform duration-300 ease-[var(--ease-brand)] hover:-translate-y-1 motion-reduce:hover:translate-y-0',
-    tone === 'bone' ? 'border border-[var(--accent-line)] bg-bone-2' : 'bg-bone',
+    // tone-bone: a light card keeps its own palette inside a dark band under
+    // the light theme too.
+    tone === 'bone' ? 'border border-[var(--accent-line)] bg-bone-2' : 'tone-bone bg-bone shadow-[var(--shadow-chip)]',
   );
 
   const body = (

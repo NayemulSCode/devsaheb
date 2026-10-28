@@ -55,10 +55,68 @@
   color-scheme: dark;
   /* Overridden per band by <Section>. Gold on dark, gold-deep on light. */
   --accent: var(--color-gold);
-  --accent-line: rgb(204 170 80 / 0.2);
+  --accent-line: color-mix(in srgb, var(--color-gold) 20%, transparent);
   --accent-hover: var(--color-gold-lift);
   --on-accent: var(--color-ink);
+
+  /* Shadows are tokens so the light theme can soften them: black at 0.6 on
+     paper reads as dirt, not depth. */
+  --shadow-float: 0 30px 70px rgb(0 0 0 / 0.55);
+  --shadow-pill: 0 12px 40px -12px rgb(0 0 0 / 0.75);
+  --shadow-chip: 0 12px 28px -14px rgb(0 0 0 / 0.7);
 }
+
+/*
+  Light theme.
+
+  Dark is the default and needs no attribute: without scripting the site
+  renders exactly as it was designed. The inline script in the page head sets
+  data-theme from the visitor's saved choice, else their system setting,
+  before first paint.
+
+  The palette is remapped rather than the components rewritten. On the root,
+  the dark tokens take light values - ink becomes paper, bone (light text on
+  dark) becomes navy text, and gold deepens until it reads on paper. Every
+  dark band, the header and the footer follow automatically. Measured on
+  paper / raised: text 16.9 / 15.4, silver 7.5 / 6.8, silver-dim 5.8 / 5.3,
+  gold 5.6 / 5.1, paper on a gold fill 5.6, on its hover 7.4.
+
+  A .tone-bone surface - a cream band, or a light card that sits inside a dark
+  band - restores the original values, since it was already designed for a
+  light ground and looks the same in both themes.
+*/
+:root[data-theme='light'] {
+  color-scheme: light;
+  --color-ink: #fbf8f2;
+  --color-ink-2: #f3ede1;
+  --color-ink-3: #e9e0cd;
+  --color-bone: #10162a;
+  --color-bone-2: #1a2136;
+  --color-silver: #4a5161;
+  --color-silver-dim: #5a6271;
+  --color-gold: #7d5f1a;
+  --color-gold-lift: #634a12;
+
+  --shadow-float: 0 24px 60px rgb(16 22 42 / 0.16);
+  --shadow-pill: 0 10px 30px -12px rgb(16 22 42 / 0.25);
+  --shadow-chip: 0 10px 24px -14px rgb(16 22 42 / 0.3);
+}
+
+:root[data-theme='light'] .tone-bone {
+  --color-ink: #0b1020;
+  --color-ink-2: #10162a;
+  --color-ink-3: #141a2e;
+  --color-bone: #f7f0e6;
+  --color-bone-2: #faf7f2;
+  --color-silver: #929ca8;
+  --color-silver-dim: #7a8698;
+  --color-gold: #ccaa50;
+  --color-gold-lift: #e0c47a;
+}
+
+/* `light:hidden` and friends, for the few things that differ by theme beyond
+   colour - which logo file to show, which toggle icon. */
+@custom-variant light (&:where([data-theme='light'], [data-theme='light'] *));
 
 /*
   Element defaults live in the base layer. Unlayered CSS beats every layer

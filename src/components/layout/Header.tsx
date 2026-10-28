@@ -136,7 +136,7 @@ export default function Header() {
     <header
       ref={headerRef}
       className="pointer-events-none sticky top-0 z-50 px-3 pt-3 sm:px-5 lg:pt-4"
-      style={{ ['--accent' as string]: 'var(--color-gold)', ['--accent-line' as string]: 'rgb(204 170 80 / 0.2)' }}
+      style={{ ['--accent' as string]: 'var(--color-gold)', ['--accent-line' as string]: 'color-mix(in srgb, var(--color-gold) 20%, transparent)' }}
     >
       {/* Dims the page under the open drawer; a tap on it closes the drawer. A
           sibling of the pill, not a child: the pill's backdrop-filter would make
@@ -153,25 +153,31 @@ export default function Header() {
         className={cn(
           'pointer-events-auto relative mx-auto flex h-14 max-w-[1180px] items-center gap-4 rounded-full border pl-5 pr-2 backdrop-blur-md transition-[background-color,border-color,box-shadow] duration-300 lg:h-[60px] lg:pl-6',
           scrolled || drawer
-            ? 'border-gold/25 bg-ink-2/90 shadow-[0_12px_40px_-12px_rgb(0_0_0/0.75)]'
+            ? 'border-gold/25 bg-ink-2/90 shadow-[var(--shadow-pill)]'
             : 'border-gold/15 bg-ink-2/60',
         )}
       >
         <Link to="/" className="flex shrink-0 items-center" aria-label="DevSaheb — home">
-          <img src="/ds-lockup-h-dark.svg" alt="DevSaheb" width={83} height={32} className="h-8 w-auto" />
+          <img src="/ds-lockup-h-dark.svg" alt="DevSaheb" width={83} height={32} className="h-8 w-auto light:hidden" />
+          <img src="/ds-lockup-h.svg" alt="DevSaheb" width={83} height={32} className="hidden h-8 w-auto light:block" />
         </Link>
 
-        <button
-          ref={menuButton}
-          type="button"
-          onClick={() => setDrawer((v) => !v)}
-          aria-expanded={drawer}
-          aria-controls="primary-nav"
-          aria-label={drawer ? 'Close menu' : 'Open menu'}
-          className="ml-auto grid size-10 place-items-center rounded-full border border-gold/25 text-bone transition-colors hover:border-gold hover:text-gold lg:hidden"
-        >
-          <MenuIcon open={drawer} />
-        </button>
+        {/* Before the nav in the DOM, so on a phone Tab reaches the menu
+            button and then the drawer it opens; drawn after it from lg. */}
+        <div className="ml-auto flex items-center gap-2 lg:order-last lg:ml-1">
+          <ThemeToggle />
+          <button
+            ref={menuButton}
+            type="button"
+            onClick={() => setDrawer((v) => !v)}
+            aria-expanded={drawer}
+            aria-controls="primary-nav"
+            aria-label={drawer ? 'Close menu' : 'Open menu'}
+            className="grid size-10 place-items-center rounded-full border border-gold/25 text-bone transition-colors hover:border-gold hover:text-gold lg:hidden"
+          >
+            <MenuIcon open={drawer} />
+          </button>
+        </div>
 
         <nav
           id="primary-nav"
@@ -179,7 +185,7 @@ export default function Header() {
           className={cn(
             'lg:ml-auto lg:flex lg:items-center lg:gap-2',
             drawer
-              ? 'absolute inset-x-0 top-full mt-2 max-h-[calc(100dvh-5.5rem)] overflow-y-auto overscroll-contain rounded-3xl border border-gold/20 bg-ink-2 px-5 pb-5 pt-2 shadow-[0_30px_70px_rgb(0_0_0/0.6)]'
+              ? 'absolute inset-x-0 top-full mt-2 max-h-[calc(100dvh-5.5rem)] overflow-y-auto overscroll-contain rounded-3xl border border-gold/20 bg-ink-2 px-5 pb-5 pt-2 shadow-[var(--shadow-float)]'
               : 'hidden',
           )}
         >
@@ -236,6 +242,102 @@ export default function Header() {
         </nav>
       </div>
     </header>
+  );
+}
+
+type Theme = 'dark' | 'light';
+
+/** Must match the key the inline head script reads in scripts/prerender.mjs. */
+const THEME_KEY = 'theme';
+
+const THEME_COLOR: Record<Theme, string> = { dark: '#0B1020', light: '#FBF8F2' };
+
+function applyTheme(theme: Theme) {
+  document.documentElement.dataset.theme = theme;
+  document.querySelector('meta[name="theme-color"]')?.setAttribute('content', THEME_COLOR[theme]);
+}
+
+function storedTheme(): Theme | null {
+  try {
+    const value = localStorage.getItem(THEME_KEY);
+    return value === 'light' || value === 'dark' ? value : null;
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Switches between the dark and light themes.
+ *
+ * The head script has already applied the right theme before first paint, so
+ * this only reads it. Which icon shows is decided by CSS from data-theme, not
+ * from state, so the prerendered button is right from the first frame instead
+ * of flipping on hydration. A choice is remembered; until one is made the site
+ * keeps following the system setting, live.
+ */
+function ThemeToggle() {
+  const [theme, setTheme] = useState<Theme>('dark');
+
+  useEffect(() => {
+    const current: Theme = document.documentElement.dataset.theme === 'light' ? 'light' : 'dark';
+    setTheme(current);
+    applyTheme(current);
+
+    const mq = window.matchMedia('(prefers-color-scheme: light)');
+    const onChange = () => {
+      if (storedTheme()) return;
+      const next: Theme = mq.matches ? 'light' : 'dark';
+      applyTheme(next);
+      setTheme(next);
+    };
+    mq.addEventListener('change', onChange);
+    return () => mq.removeEventListener('change', onChange);
+  }, []);
+
+  const toggle = () => {
+    const next: Theme = theme === 'light' ? 'dark' : 'light';
+    applyTheme(next);
+    setTheme(next);
+    try {
+      localStorage.setItem(THEME_KEY, next);
+    } catch {
+      // Private mode or storage disabled: the switch still works for this page.
+    }
+  };
+
+  return (
+    <button
+      type="button"
+      onClick={toggle}
+      aria-label={theme === 'light' ? 'Switch to dark theme' : 'Switch to light theme'}
+      className="grid size-10 place-items-center rounded-full border border-gold/25 text-bone transition-colors hover:border-gold hover:text-gold"
+    >
+      {/* Sun on dark (to go light), moon on light (to go dark). */}
+      <svg
+        aria-hidden="true"
+        viewBox="0 0 24 24"
+        className="size-[18px] light:hidden"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="1.6"
+        strokeLinecap="round"
+      >
+        <circle cx="12" cy="12" r="4" />
+        <path d="M12 2.5v2M12 19.5v2M4.6 4.6 6 6M18 18l1.4 1.4M2.5 12h2M19.5 12h2M4.6 19.4 6 18M18 6l1.4-1.4" />
+      </svg>
+      <svg
+        aria-hidden="true"
+        viewBox="0 0 24 24"
+        className="hidden size-[18px] light:block"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="1.6"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      >
+        <path d="M20.5 14.5A8.5 8.5 0 1 1 9.5 3.5a6.5 6.5 0 0 0 11 11Z" />
+      </svg>
+    </button>
   );
 }
 
@@ -345,7 +447,7 @@ function NavDropdown({
             : 'hidden lg:invisible lg:block lg:-translate-y-1.5 lg:opacity-0',
         )}
       >
-        <div className="rounded-2xl border border-gold/15 bg-ink/40 p-4 lg:border-gold/20 lg:bg-ink-2 lg:p-6 lg:shadow-[0_30px_70px_rgb(0_0_0/0.55)]">
+        <div className="rounded-2xl border border-gold/15 bg-ink/40 p-4 lg:border-gold/20 lg:bg-ink-2 lg:p-6 lg:shadow-[var(--shadow-float)]">
           {children}
         </div>
       </div>
