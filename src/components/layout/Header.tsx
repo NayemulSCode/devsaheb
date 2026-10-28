@@ -257,41 +257,22 @@ function applyTheme(theme: Theme) {
   document.querySelector('meta[name="theme-color"]')?.setAttribute('content', THEME_COLOR[theme]);
 }
 
-function storedTheme(): Theme | null {
-  try {
-    const value = localStorage.getItem(THEME_KEY);
-    return value === 'light' || value === 'dark' ? value : null;
-  } catch {
-    return null;
-  }
-}
-
 /**
- * Switches between the dark and light themes.
+ * Switches between the light and dark themes.
  *
- * The head script has already applied the right theme before first paint, so
- * this only reads it. Which icon shows is decided by CSS from data-theme, not
- * from state, so the prerendered button is right from the first frame instead
- * of flipping on hydration. A choice is remembered; until one is made the site
- * keeps following the system setting, live.
+ * Light is the default for everyone, whatever their system setting; the head
+ * script has already applied a saved choice of dark before first paint, so
+ * this only reads the result. Which icon shows is decided by CSS from
+ * data-theme, not from state, so the prerendered button is right from the
+ * first frame instead of flipping on hydration. A choice is remembered.
  */
 function ThemeToggle() {
-  const [theme, setTheme] = useState<Theme>('dark');
+  const [theme, setTheme] = useState<Theme>('light');
 
   useEffect(() => {
-    const current: Theme = document.documentElement.dataset.theme === 'light' ? 'light' : 'dark';
+    const current: Theme = document.documentElement.dataset.theme === 'dark' ? 'dark' : 'light';
     setTheme(current);
     applyTheme(current);
-
-    const mq = window.matchMedia('(prefers-color-scheme: light)');
-    const onChange = () => {
-      if (storedTheme()) return;
-      const next: Theme = mq.matches ? 'light' : 'dark';
-      applyTheme(next);
-      setTheme(next);
-    };
-    mq.addEventListener('change', onChange);
-    return () => mq.removeEventListener('change', onChange);
   }, []);
 
   const toggle = () => {

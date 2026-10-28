@@ -194,6 +194,7 @@ export default function AdminApp({ onSignOut }: { onSignOut: () => void }) {
           config={puckConfig as Config}
           data={current.data as Data}
           onPublish={(next) => publish(next)}
+          overrides={{ iframe: PreviewTheme }}
         />
       ) : null}
 
@@ -262,4 +263,17 @@ function Centered({ children }: { children: React.ReactNode }) {
       {children}
     </div>
   );
+}
+
+/**
+ * Puck draws the page inside its own iframe, whose <html> has no data-theme,
+ * so without this it would show the dark palette while the site defaults to
+ * light. It takes the admin page's own theme - light, or dark if chosen.
+ */
+function PreviewTheme({ children, document: frame }: { children: React.ReactNode; document?: Document }) {
+  useEffect(() => {
+    if (!frame) return;
+    frame.documentElement.dataset.theme = window.document.documentElement.dataset.theme ?? 'light';
+  }, [frame]);
+  return <>{children}</>;
 }

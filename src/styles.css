@@ -69,10 +69,11 @@
 /*
   Light theme.
 
-  Dark is the default and needs no attribute: without scripting the site
-  renders exactly as it was designed. The inline script in the page head sets
-  data-theme from the visitor's saved choice, else their system setting,
-  before first paint.
+  Light is the default for everyone: prerendered pages ship with
+  data-theme="light" on <html>, so it holds without scripting too. The inline
+  script in the page head switches to dark before first paint only when the
+  visitor has chosen dark. The base tokens above are the dark palette, which
+  is what renders wherever data-theme is absent (the admin's preview frame).
 
   The palette is remapped rather than the components rewritten. On the root,
   the dark tokens take light values - ink becomes paper, bone (light text on

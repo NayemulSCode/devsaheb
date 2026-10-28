@@ -38,7 +38,7 @@ const CHROME = [
 ].find((p) => existsSync(p));
 
 /** WCAG 2.2 AA. axe tags map directly onto the conformance levels. */
-const THEMES = ['dark', 'light'];
+const THEMES = ['light', 'dark'];
 
 const TAGS = ['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa', 'wcag22aa', 'best-practice'];
 
@@ -103,12 +103,18 @@ async function main() {
 
   // Every page is audited in both themes. The light theme remaps the palette
   // rather than restyling components, so a contrast failure in one theme says
-  // nothing about the other. The theme follows prefers-color-scheme when no
-  // choice is stored, which is always the case in a fresh headless page.
+  // nothing about the other. Light is the default; dark is reached the way a
+  // visitor reaches it, through the saved choice the head script reads.
   for (const path of paths) for (const theme of THEMES) {
     const page = await browser.newPage();
     await page.setViewport({ width: 1280, height: 900 });
-    await page.emulateMediaFeatures([{ name: 'prefers-color-scheme', value: theme }]);
+    await page.evaluateOnNewDocument((t) => {
+      try {
+        // The browser profile is shared across pages, so clear it for light.
+        if (t === 'dark') localStorage.setItem('theme', 'dark');
+        else localStorage.removeItem('theme');
+      } catch {}
+    }, theme);
     const where = `${path} (${theme})`;
 
     try {

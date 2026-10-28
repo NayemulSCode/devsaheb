@@ -164,7 +164,7 @@ function buildDocument({ appHtml, meta, assets, site, jsonLd, data, ogImage }) {
     : '';
 
   return `<!doctype html>
-<html lang="${escape(site.locale.split('_')[0])}">
+<html lang="${escape(site.locale.split('_')[0])}" data-theme="light">
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -173,11 +173,12 @@ function buildDocument({ appHtml, meta, assets, site, jsonLd, data, ogImage }) {
          inline and blocking: deferring it would flash finished content and
          then hide it. If scripting is off this never runs, the .js class is
          never set, and every [data-reveal] block simply stays visible. -->
-    <!-- Same reasoning for the theme: chosen here, before paint, from a saved
-         choice or else the system setting, so a light-mode visitor never sees
-         the dark page flash first. No script, no attribute: the dark default.
-         The key must match THEME_KEY in src/components/layout/Header.tsx. -->
-    <script>(function(d){d.classList.add('js');try{var t=localStorage.getItem('theme');if(t!=='light'&&t!=='dark')t=matchMedia('(prefers-color-scheme: light)').matches?'light':'dark';d.setAttribute('data-theme',t)}catch(e){}})(document.documentElement)</script>
+    <!-- Light is the default for everyone and is already on <html>, so it
+         holds without scripting too. Only a saved choice of dark changes it,
+         here, before paint, so a returning dark-mode visitor never sees the
+         light page flash first. The key must match THEME_KEY in
+         src/components/layout/Header.tsx. -->
+    <script>(function(d){d.classList.add('js');try{if(localStorage.getItem('theme')==='dark')d.setAttribute('data-theme','dark')}catch(e){}})(document.documentElement)</script>
 
     <title>${escape(meta.title)}</title>
     <meta name="description" content="${escape(meta.description)}">
@@ -205,7 +206,7 @@ function buildDocument({ appHtml, meta, assets, site, jsonLd, data, ogImage }) {
     <link rel="icon" href="/favicon.ico" sizes="48x48">
     <link rel="apple-touch-icon" href="/icon-180.png">
     <link rel="manifest" href="/site.webmanifest">
-    <meta name="theme-color" content="#0B1020">
+    <meta name="theme-color" content="#FBF8F2">
 
 ${preloads}
 ${styles}
