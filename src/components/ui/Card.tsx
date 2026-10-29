@@ -25,7 +25,7 @@ export default function Card({
       style={style}
       className={cn(
         'group relative flex flex-col gap-4 border border-[var(--accent-line)] p-7',
-        'transition-colors duration-300 ease-[var(--ease-brand)]',
+        'transition-[color,background-color,border-color,box-shadow] duration-300 ease-[var(--ease-brand)]',
         className,
       )}
     >

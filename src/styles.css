@@ -10,22 +10,25 @@
   See brand/README.md for the contrast measurements behind the gold rules.
 */
 @theme {
-  --color-ink: #0b1020;
-  --color-ink-2: #10162a;
-  --color-ink-3: #141a2e;
+  /* Lifted from #0b1020 / #10162a / #141a2e: the near-black navy swallowed
+     shadows and made raised surfaces hard to tell apart. Logo and brand files
+     keep the original navy; this is the site's dark-mode ground only. */
+  --color-ink: #141b2e;
+  --color-ink-2: #1a2237;
+  --color-ink-3: #212a41;
 
-  /* Gold measures 9.22:1 on ink and 1.81:1 on bone. It is an accent for dark
+  /* Gold measures 7.69:1 on ink and 1.81:1 on bone. It is an accent for dark
      grounds only. Components read --accent from <Section>, which picks the
      legible one, so this rule is enforced by structure rather than memory. */
   --color-gold: #ccaa50;
   --color-gold-lift: #e0c47a;
   --color-gold-deep: #7a5f1e;
 
-  --color-silver: #929ca8;
-  /* Was #5c6675, which measured 3.26:1 on ink and 3.09:1 on ink-2 - both below
-     AA for normal text, and it is used at 9-11px where it matters most.
-     #7a8698 measures 5.13:1 and 4.86:1. Caught by scripts/audit-a11y.mjs. */
-  --color-silver-dim: #7a8698;
+  --color-silver: #a1aab7;
+  /* Used at 9-11px, so it has to clear AA on every dark surface. On the
+     lighter navy, #8a95a7 measures 5.66:1 on ink, 5.22:1 on ink-2 and 4.71:1
+     on ink-3. The audit (scripts/audit-a11y.mjs) checks it on every page. */
+  --color-silver-dim: #8a95a7;
   --color-muted: #55504a;
 
   --color-bone: #f7f0e6;
@@ -68,8 +71,13 @@
   --shadow-footer: 0 -28px 60px -38px rgb(0 0 0 / 0.5);
   /* Hover lift on gold-edged controls. Resolves against the active theme's gold. */
   --shadow-glow: 0 12px 26px -12px color-mix(in srgb, var(--color-gold) 55%, transparent);
-  /* A card one step above ink-2: lighter on navy, lighter on paper too. */
-  --surface-raised: #161d33;
+  /* A card one step above ink-2: lighter on navy, lighter on paper too.
+     No lighter than this, or silver-dim text on it drops below 4.5:1. */
+  --surface-raised: #222b43;
+  /* A surface that sits above its band (a detail panel, a framed grid), and
+     the extra depth a tile takes on hover. */
+  --shadow-panel: 0 34px 70px -34px rgb(0 0 0 / 0.7);
+  --shadow-lift: 0 20px 40px -18px rgb(0 0 0 / 0.7);
 }
 
 /*
@@ -109,18 +117,27 @@
   --shadow-chip: 0 10px 24px -14px rgb(16 22 42 / 0.3);
   --shadow-footer: 0 -30px 60px -36px rgb(16 22 42 / 0.2);
   --surface-raised: #fbf8f2;
+  --shadow-panel: 0 30px 60px -34px rgb(16 22 42 / 0.24);
+  --shadow-lift: 0 18px 36px -18px rgb(16 22 42 / 0.3);
 }
 
 :root[data-theme='light'] .tone-bone {
-  --color-ink: #0b1020;
-  --color-ink-2: #10162a;
-  --color-ink-3: #141a2e;
+  --color-ink: #141b2e;
+  --color-ink-2: #1a2237;
+  --color-ink-3: #212a41;
   --color-bone: #f7f0e6;
   --color-bone-2: #faf7f2;
-  --color-silver: #929ca8;
-  --color-silver-dim: #7a8698;
+  --color-silver: #a1aab7;
+  --color-silver-dim: #8a95a7;
   --color-gold: #ccaa50;
   --color-gold-lift: #e0c47a;
+}
+
+/* A cream band casts navy-tinted shadows in either theme: black on cream
+   reads as dirt, not depth. */
+.tone-bone {
+  --shadow-panel: 0 30px 60px -34px rgb(16 22 42 / 0.24);
+  --shadow-lift: 0 18px 36px -18px rgb(16 22 42 / 0.3);
 }
 
 /* `light:hidden` and friends, for the few things that differ by theme beyond

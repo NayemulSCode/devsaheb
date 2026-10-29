@@ -29,16 +29,19 @@ export default function CardGridBlock({
         ) : null}
 
         <div
-          className="grid gap-px bg-[var(--accent-line)] sm:grid-cols-2"
+          // The grid is raised as one panel, so its shared hairlines stay intact.
+          className="grid gap-px bg-[var(--accent-line)] shadow-[var(--shadow-panel)] sm:grid-cols-2"
           style={{ gridTemplateColumns: undefined }}
           data-cards={cards.length}
         >
           {cards.map((card, i) => (
-            <Reveal key={card.title} delay={i * 60} className="h-full">
+            // z-index on the grid item, not the card, so the hovered card's
+            // shadow paints over its neighbours rather than under them.
+            <Reveal key={card.title} delay={i * 60} className="relative h-full hover:z-10">
               <Card
                 index={card.index}
                 title={card.title}
-                className={`h-full border-0 ${tone === 'bone' ? 'bg-bone-2 hover:bg-white' : 'bg-ink-2'}`}
+                className={`h-full border-0 hover:shadow-[var(--shadow-lift)] ${tone === 'bone' ? 'bg-bone-2 hover:bg-white' : 'bg-ink-2'}`}
               >
                 {card.body ? <p className={`text-sm ${bodyText}`}>{card.body}</p> : null}
                 {card.items?.length ? (

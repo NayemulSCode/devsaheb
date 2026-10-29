@@ -129,7 +129,8 @@ function Detail({
   return (
     <div
       className={cn(
-        'relative flex flex-col border border-[var(--accent-line)] p-7 lg:min-h-[26rem]',
+        // The one raised surface in the section: the list points at it.
+        'relative flex flex-col border border-[var(--accent-line)] p-7 shadow-[var(--shadow-panel)] lg:min-h-[26rem]',
         tone === 'bone' ? 'bg-bone-2' : 'bg-ink-2',
       )}
     >

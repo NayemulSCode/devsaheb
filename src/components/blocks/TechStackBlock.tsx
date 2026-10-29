@@ -109,19 +109,28 @@ export default function TechStackBlock({ tone, eyebrow, heading, lede, groups }:
               hidden={!selected}
               className={cn('mx-auto max-w-5xl', selected && switched && 'ds-fade-in')}
             >
-              <ul
-                aria-label={tabbed ? undefined : group.label}
-                className="ds-tech-grid grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6"
+              {/* Framed and raised as one panel. Thirty-six logos each casting
+                  a shadow would be noise; the grid's own hairlines stay. */}
+              <div
+                className={cn(
+                  'border border-[var(--accent-line)] p-2 shadow-[var(--shadow-panel)] sm:p-4',
+                  tone === 'bone' ? 'bg-bone-2' : 'bg-ink-2',
+                )}
               >
-                {group.items.map((item, j) => (
-                  <li key={`${item.name}-${j}`} className="ds-tech-tile relative">
-                    <Tile item={item} />
-                  </li>
-                ))}
-                {fillers(group.items.length).map((visibility, k) => (
-                  <li key={`fill-${k}`} aria-hidden="true" className={cn('ds-tech-tile relative', visibility)} />
-                ))}
-              </ul>
+                <ul
+                  aria-label={tabbed ? undefined : group.label}
+                  className="ds-tech-grid grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6"
+                >
+                  {group.items.map((item, j) => (
+                    <li key={`${item.name}-${j}`} className="ds-tech-tile relative">
+                      <Tile item={item} />
+                    </li>
+                  ))}
+                  {fillers(group.items.length).map((visibility, k) => (
+                    <li key={`fill-${k}`} aria-hidden="true" className={cn('ds-tech-tile relative', visibility)} />
+                  ))}
+                </ul>
+              </div>
             </div>
           );
         })}

@@ -250,7 +250,7 @@ type Theme = 'dark' | 'light';
 /** Must match the key the inline head script reads in scripts/prerender.mjs. */
 const THEME_KEY = 'theme';
 
-const THEME_COLOR: Record<Theme, string> = { dark: '#0B1020', light: '#FBF8F2' };
+const THEME_COLOR: Record<Theme, string> = { dark: '#141B2E', light: '#FBF8F2' };
 
 function applyTheme(theme: Theme) {
   document.documentElement.dataset.theme = theme;
