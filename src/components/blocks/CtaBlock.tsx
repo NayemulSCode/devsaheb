@@ -1,4 +1,4 @@
-import Section from '../ui/Section';
+import Section, { isLightTone } from '../ui/Section';
 import Container from '../ui/Container';
 import Button from '../ui/Button';
 import Reveal from '../Reveal';
@@ -17,7 +17,7 @@ export default function CtaBlock({
   secondaryLabel,
   secondaryHref,
 }: CtaProps) {
-  const bodyText = tone === 'bone' ? 'text-muted' : 'text-silver';
+  const bodyText = isLightTone(tone) ? 'text-muted' : 'text-silver';
 
   return (
     <Section tone={tone}>

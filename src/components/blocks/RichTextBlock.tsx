@@ -1,6 +1,6 @@
 import { Fragment, type CSSProperties, type ReactNode } from 'react';
 import { Link } from 'react-router-dom';
-import Section from '../ui/Section';
+import Section, { isLightTone, type Tone } from '../ui/Section';
 import Container from '../ui/Container';
 import Eyebrow from '../ui/Eyebrow';
 import Reveal from '../Reveal';
@@ -18,7 +18,7 @@ import type { RichNode } from '../../content/schema';
  * a newer build degrades instead of taking the route down.
  */
 export default function RichTextBlock({ tone, eyebrow, heading, doc }: RichTextProps) {
-  const bodyText = tone === 'bone' ? 'text-muted' : 'text-silver';
+  const bodyText = isLightTone(tone) ? 'text-muted' : 'text-silver';
 
   return (
     <Section tone={tone}>
@@ -43,7 +43,7 @@ export default function RichTextBlock({ tone, eyebrow, heading, doc }: RichTextP
   );
 }
 
-function Nodes({ nodes, tone }: { nodes?: RichNode[] | undefined; tone: 'ink' | 'bone' }) {
+function Nodes({ nodes, tone }: { nodes?: RichNode[] | undefined; tone: Tone }) {
   if (!nodes?.length) return null;
   return (
     <>
@@ -57,8 +57,8 @@ function Nodes({ nodes, tone }: { nodes?: RichNode[] | undefined; tone: 'ink' | 
 const alignStyle = (node: RichNode): CSSProperties | undefined =>
   node.attrs?.textAlign ? { textAlign: node.attrs.textAlign } : undefined;
 
-function Node({ node, tone }: { node: RichNode; tone: 'ink' | 'bone' }) {
-  const heading = tone === 'bone' ? 'text-ink' : 'text-bone';
+function Node({ node, tone }: { node: RichNode; tone: Tone }) {
+  const heading = isLightTone(tone) ? 'text-ink' : 'text-bone';
   const rule = 'border-[var(--accent-line)]';
 
   switch (node.type) {

@@ -1,4 +1,4 @@
-import Section from '../ui/Section';
+import Section, { isLightTone } from '../ui/Section';
 import Container from '../ui/Container';
 import Eyebrow from '../ui/Eyebrow';
 import Reveal from '../Reveal';
@@ -6,7 +6,7 @@ import Reveal from '../Reveal';
 import type { StatsProps } from './types';
 
 export default function StatsBlock({ tone, eyebrow, heading, stats }: StatsProps) {
-  const bodyText = tone === 'bone' ? 'text-muted' : 'text-silver';
+  const bodyText = isLightTone(tone) ? 'text-muted' : 'text-silver';
 
   return (
     <Section tone={tone}>
@@ -25,7 +25,7 @@ export default function StatsBlock({ tone, eyebrow, heading, stats }: StatsProps
             <Reveal
               key={`${stat.label}-${i}`}
               delay={i * 60}
-              className={tone === 'bone' ? 'bg-bone-2 p-7' : 'bg-ink-2 p-7'}
+              className="bg-[var(--surface)] p-7"
             >
               {/* dd before dt so the figure reads first visually while the
                   markup keeps term-then-definition order for screen readers. */}

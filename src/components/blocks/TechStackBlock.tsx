@@ -1,7 +1,7 @@
 import { useId, useRef, useState } from 'react';
 import type { CSSProperties, KeyboardEvent, ReactNode } from 'react';
 import { Link } from 'react-router-dom';
-import Section from '../ui/Section';
+import Section, { isLightTone } from '../ui/Section';
 import Container from '../ui/Container';
 import Eyebrow from '../ui/Eyebrow';
 import Reveal from '../Reveal';
@@ -28,7 +28,7 @@ export default function TechStackBlock({ tone, eyebrow, heading, lede, groups }:
   if (shown.length === 0) return null;
 
   const current = Math.min(active, shown.length - 1);
-  const muted = tone === 'bone' ? 'text-muted' : 'text-silver';
+  const muted = isLightTone(tone) ? 'text-muted' : 'text-silver';
 
   const select = (i: number) => {
     setActive(i);
@@ -111,12 +111,7 @@ export default function TechStackBlock({ tone, eyebrow, heading, lede, groups }:
             >
               {/* Framed and raised as one panel. Thirty-six logos each casting
                   a shadow would be noise; the grid's own hairlines stay. */}
-              <div
-                className={cn(
-                  'border border-[var(--accent-line)] p-2 shadow-[var(--shadow-panel)] sm:p-4',
-                  tone === 'bone' ? 'bg-bone-2' : 'bg-ink-2',
-                )}
-              >
+              <div className="border border-[var(--accent-line)] bg-[var(--surface)] p-2 shadow-[var(--shadow-panel)] sm:p-4">
                 <ul
                   aria-label={tabbed ? undefined : group.label}
                   className="ds-tech-grid grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6"

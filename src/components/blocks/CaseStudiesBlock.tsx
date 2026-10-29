@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import type { FocusEvent } from 'react';
 import { Link } from 'react-router-dom';
-import Section from '../ui/Section';
+import Section, { isLightTone } from '../ui/Section';
 import Container from '../ui/Container';
 import Eyebrow from '../ui/Eyebrow';
 import Button from '../ui/Button';
@@ -129,7 +129,7 @@ export default function CaseStudiesBlock({
   };
 
   const pinned = distance > 0;
-  const muted = tone === 'bone' ? 'text-muted' : 'text-silver';
+  const muted = isLightTone(tone) ? 'text-muted' : 'text-silver';
   const label = heading || 'Case studies';
 
   return (
@@ -205,7 +205,7 @@ function Card({ study, index, tone }: { study: Study; index: number; tone: CaseS
     'group flex h-full flex-col overflow-hidden text-ink transition-transform duration-300 ease-[var(--ease-brand)] hover:-translate-y-1 motion-reduce:hover:translate-y-0',
     // tone-bone: a light card keeps its own palette inside a dark band under
     // the light theme too.
-    tone === 'bone' ? 'border border-[var(--accent-line)] bg-bone-2' : 'tone-bone bg-bone shadow-[var(--shadow-chip)]',
+    isLightTone(tone) ? 'border border-[var(--accent-line)] bg-[var(--surface)]' : 'tone-bone bg-bone shadow-[var(--shadow-chip)]',
   );
 
   const body = (

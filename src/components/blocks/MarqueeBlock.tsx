@@ -55,7 +55,7 @@ export default function MarqueeBlock({ tone, label, speed, direction, items }: M
           className={cn(
             'ds-marquee-toggle absolute right-3 top-1/2 grid size-8 -translate-y-1/2 place-items-center',
             'border border-[var(--accent-line)] text-[var(--accent)] transition-colors hover:border-[var(--accent)]',
-            tone === 'ink' ? 'bg-ink' : 'bg-bone',
+            'bg-[var(--band)]',
           )}
         >
           <svg viewBox="0 0 16 16" aria-hidden="true" className="size-3.5" fill="currentColor">

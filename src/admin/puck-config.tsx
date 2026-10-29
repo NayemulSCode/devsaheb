@@ -70,8 +70,11 @@ const toneField = {
   type: 'select' as const,
   label: 'Band',
   options: [
-    { label: 'Ink (dark)', value: 'ink' },
-    { label: 'Bone (light)', value: 'bone' },
+    { label: 'Ink', value: 'ink' },
+    { label: 'Ink · lifted', value: 'ink-soft' },
+    { label: 'Bone (cream)', value: 'bone' },
+    { label: 'Bone · lighter', value: 'bone-soft' },
+    { label: 'Sand (warm cream)', value: 'sand' },
   ],
 };
 

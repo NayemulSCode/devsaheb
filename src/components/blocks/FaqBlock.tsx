@@ -1,4 +1,4 @@
-import Section from '../ui/Section';
+import Section, { isLightTone } from '../ui/Section';
 import Container from '../ui/Container';
 import Eyebrow from '../ui/Eyebrow';
 import Reveal from '../Reveal';
@@ -13,7 +13,7 @@ import type { FaqProps } from './types';
  * also means the answers are in the prerendered HTML for crawlers to read.
  */
 export default function FaqBlock({ tone, eyebrow, heading, items }: FaqProps) {
-  const bodyText = tone === 'bone' ? 'text-muted' : 'text-silver';
+  const bodyText = isLightTone(tone) ? 'text-muted' : 'text-silver';
 
   return (
     <Section tone={tone}>

@@ -1,4 +1,4 @@
-import Section from '../ui/Section';
+import Section, { isLightTone } from '../ui/Section';
 import Container from '../ui/Container';
 import Eyebrow from '../ui/Eyebrow';
 import Reveal from '../Reveal';
@@ -14,7 +14,7 @@ export default function ChecklistBlock({
   excludedTitle,
   excluded,
 }: ChecklistProps) {
-  const bodyText = tone === 'bone' ? 'text-muted' : 'text-silver';
+  const bodyText = isLightTone(tone) ? 'text-muted' : 'text-silver';
   const hasExcluded = Boolean(excludedTitle && excluded?.length);
 
   return (
@@ -50,7 +50,7 @@ export default function ChecklistBlock({
             <Reveal delay={100}>
               <h3
                 className={`font-mono text-[10.5px] uppercase tracking-[0.14em] ${
-                  tone === 'bone' ? 'text-muted' : 'text-silver-dim'
+                  isLightTone(tone) ? 'text-muted' : 'text-silver-dim'
                 }`}
               >
                 {excludedTitle}
@@ -60,7 +60,7 @@ export default function ChecklistBlock({
                   <li key={`${item.text}-${i}`} className={`flex gap-3 text-sm ${bodyText}`}>
                     <span
                       aria-hidden="true"
-                      className={tone === 'bone' ? 'mt-px text-muted' : 'mt-px text-silver-dim'}
+                      className={isLightTone(tone) ? 'mt-px text-muted' : 'mt-px text-silver-dim'}
                     >
                       —
                     </span>

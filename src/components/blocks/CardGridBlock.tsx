@@ -1,4 +1,4 @@
-import Section from '../ui/Section';
+import Section, { isLightTone } from '../ui/Section';
 import Container from '../ui/Container';
 import Eyebrow from '../ui/Eyebrow';
 import Reveal from '../Reveal';
@@ -13,7 +13,7 @@ export default function CardGridBlock({
   lede,
   cards,
 }: CardGridProps) {
-  const bodyText = tone === 'bone' ? 'text-muted' : 'text-silver';
+  const bodyText = isLightTone(tone) ? 'text-muted' : 'text-silver';
 
   return (
     <Section tone={tone}>
@@ -41,7 +41,7 @@ export default function CardGridBlock({
               <Card
                 index={card.index}
                 title={card.title}
-                className={`h-full border-0 hover:shadow-[var(--shadow-lift)] ${tone === 'bone' ? 'bg-bone-2 hover:bg-white' : 'bg-ink-2'}`}
+                className={`h-full border-0 hover:shadow-[var(--shadow-lift)] bg-[var(--surface)] ${isLightTone(tone) ? 'hover:bg-white' : ''}`}
               >
                 {card.body ? <p className={`text-sm ${bodyText}`}>{card.body}</p> : null}
                 {card.items?.length ? (

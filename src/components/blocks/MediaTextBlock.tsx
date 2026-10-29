@@ -1,4 +1,4 @@
-import Section from '../ui/Section';
+import Section, { isLightTone } from '../ui/Section';
 import Container from '../ui/Container';
 import Eyebrow from '../ui/Eyebrow';
 import Button from '../ui/Button';
@@ -19,7 +19,7 @@ export default function MediaTextBlock({
   primaryLabel,
   primaryHref,
 }: MediaTextProps) {
-  const bodyText = tone === 'bone' ? 'text-muted' : 'text-silver';
+  const bodyText = isLightTone(tone) ? 'text-muted' : 'text-silver';
   const paragraphs = body.split(/\n{2,}/).map((p) => p.trim()).filter(Boolean);
 
   return (

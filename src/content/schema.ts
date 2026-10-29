@@ -26,7 +26,7 @@ const href = z
     message: 'Must be a root-relative path, http(s) URL, mailto: or tel:',
   });
 
-const tone = z.enum(['ink', 'bone']);
+const tone = z.enum(['ink', 'ink-soft', 'bone', 'bone-soft', 'sand']);
 
 /**
  * Every block carries a stable id.

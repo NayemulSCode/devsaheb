@@ -1,4 +1,4 @@
-import Section from '../ui/Section';
+import Section, { isLightTone } from '../ui/Section';
 import Container from '../ui/Container';
 import Eyebrow from '../ui/Eyebrow';
 import Reveal from '../Reveal';
@@ -12,7 +12,7 @@ export default function TeamGridBlock({
   lede,
   people,
 }: TeamGridProps) {
-  const bodyText = tone === 'bone' ? 'text-muted' : 'text-silver';
+  const bodyText = isLightTone(tone) ? 'text-muted' : 'text-silver';
 
   return (
     <Section tone={tone}>
@@ -33,7 +33,7 @@ export default function TeamGridBlock({
               key={`${person.name}-${i}`}
               as="li"
               delay={i * 50}
-              className={tone === 'bone' ? 'bg-bone-2 p-6' : 'bg-ink-2 p-6'}
+              className="bg-[var(--surface)] p-6"
             >
               {person.image ? (
                 <img

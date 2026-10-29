@@ -33,6 +33,8 @@
 
   --color-bone: #f7f0e6;
   --color-bone-2: #faf7f2;
+  /* A warmer step below bone. Not remapped by the light theme. */
+  --color-sand: #efe5d3;
 
   --font-display: "Geist Variable", "Segoe UI", system-ui, sans-serif;
   --font-sans: "Geist Variable", "Segoe UI", system-ui, sans-serif;

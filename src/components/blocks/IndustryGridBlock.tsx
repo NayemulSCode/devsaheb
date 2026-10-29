@@ -1,6 +1,6 @@
 import type { ReactNode } from 'react';
 import { Link } from 'react-router-dom';
-import Section from '../ui/Section';
+import Section, { isLightTone } from '../ui/Section';
 import Container from '../ui/Container';
 import Eyebrow from '../ui/Eyebrow';
 import Reveal from '../Reveal';
@@ -23,7 +23,7 @@ export default function IndustryGridBlock({ tone, eyebrow, heading, lede, indust
               <h2 className="text-balance text-3xl font-extrabold md:text-4xl">{heading}</h2>
             ) : null}
             {lede ? (
-              <p className={cn('max-w-[60ch]', tone === 'bone' ? 'text-muted' : 'text-silver')}>{lede}</p>
+              <p className={cn('max-w-[60ch]', isLightTone(tone) ? 'text-muted' : 'text-silver')}>{lede}</p>
             ) : null}
           </Reveal>
         ) : null}
@@ -33,7 +33,7 @@ export default function IndustryGridBlock({ tone, eyebrow, heading, lede, indust
             // Stagger along a row, not down the whole list, so the last tile
             // does not wait a second behind the first.
             <Reveal key={`${industry.label}-${i}`} as="li" delay={(i % 6) * 40} className="relative h-full hover:z-10">
-              <Tile industry={industry} tone={tone} />
+              <Tile industry={industry} />
             </Reveal>
           ))}
         </ul>
@@ -42,13 +42,13 @@ export default function IndustryGridBlock({ tone, eyebrow, heading, lede, indust
   );
 }
 
-function Tile({ industry, tone }: { industry: Industry; tone: 'ink' | 'bone' }) {
+function Tile({ industry }: { industry: Industry }) {
   const className = cn(
     // A little tighter on a phone, where eighteen tiles make nine rows.
     'group relative flex h-full min-h-28 flex-col items-center justify-center gap-2.5 px-3 py-5 text-center sm:min-h-32 sm:gap-3 sm:py-6',
     // Separate tiles, so each lifts on its own; at rest they stay flat.
     'border border-[var(--accent-line)] transition-[border-color,box-shadow,translate] duration-300 ease-[var(--ease-brand)] hover:-translate-y-1 hover:border-[var(--accent)] hover:shadow-[var(--shadow-lift)] motion-reduce:hover:translate-y-0',
-    tone === 'bone' ? 'bg-bone-2' : 'bg-ink-2',
+    'bg-[var(--surface)]',
   );
 
   const body: ReactNode = (

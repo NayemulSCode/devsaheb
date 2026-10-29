@@ -1,6 +1,6 @@
 import { useId, useState } from 'react';
 import { Link } from 'react-router-dom';
-import Section from '../ui/Section';
+import Section, { isLightTone } from '../ui/Section';
 import Container from '../ui/Container';
 import Eyebrow from '../ui/Eyebrow';
 import Reveal from '../Reveal';
@@ -35,7 +35,7 @@ export default function ServiceExplorerBlock({
   if (items.length === 0) return null;
 
   const current = Math.min(active, items.length - 1);
-  const muted = tone === 'bone' ? 'text-muted' : 'text-silver';
+  const muted = isLightTone(tone) ? 'text-muted' : 'text-silver';
 
   return (
     <Section tone={tone}>
@@ -122,18 +122,13 @@ function Detail({
   cardLabel?: string | undefined;
   tone: Tone;
 }) {
-  const muted = tone === 'bone' ? 'text-muted' : 'text-silver';
+  const muted = isLightTone(tone) ? 'text-muted' : 'text-silver';
   const linkClass =
     'inline-flex items-center gap-2 font-mono text-[11px] font-semibold uppercase tracking-[0.12em] text-[var(--accent)] underline-offset-4 hover:underline';
 
   return (
-    <div
-      className={cn(
-        // The one raised surface in the section: the list points at it.
-        'relative flex flex-col border border-[var(--accent-line)] p-7 shadow-[var(--shadow-panel)] lg:min-h-[26rem]',
-        tone === 'bone' ? 'bg-bone-2' : 'bg-ink-2',
-      )}
-    >
+    // The one raised surface in the section: the list points at it.
+    <div className="relative flex flex-col border border-[var(--accent-line)] bg-[var(--surface)] p-7 shadow-[var(--shadow-panel)] lg:min-h-[26rem]">
       {item.subItems?.length ? (
         <>
           <p className={cn('font-mono text-[10.5px] uppercase tracking-[0.14em]', muted)}>
