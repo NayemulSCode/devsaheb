@@ -2,6 +2,7 @@ import type { ReactNode } from 'react';
 import { useLocation } from 'react-router-dom';
 import Header from './Header';
 import Footer from './Footer';
+import ScrollToTop from '../ScrollToTop';
 
 export default function Layout({ children }: { children: ReactNode }) {
   const { pathname } = useLocation();
@@ -15,6 +16,7 @@ export default function Layout({ children }: { children: ReactNode }) {
 
   return (
     <div className="flex min-h-screen flex-col">
+      <ScrollToTop />
       {/* First tab stop on every page. Sighted keyboard users would otherwise
           traverse 45 mega-menu links before reaching the content. */}
       <a

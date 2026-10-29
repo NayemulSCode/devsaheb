@@ -31,12 +31,20 @@ const SOCIAL_ICONS: Record<string, string> = {
   Facebook: 'M22 12a10 10 0 1 0-11.56 9.88v-6.99H7.9V12h2.54V9.8c0-2.5 1.49-3.89 3.77-3.89 1.09 0 2.24.2 2.24.2v2.46h-1.26c-1.24 0-1.63.77-1.63 1.56V12h2.78l-.45 2.89h-2.33v6.99A10 10 0 0 0 22 12Z',
 };
 
+const BADGE =
+  'grid gap-1 border border-gold/15 bg-[var(--surface-raised)] px-4 py-2.5 shadow-[var(--shadow-chip)]';
+
 export default function Footer() {
   return (
     <footer
-      className="border-t border-gold/20 bg-ink-2 pt-16"
+      className="relative bg-ink-2 pt-16 shadow-[var(--shadow-footer)]"
       style={{ ['--accent' as string]: 'var(--color-gold)' }}
     >
+      {/* A hairline that fades out at both ends, in place of a flat border. */}
+      <span
+        aria-hidden="true"
+        className="pointer-events-none absolute inset-x-0 top-0 h-px bg-linear-to-r from-transparent via-gold/55 to-transparent"
+      />
       <Container>
         {/* Brand and contact, then the link lists: two columns on a phone, three
             from sm up, and beside the brand column from lg. */}
@@ -103,7 +111,7 @@ export default function Footer() {
                         aria-label={`${site.name} on ${label}`}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="grid size-9 place-items-center border border-silver/15 text-silver transition-[color,border-color,transform] duration-200 hover:-translate-y-0.5 hover:border-gold hover:text-gold"
+                        className="grid size-9 place-items-center border border-gold/15 bg-[var(--surface-raised)] text-silver shadow-[var(--shadow-chip)] transition-[color,border-color,transform,box-shadow] duration-200 hover:-translate-y-0.5 hover:border-gold hover:text-gold hover:shadow-[var(--shadow-glow)]"
                       >
                         <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
                           <path d={SOCIAL_ICONS[label] ?? ''} />
@@ -118,13 +126,13 @@ export default function Footer() {
             <div className="mt-9 flex flex-wrap gap-3">
               {/* Displayed as images only. Self-serving AggregateRating markup on
                   your own Organization is disallowed for rich results. */}
-              <div className="grid gap-1 border border-silver/15 px-4 py-2.5">
+              <div className={BADGE}>
                 <span className="font-display text-[15px] font-extrabold text-bone">BASIS</span>
                 <span className="font-mono text-[9px] uppercase tracking-[0.08em] text-silver-dim">
                   Member — verify before use
                 </span>
               </div>
-              <div className="grid gap-1 border border-silver/15 px-4 py-2.5">
+              <div className={BADGE}>
                 <span className="text-xs tracking-[0.1em] text-gold">★★★★★</span>
                 <span className="font-mono text-[9px] uppercase tracking-[0.08em] text-silver-dim">
                   Google reviews — display only

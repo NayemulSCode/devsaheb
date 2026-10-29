@@ -64,6 +64,12 @@
   --shadow-float: 0 30px 70px rgb(0 0 0 / 0.55);
   --shadow-pill: 0 12px 40px -12px rgb(0 0 0 / 0.75);
   --shadow-chip: 0 12px 28px -14px rgb(0 0 0 / 0.7);
+  /* Cast upward, so the footer reads as a raised base the page rests on. */
+  --shadow-footer: 0 -28px 60px -38px rgb(0 0 0 / 0.5);
+  /* Hover lift on gold-edged controls. Resolves against the active theme's gold. */
+  --shadow-glow: 0 12px 26px -12px color-mix(in srgb, var(--color-gold) 55%, transparent);
+  /* A card one step above ink-2: lighter on navy, lighter on paper too. */
+  --surface-raised: #161d33;
 }
 
 /*
@@ -101,6 +107,8 @@
   --shadow-float: 0 24px 60px rgb(16 22 42 / 0.16);
   --shadow-pill: 0 10px 30px -12px rgb(16 22 42 / 0.25);
   --shadow-chip: 0 10px 24px -14px rgb(16 22 42 / 0.3);
+  --shadow-footer: 0 -30px 60px -36px rgb(16 22 42 / 0.2);
+  --surface-raised: #fbf8f2;
 }
 
 :root[data-theme='light'] .tone-bone {
